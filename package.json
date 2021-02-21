@@ -1,0 +1,16 @@
+{
+  "name": "disciplesbot",
+  "version": "1.0.0",
+  "description": "A all around workflow bot for Disciples of Osiris",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Dylanface",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^12.5.1",
+    "fs": "0.0.1-security",
+    "nodemon": "^2.0.7"
+  }
+}
