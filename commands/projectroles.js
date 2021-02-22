@@ -13,8 +13,8 @@ module.exports = {
         .setDescription('Choosing to participate will allow you to claim and submit projects!\n\n'
             + `${projectNotificationEmoji} to become Project Participant`);
 
-        let messageEmbed = await message.channel.send(embed);
-        messageEmbed.react(projectNotificationEmoji);
+        let roleEmbed = await message.channel.send(embed);
+        roleEmbed.react(projectNotificationEmoji);
 
         client.on('messageReactionAdd', async (reaction, user) => {
             if(reaction.message.partial) await reaction.message.fetch();

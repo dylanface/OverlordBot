@@ -10,6 +10,7 @@ module.exports = {
             'Please link the required plugins with a return after each link.' //4
             
         ]
+        
         let counter = 0
 
         const filter = m => m.author.id === message.author.id
