@@ -39,7 +39,6 @@ module.exports = {
 
                 guild.channels.create((channelName), { 
                     type: 'text',
-                    parent: '733816370206081074',
                     reason: 'I do what I am told' })
                     .then(async (channel) => {
                         let infoEmbed = new Discord.MessageEmbed()
