@@ -1,7 +1,7 @@
 {
-  "name": "disciplesbot",
+  "name": "overlord",
   "version": "1.0.0",
-  "description": "A all around workflow bot for Disciples of Osiris",
+  "description": "A all around workflow bot for Golden Realms",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

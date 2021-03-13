@@ -1,3 +1,6 @@
+const { MessageEmbed } = require("discord.js");
+const { v4: uuidv4 } = require("uuid");
+
 module.exports = {
   name: "suggest",
   description: "create a suggestion!",
@@ -30,13 +33,34 @@ module.exports = {
 
     message.delete();
 
-    let scoreCount = 0;
+//Begin voting process below
 
+   function embedRecord(messageId, upVotes, downVotes, voters) {
+     this.messageId = messageId;
+     this.uuid = uuidv4();
+     this.upVotes = upVotes;
+     this.downVotes = downVotes;
+     this.voters = voters;
+   }     
+   
+    let upVoteCount = 0;
+    let downVoteCount = 0;
     let whoVoted = [];
+    let totalScore = upVoteCount - downVoteCount;
 
-    function evaluate(score, voters) {
-      if (score > voters) return false;
-      if (score === 1) return true;
+    let voteRecord = new embedRecord(
+      suggestionVote.id,
+      upVoteCount,
+      downVoteCount,
+      whoVoted
+    );
+
+    function evaluate(upVotes, downVotes, voters) {
+      let upVotePercent = (upVotes / voters) * 100;
+      let downVotePercent = (downVotes / voters) * 100;
+
+      if (voteRecord.totalScore > voteRecord.voters) return false;
+      if (upVotePercent > downVotePercent && downVotePercent > 10) return true;
     }
 
     client.on("messageReactionAdd", async (reaction, user) => {
@@ -46,56 +70,56 @@ module.exports = {
       if (!reaction.message.guild) return;
 
       if (reaction.message.channel.id == channel) {
-        if (
-          reaction.emoji.name === upVoteEmoji ||
-          reaction.emoji.name === downVoteEmoji
-        ) {
-          if (reaction.emoji.name === upVoteEmoji) {
-            if (!whoVoted.includes(user.tag)) {
-              whoVoted.push(user.tag);
-              scoreCount++;
+        if (reaction.message.id === voteRecord.messageId) {
+          if (reaction.emoji.name === upVoteEmoji || reaction.emoji.name === downVoteEmoji) {
+            if (reaction.emoji.name === upVoteEmoji) {
+              if (!voteRecord.voters.includes(user.tag)) {
+                voteRecord.voters.push(user.tag);
+                voteRecord.upVotes++;
+                console.log(voteRecord);
 
-              let evaluation = await new evaluate(scoreCount, whoVoted.length);
-
-              if (evaluation) {
-                let winnerEmbed = new Discord.MessageEmbed()
-                  .setColor("#FFBC00")
-                  .setAuthor(
-                    `${message.author.tag}'s Suggestion`,
-                    message.author.displayAvatarURL({ dynamic: true })
-                  )
-                  .setDescription(messageArgs)
-                  .setFooter(
-                    `The evaluated voting score for this suggestion was ${scoreCount}!`
-                  );
-
-                let approved = message.guild.channels.cache.find(
-                  (a) => a.name === "approved-suggestions"
+                let evaluation = await new evaluate(
+                  voteRecord.upVotes,
+                  voteRecord.downVotes,
+                  voteRecord.voters.length
                 );
 
-                approved.send(winnerEmbed);
+                if (evaluation) {
+                  let winnerEmbed = new Discord.MessageEmbed()
+                    .setColor("#FFBC00")
+                    .setAuthor(
+                      `${message.author.tag}'s Suggestion`,
+                      message.author.displayAvatarURL({ dynamic: true })
+                    )
+                    .setDescription(messageArgs)
+                    .setFooter(
+                      `The evaluated voting score for this suggestion was ${totalScore}!`
+                    );
+
+                  let approved = message.guild.channels.cache.find(
+                    (a) => a.name === "approved-suggestions"
+                  );
+
+                  approved.send(winnerEmbed);
+                }
+              } else {
+                console.log(`${user.tag} has already voted`);
               }
-            } else {
-              return;
             }
-
-            console.log(scoreCount);
-            console.log(whoVoted);
-          }
-          if (reaction.emoji.name === downVoteEmoji) {
-            if (!whoVoted.includes(user.tag)) {
-              whoVoted.push(user.tag);
-              scoreCount--;
-            } else {
-              return;
+            if (reaction.emoji.name === downVoteEmoji) {
+              if (!voteRecord.voters.includes(user.tag)) {
+                voteRecord.voters.push(user.tag);
+                voteRecord.downVoteCount++;
+              } else {
+                console.log(`${user.tag} has already voted`);
+              }
             }
-
-            console.log(scoreCount);
-            console.log(whoVoted);
           }
-        }
       }
+    }
     });
-    
+    console.log(voteRecord);
+
+
   },
 };
