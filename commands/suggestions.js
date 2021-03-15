@@ -1,4 +1,3 @@
-const { MessageEmbed } = require("discord.js");
 const { v4: uuidv4 } = require("uuid");
 
 module.exports = {
