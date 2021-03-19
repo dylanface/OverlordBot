@@ -3,7 +3,7 @@ module.exports = (Discord, client, message) =>{
     client.user.setPresence({
         status: 'online',
         activity: {
-            name: '50 Shades of Grey',
+            name: 'your reactions',
             type: 'LISTENING'
         }
     });
