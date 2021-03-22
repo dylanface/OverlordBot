@@ -47,7 +47,6 @@ module.exports = {
     const nineEmoji = "9️⃣";
     const tenEmoji = "🔟";
 
-
     // Create arrays to categorize and later iterate through emojis below
     const anyTakersEmojis = [
       anyGaymersEmoji,
@@ -70,10 +69,33 @@ module.exports = {
 
     const utilityEmojis = [confirmEmoji, cancelEmoji];
 
-    const clockEmojis = [oneClockEmoji, twoClockEmoji, threeClockEmoji, fourClockEmoji, fiveClockEmoji, sixClockEmoji, sevenClockEmoji, eightClockEmoji, nineClockEmoji, tenClockEmoji];
+    const clockEmojis = [
+      oneClockEmoji,
+      twoClockEmoji,
+      threeClockEmoji,
+      fourClockEmoji,
+      fiveClockEmoji,
+      sixClockEmoji,
+      sevenClockEmoji,
+      eightClockEmoji,
+      nineClockEmoji,
+      tenClockEmoji,
+    ];
 
-    const numberEmojis = [oneEmoji, twoEmoji, threeEmoji, fourEmoji, fiveEmoji, sixEmoji, sevenEmoji, eightEmoji, nineEmoji, tenEmoji];
+    const numberEmojis = [
+      oneEmoji,
+      twoEmoji,
+      threeEmoji,
+      fourEmoji,
+      fiveEmoji,
+      sixEmoji,
+      sevenEmoji,
+      eightEmoji,
+      nineEmoji,
+      tenEmoji,
+    ];
 
+    // Initialize function variables
     let channel = message.channel;
     let user = message.author;
     let notifyActivity;
@@ -81,10 +103,11 @@ module.exports = {
     let gameName;
     let watchingName;
     let confirmMessage;
+    let today = new Date().toString().slice(0,11);
 
     message.delete();
 
-    // Create global embeds 
+    // Create global embeds
     const anyTakersEmbed = new Discord.MessageEmbed()
       .setColor("#0099ff")
       .setTitle("Any ?").setDescription(`Gamers ‣ ${anyGaymersEmoji} \n 
@@ -92,7 +115,8 @@ module.exports = {
             Watchers ‣ ${anyWatchersEmoji} \n
             Programmers ‣ ${anyProgrammersEmoji}`);
 
-    const gameEmbed = new Discord.MessageEmbed().setTitle(
+    const gameEmbed = new Discord.MessageEmbed()
+    .setTitle(
       "What game do you want to play?"
     ).setDescription(`Overwatch ‣ <:overwatch:820741867678335007> \n
             Rainbow Six ‣ <:rainbowsix:820741868052283443> \n
@@ -101,10 +125,15 @@ module.exports = {
             Stardew Valley ‣ <:stardew:820741868135907328> \n
             Cold War ‣ <:blackops:820741868706988092> \n
             Other Game ‣ <:classics:820741867683053599>`);
-    
-    const timeEmbed = new Discord.MessageEmbed()
-    .setTitle()
-    .setDescription()
+    if (args )
+    async function createScheduleEmbed() {
+
+      const timeEmbed = new Discord.MessageEmbed()
+      .setTitle('What time would you like to schedule this event for?')
+      .setDescription(`Today is ${today}`);
+      
+      channel.send(timeEmbed)
+    }        
 
     // Begin command logic
     async function createConfirmEmbed(sendToChannel, game, media) {
@@ -146,46 +175,46 @@ module.exports = {
         utilityEmojis.forEach(utilReact);
       }
     }
-    
+
     async function createNotifyEmbed(game, media) {
       if (!game && !media) {
         const notifyEmbed = new Discord.MessageEmbed()
-        .setTitle(`Hey ${notifyActivity}!`)
-        .setAuthor(
-          message.author.tag,
-          message.author.displayAvatarURL({ dynamic: true })
+          .setTitle(`Hey ${notifyActivity}!`)
+          .setAuthor(
+            message.author.tag,
+            message.author.displayAvatarURL({ dynamic: true })
           )
           .setDescription(`${user.username} is a ${notifyActivity}`);
-          
-          guildNotify(notifyEmbed);
-        }
-        if (game) {
+
+        guildNotify(notifyEmbed);
+      }
+      if (game) {
         const notifyEmbed = new Discord.MessageEmbed()
-        .setTitle("Hey Gamer!")
-        .setAuthor(
-          message.author.tag,
-          message.author.displayAvatarURL({ dynamic: true })
+          .setTitle("Hey Gamer!")
+          .setAuthor(
+            message.author.tag,
+            message.author.displayAvatarURL({ dynamic: true })
           )
           .setDescription(
             `${user.username} is playing ${game}, and is looking for people to play with!`
-            );
-            
-            guildNotify(notifyEmbed);
-        }
-        if (media) {
-          const notifyEmbed = new Discord.MessageEmbed()
-            .setTitle("Hey Watcher!")
-            .setAuthor(
-              message.author.tag,
-              message.author.displayAvatarURL({ dynamic: true })
-            )
-            .setDescription(
-              `${user.username} is watching ${media}, and is looking for people to watch with!`
-            );
+          );
 
-          guildNotify(notifyEmbed);
-        }
-   }
+        guildNotify(notifyEmbed);
+      }
+      if (media) {
+        const notifyEmbed = new Discord.MessageEmbed()
+          .setTitle("Hey Watcher!")
+          .setAuthor(
+            message.author.tag,
+            message.author.displayAvatarURL({ dynamic: true })
+          )
+          .setDescription(
+            `${user.username} is watching ${media}, and is looking for people to watch with!`
+          );
+
+        guildNotify(notifyEmbed);
+      }
+    }
 
     async function guildNotify(embed) {
       const lfgChannel = message.guild.channels.cache.find(
@@ -206,9 +235,9 @@ module.exports = {
           if (gameName === notifyGroup.name) {
             notifyGroup.members.forEach((member) => {
               if (member.id != client.user.id && !member.user.bot)
-              member.send(embed);
-              console.log(`Sent notification to ${member.displayname}`)
-            })
+                member.send(embed);
+              console.log(`Sent notification to ${member.displayname}`);
+            });
           }
         });
       }
@@ -271,7 +300,11 @@ module.exports = {
                         messages.first().delete({ timeout: 1000 });
                         inputConfirmationMessage.delete({ timeout: 10000 });
 
-                        createConfirmEmbed(anyTakersMessage, null, watchingName);
+                        createConfirmEmbed(
+                          anyTakersMessage,
+                          null,
+                          watchingName
+                        );
                       })
                       .catch(async () => {
                         const inputDeleteWarning = await message.channel.send(
@@ -354,9 +387,10 @@ module.exports = {
               case confirmEmoji:
                 createNotifyEmbed(gameName, watchingName);
                 confirmMessage.delete();
-                if (args >= 1) message.author.send(
-                  `Your message has been sent to #looking-for-group`
-                );
+                if (args >= 1)
+                  message.author.send(
+                    `Your message has been sent to #looking-for-group`
+                  );
                 break;
               case cancelEmoji:
                 let deleteWarning = await channel.send(
