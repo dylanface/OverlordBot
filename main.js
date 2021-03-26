@@ -1,6 +1,5 @@
 const Discord = require('discord.js');
 require("dotenv").config();
-const db = require('./database/db');
 
 const client = new Discord.Client({ partials: ["MESSAGE", "CHANNEL", "REACTION" ]});
 const token = process.env.CLIENT_TOKEN

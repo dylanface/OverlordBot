@@ -103,7 +103,8 @@ module.exports = {
     let gameName;
     let watchingName;
     let confirmMessage;
-    let today = new Date().toString().slice(0,11);
+    let scheduleMessage;
+    let today = new Date().toString().slice(0, 11);
 
     message.delete();
 
@@ -115,8 +116,7 @@ module.exports = {
             Watchers ‣ ${anyWatchersEmoji} \n
             Programmers ‣ ${anyProgrammersEmoji}`);
 
-    const gameEmbed = new Discord.MessageEmbed()
-    .setTitle(
+    const gameEmbed = new Discord.MessageEmbed().setTitle(
       "What game do you want to play?"
     ).setDescription(`Overwatch ‣ <:overwatch:820741867678335007> \n
             Rainbow Six ‣ <:rainbowsix:820741868052283443> \n
@@ -125,15 +125,6 @@ module.exports = {
             Stardew Valley ‣ <:stardew:820741868135907328> \n
             Cold War ‣ <:blackops:820741868706988092> \n
             Other Game ‣ <:classics:820741867683053599>`);
-    if (args )
-    async function createScheduleEmbed() {
-
-      const timeEmbed = new Discord.MessageEmbed()
-      .setTitle('What time would you like to schedule this event for?')
-      .setDescription(`Today is ${today}`);
-      
-      channel.send(timeEmbed)
-    }        
 
     // Begin command logic
     async function createConfirmEmbed(sendToChannel, game, media) {
@@ -179,9 +170,8 @@ module.exports = {
     async function createNotifyEmbed(game, media) {
       if (!game && !media) {
         const notifyEmbed = new Discord.MessageEmbed()
-          .setTitle(`Hey ${notifyActivity}!`)
-          .setAuthor(
-            message.author.tag,
+          .setFooter(
+            `LFG from ${message.author.username}`,
             message.author.displayAvatarURL({ dynamic: true })
           )
           .setDescription(`${user.username} is a ${notifyActivity}`);
@@ -190,9 +180,8 @@ module.exports = {
       }
       if (game) {
         const notifyEmbed = new Discord.MessageEmbed()
-          .setTitle("Hey Gamer!")
-          .setAuthor(
-            message.author.tag,
+          .setFooter(
+            `LFG from ${message.author.username}`,
             message.author.displayAvatarURL({ dynamic: true })
           )
           .setDescription(
@@ -203,9 +192,8 @@ module.exports = {
       }
       if (media) {
         const notifyEmbed = new Discord.MessageEmbed()
-          .setTitle("Hey Watcher!")
-          .setAuthor(
-            message.author.tag,
+          .setFooter(
+            `LFG from ${message.author.username}`,
             message.author.displayAvatarURL({ dynamic: true })
           )
           .setDescription(
@@ -259,153 +247,166 @@ module.exports = {
 
       if (reaction.message.channel === channel) {
         if (user == message.author) {
-          if (anyTakersEmojis.includes(reaction.emoji.name)) {
-            anyTakersMessage.reactions.removeAll();
-            switch (reaction.emoji.name) {
-              case anyGaymersEmoji:
-                notifyActivity = "Gamer";
-                gameMessage = await anyTakersMessage.edit(gameEmbed);
-                function gamesReact(value) {
-                  if (gameMessage) gameMessage.react(value);
-                }
-                gameEmojis.forEach(gamesReact);
-                break;
+          if (args.length === 0) {
+            if (anyTakersEmojis.includes(reaction.emoji.name)) {
+              anyTakersMessage.reactions.removeAll();
+              switch (reaction.emoji.name) {
+                case anyGaymersEmoji:
+                  notifyActivity = "Gamer";
+                  gameMessage = await anyTakersMessage.edit(gameEmbed);
+                  function gamesReact(value) {
+                    if (gameMessage) gameMessage.react(value);
+                  }
+                  gameEmojis.forEach(gamesReact);
+                  break;
 
-              case anyTalkersEmoji:
-                notifyActivity = "Talker";
-                createConfirmEmbed(anyTakersMessage);
-                break;
+                case anyTalkersEmoji:
+                  notifyActivity = "Talker";
+                  createConfirmEmbed(anyTakersMessage);
+                  break;
 
-              case anyWatchersEmoji:
-                notifyActivity = "Watcher";
-                message.channel
-                  .send(
-                    "Please enter the name of your desired movie, tv show, or youtube video as a discord message in this channel!"
-                  )
-                  .then((inputRequestMessage) => {
-                    const filter = (m) => message.author.id === m.author.id;
-                    inputRequestMessage.delete({ timeout: 12000 });
+                case anyWatchersEmoji:
+                  notifyActivity = "Watcher";
+                  message.channel
+                    .send(
+                      "Please enter the name of your desired movie, tv show, or youtube video as a discord message in this channel!"
+                    )
+                    .then((inputRequestMessage) => {
+                      const filter = (m) => message.author.id === m.author.id;
+                      inputRequestMessage.delete({ timeout: 12000 });
 
-                    message.channel
-                      .awaitMessages(filter, {
-                        time: 60000,
-                        max: 1,
-                        errors: ["time"],
-                      })
-                      .then(async (messages) => {
-                        const inputConfirmationMessage = await message.channel.send(
-                          `You entered: ${messages.first().content}`
-                        );
-                        watchingName = messages.first().content;
-                        messages.first().delete({ timeout: 1000 });
-                        inputConfirmationMessage.delete({ timeout: 10000 });
+                      message.channel
+                        .awaitMessages(filter, {
+                          time: 60000,
+                          max: 1,
+                          errors: ["time"],
+                        })
+                        .then(async (messages) => {
+                          const inputConfirmationMessage = await message.channel.send(
+                            `You entered: ${messages.first().content}`
+                          );
+                          watchingName = messages.first().content;
+                          messages.first().delete({ timeout: 1000 });
+                          inputConfirmationMessage.delete({ timeout: 10000 });
 
-                        createConfirmEmbed(
-                          anyTakersMessage,
-                          null,
-                          watchingName
-                        );
-                      })
-                      .catch(async () => {
-                        const inputDeleteWarning = await message.channel.send(
-                          "You did not enter a movie, tv show, or youtube video title!"
-                        );
-                        inputDeleteWarning.delete({ timeout: 5000 });
-                      });
-                  });
-                break;
+                          createConfirmEmbed(
+                            anyTakersMessage,
+                            null,
+                            watchingName
+                          );
+                        })
+                        .catch(async () => {
+                          const inputDeleteWarning = await message.channel.send(
+                            "You did not enter a movie, tv show, or youtube video title!"
+                          );
+                          inputDeleteWarning.delete({ timeout: 5000 });
+                        });
+                    });
+                  break;
 
-              case anyProgrammersEmoji:
-                notifyActivity = "Programmer";
-                createConfirmEmbed(anyTakersMessage);
-                break;
-            }
-          } else if (gameEmojis.includes(reaction.emoji.id)) {
-            switch (reaction.emoji.id) {
-              case overwatchEmoji:
-                gameName = "Overwatch";
-                createConfirmEmbed(gameMessage, gameName);
-                break;
-              case rainbowSixEmoji:
-                gameName = "Rainbow Six";
-                createConfirmEmbed(gameMessage, gameName);
-                break;
-              case apexLegendsEmoji:
-                gameName = "Apex Legends";
-                createConfirmEmbed(gameMessage, gameName);
-                break;
-              case dbdEmoji:
-                gameName = "Dead By Daylight";
-                createConfirmEmbed(gameMessage, gameName);
-                break;
-              case stardewEmoji:
-                gameName = "Stardew Valley";
-                createConfirmEmbed(gameMessage, gameName);
-                break;
-              case coldWarEmoji:
-                gameName = "Call Of Duty";
-                createConfirmEmbed(gameMessage, gameName);
-                break;
-              case otherGameEmoji:
-                message.channel
-                  .send(
-                    "Please enter the name of your desired game as a discord message in this channel!"
-                  )
-                  .then((inputRequestMessage) => {
-                    const filter = (m) => message.author.id === m.author.id;
-                    inputRequestMessage.delete({ timeout: 15000 });
+                case anyProgrammersEmoji:
+                  notifyActivity = "Programmer";
+                  createConfirmEmbed(anyTakersMessage);
+                  break;
+              }
+            } else if (gameEmojis.includes(reaction.emoji.id)) {
+              switch (reaction.emoji.id) {
+                case overwatchEmoji:
+                  gameName = "Overwatch";
+                  createConfirmEmbed(gameMessage, gameName);
+                  break;
+                case rainbowSixEmoji:
+                  gameName = "Rainbow Six";
+                  createConfirmEmbed(gameMessage, gameName);
+                  break;
+                case apexLegendsEmoji:
+                  gameName = "Apex Legends";
+                  createConfirmEmbed(gameMessage, gameName);
+                  break;
+                case dbdEmoji:
+                  gameName = "Dead By Daylight";
+                  createConfirmEmbed(gameMessage, gameName);
+                  break;
+                case stardewEmoji:
+                  gameName = "Stardew Valley";
+                  createConfirmEmbed(gameMessage, gameName);
+                  break;
+                case coldWarEmoji:
+                  gameName = "Call Of Duty";
+                  createConfirmEmbed(gameMessage, gameName);
+                  break;
+                case otherGameEmoji:
+                  message.channel
+                    .send(
+                      "Please enter the name of your desired game as a discord message in this channel!"
+                    )
+                    .then((inputRequestMessage) => {
+                      const filter = (m) => message.author.id === m.author.id;
+                      inputRequestMessage.delete({ timeout: 15000 });
 
-                    message.channel
-                      .awaitMessages(filter, {
-                        time: 60000,
-                        max: 1,
-                        errors: ["time"],
-                      })
-                      .then(async (messages) => {
-                        const inputConfirmationMessage = await message.channel.send(
-                          `You entered: ${messages.first().content}`
-                        );
-                        gameName = messages.first().content;
-                        messages.first().delete({ timeout: 1000 });
-                        inputConfirmationMessage.delete({ timeout: 10000 });
+                      message.channel
+                        .awaitMessages(filter, {
+                          time: 60000,
+                          max: 1,
+                          errors: ["time"],
+                        })
+                        .then(async (messages) => {
+                          const inputConfirmationMessage = await message.channel.send(
+                            `You entered: ${messages.first().content}`
+                          );
+                          gameName = messages.first().content;
+                          messages.first().delete({ timeout: 1000 });
+                          inputConfirmationMessage.delete({ timeout: 10000 });
 
-                        createConfirmEmbed(gameMessage, gameName);
-                      })
-                      .catch(async () => {
-                        const inputDeleteWarning = await message.channel.send(
-                          "You did not enter a game title!"
-                        );
-                        inputDeleteWarning.delete({ timeout: 5000 });
-                      });
-                  });
-                break;
-            }
-
-            gameMessage.reactions.removeAll();
-          } else if (utilityEmojis.includes(reaction.emoji.name)) {
-            switch (reaction.emoji.name) {
-              case confirmEmoji:
-                createNotifyEmbed(gameName, watchingName);
-                confirmMessage.delete();
-                if (args >= 1)
-                  message.author.send(
-                    `Your message has been sent to #looking-for-group`
+                          createConfirmEmbed(gameMessage, gameName);
+                        })
+                        .catch(async () => {
+                          const inputDeleteWarning = await message.channel.send(
+                            "You did not enter a game title!"
+                          );
+                          inputDeleteWarning.delete({ timeout: 5000 });
+                        });
+                    });
+                  break;
+              }
+              gameMessage.reactions.removeAll();
+            } else if (utilityEmojis.includes(reaction.emoji.name)) {
+              switch (reaction.emoji.name) {
+                case confirmEmoji:
+                  createNotifyEmbed(gameName, watchingName);
+                  confirmMessage.delete();
+                  if (args >= 1)
+                    message.author.send(
+                      `Your message has been sent to #looking-for-group`
+                    );
+                  break;
+                case cancelEmoji:
+                  let deleteWarning = await channel.send(
+                    "This embed will self destruct in 5 seconds!"
                   );
-                break;
-              case cancelEmoji:
-                let deleteWarning = await channel.send(
-                  "This embed will self destruct in 5 seconds!"
-                );
-                confirmMessage.delete({ timeout: 5000 });
-                deleteWarning.delete({ timeout: 5000 });
-                break;
+                  confirmMessage.delete({ timeout: 5000 });
+                  deleteWarning.delete({ timeout: 5000 });
+                  break;
+              }
             }
-          } else {
-            reaction.remove();
+          } else if (args.length >= 1 && args == "schedule") {
+              async function createScheduleEmbed() {
+                const timeEmbed = new Discord.MessageEmbed()
+                  .setTitle("What time would you like to schedule this event for?")
+                  .setDescription(`Today is ${today}`);
+                  
+                scheduleMessage = await channel.send(timeEmbed);
+                function numberReact(value) {
+                  scheduleMessage.react(value);
+                }
+                numberEmojis.forEach(numberReact);
+              }
+              createScheduleEmbed();
           }
         }
       }
     });
+    // End listener
   },
 };
 // Yay we done!
