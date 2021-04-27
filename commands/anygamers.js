@@ -3,6 +3,8 @@ const { v4: uuidv4 } = require("uuid");
 module.exports = {
   name: "anygamers",
   description: "YO DOES ANYONE WANNA PLAY WITH ME!!!",
+  guildOnly: "true",
+  cooldown: 5,
   async execute(client, message, args, Discord) {
     // Event emojis defined below
     const anyGaymersEmoji = "🎮";
