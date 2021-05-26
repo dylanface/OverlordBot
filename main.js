@@ -1,7 +1,9 @@
 const Discord = require('discord.js');
 require("dotenv").config();
 
-const client = new Discord.Client({ partials: ["MESSAGE", "CHANNEL", "REACTION" ]});
+const myIntents = Discord.Intents.ALL;
+const client = new Discord.Client({ partials: ["MESSAGE", "CHANNEL", "REACTION" ], intents: myIntents });
+
 const token = process.env.TEST_TOKEN
 
 client.commands = new Discord.Collection();

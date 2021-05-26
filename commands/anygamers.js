@@ -5,6 +5,7 @@ module.exports = {
   description: "YO DOES ANYONE WANNA PLAY WITH ME!!!",
   guildOnly: "true",
   cooldown: 5,
+  guildExclusive: "817236262242615326",
   async execute(client, message, args, Discord) {
     // Event emojis defined below
     const anyGaymersEmoji = "🎮";
