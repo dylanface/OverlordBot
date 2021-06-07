@@ -2,10 +2,10 @@ const fs = require('fs');
 
 module.exports = async (client, Discord) => {
     
-    const slashCommandFiles = fs.readdirSync('./commands/slash/').filter(file => file.endsWith('.js'));
+    const slashCommandFiles = fs.readdirSync('./slash/').filter(file => file.endsWith('.js'));
 
     for(const file of slashCommandFiles){
-        const slash_command = require(`../commands/${file}`);
+        const slash_command = require(`../slash/${file}`);
         if(slash_command.name){
             try {
                 if (!client.application?.owner) await client.application?.fetch();
