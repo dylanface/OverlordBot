@@ -9,7 +9,7 @@ module.exports = {
     //guildExclusive: "140247578242580481",
     cooldown: 10,
     async execute(client, message, args, Discord) {
-        message.delete({ timeout: 20000 });
+        message.delete({ timeout: 20000 }).catch(error => console.log(error));
 
         const inputID = args[0];
         const inputTag = message.mentions.users.first();
@@ -88,8 +88,8 @@ module.exports = {
                                             .setTitle("Action Successful")
                                             .setDescription(`This message will be deleted in 5 seconds`);
                                         
-                                        let deleteMessage = await confirmMessage.edit(deleteWarning);
-                                        deleteMessage.delete({ timeout: 5000 });
+                                        let deleteMessage = await confirmMessage.edit(deleteWarning)
+                                        .then(deleteMessage.delete({ timeout: 5000 }));
                                     } 
                                     else if (action == "kick") {
                                         console.log(`${message.author.tag} has kicked ${inputID}`)
@@ -97,8 +97,9 @@ module.exports = {
                                             .setTitle("Action Successful")
                                             .setDescription(`This message will be deleted in 5 seconds`);
                                         
-                                        let deleteMessage = await confirmMessage.edit(deleteWarning);
-                                        deleteMessage.delete({ timeout: 5000 });
+                                        let deleteMessage = await confirmMessage.edit(deleteWarning)
+                                        .then(deleteMessage.delete({ timeout: 5000 }));
+                                        
                                     }
                                 break;
                             }
@@ -109,7 +110,16 @@ module.exports = {
 
 
             } catch(error) {
-                channel.send(`This is the error ${error}`)
+                const errorEmbed = new Discord.MessageEmbed()
+                    .setColor('#c0392b')
+                    .setTitle('Overlord Error Panel')
+                    .addFields(
+                        { name: 'Discord Error Message', value: `\` ${error} \``, inline: false },
+                        { name: 'Entered Args', value: `\` ${args} \``, inline: false },
+                        { name: 'Please Retry', value: `\` The most common error is typos when copying user IDs, make sure to double check the ID you are indexing \``, inline: false }
+                    )
+                    .setTimestamp()
+                    const errorMessage = await channel.send(errorEmbed)
             }
         }
         else if (inputTag) {
