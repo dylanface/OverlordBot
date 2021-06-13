@@ -1,29 +1,37 @@
-const fs = require('fs');
+module.exports = async (Discord, client, message) => {
 
-module.exports = async (client, Discord) => {
+    const guildID = '813358737682726934';
+    const fetchGuild = client.guilds.cache.get(guildID);
     
-    const slashCommandFiles = fs.readdirSync('./slash/').filter(file => file.endsWith('.js'));
+    if (!client.application?.owner) await client.application?.fetch();
 
-    for(const file of slashCommandFiles){
-        const slash_command = require(`../slash/${file}`);
-        if(slash_command.name){
-            try {
-                if (!client.application?.owner) await client.application?.fetch();
-                const data = {
-                    name: slash_command.name,
-                    description: slash_command.description,
-                };
-                const command = await client.guilds.cache.get('813358737682726934')?.commands.create(data);
-                console.log(command);
+    const data = [];
 
-            } catch (error) {
-                console.log(error)
-            }
-        } else {
-            continue;
+    client.slashCommands.forEach(async command => { 
+        const sCommand = command;
+        data.push({
+            name: sCommand.name,
+            description: sCommand.description,
+            options: [sCommand.options],
+            defaultPermission: sCommand.defaultPermission,
+        });
+
+    })
+    
+    const cmd = await fetchGuild?.commands.set(data);
+
+    cmd.forEach(async registeredCmd => {
+        const registeredSCommand = await client.slashCommands.get(registeredCmd.name);
+        registeredSCommand.registryID = registeredCmd.id;
+        console.log(registeredSCommand);
+        if (registeredSCommand.permissions) {
+
+            registeredCmd.setPermissions(registeredSCommand.permissions)
+            .then(console.log)
+            .catch(console.error);
         }
-    }
-    
+    })
+
     client.user.setPresence({
         status: 'online',
         activity: {
