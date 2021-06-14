@@ -1,12 +1,12 @@
 module.exports = {
     name: 'clearchat',
     description: "This can clear the channel you execute the command in",
-    options: {
+    options: [{
         name: 'input',
         type: 'INTEGER',
         description: 'The number of messages to clear',
         required: true,
-    },
+    }],
     defaultPermission: false,
     permissions: [{
         id: '819638095997698088',

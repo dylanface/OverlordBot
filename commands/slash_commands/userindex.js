@@ -3,24 +3,79 @@ const Discord = require('discord.js');
 module.exports = {
     name: 'userindex',
     description: "Search all of Discord for a user",
-    options: {
+    options: [{
         name: 'userid',
         type: 'USER',
         description: 'The user\'s userid (in snowflake form)',
         required: true,
+
     },
+    {
+        name: 'purgetime',
+        type: 'INTEGER',
+        description: 'The amount of days to purge messages the banned user, if any',
+        required: false,
+        choices: [
+            {
+                name: 'one',
+                value: 1,
+            },
+            {
+                name: 'two',
+                value: 2,
+            },
+            {
+                name: 'three',
+                value: 3,
+            },
+            {
+                name: 'four',
+                value: 4,
+            },
+            {
+                name: 'five',
+                value: 5,
+            },
+            {
+                name: 'six',
+                value: 6,
+            },
+            {
+                name: 'seven',
+                value: 7,
+            },
+        ]
+
+    },
+    {
+        name: 'reason',
+        type: 'STRING',
+        description: 'Reason for banning the user, if any',
+        required: false,
+
+    }],
     async execute(interaction, client) {
 
         await interaction.defer({ ephemeral: true });
 
+        
+        console.log(interaction.options);
+        let inputDays;
+        let inputReason;
+        
         const inputID = await interaction.options.get('userid').value;
-        let user;
+        if (interaction.options.has('purgetime')) {
+            inputDays = await interaction.options.get('purgetime').value;
+        }
+        if (interaction.options.has('reason')) {
+            inputReason = await interaction.options.get('reason').value;
+        }
 
+        let user; 
+        
         const banEmoji = '🔨';
         const warnEmoji = '⚠️';
-        const kickEmoji = '🥾';
         const noteEmoji = '📒';
-        
         const cancelEmoji = '❌';
 
         const cancelButtonPr = [
@@ -44,31 +99,50 @@ module.exports = {
                     .setCustomID('makenote')
                     .setLabel(`${noteEmoji} Mod Note on User`)
                     .setStyle('PRIMARY'), 
-                cancelButtonPr,
+                    cancelButtonPr,
                     
-            );
-            
-            const banSelect = new Discord.MessageActionRow()
+        );
+                    
+        const banSelect = new Discord.MessageActionRow()
             .addComponents(
                 new Discord.MessageButton()
                     .setCustomID('redbanuser')
                     .setLabel(`${banEmoji} Are You Sure?`)
                     .setStyle('DANGER'),
-                cancelButtonPr,
-
+                    cancelButtonPr,
+                    
             );
 
-            const warnSelect = new Discord.MessageActionRow()
+        const warnSelect = new Discord.MessageActionRow()
             .addComponents(
                 new Discord.MessageButton()
                     .setCustomID('redwarnuser')
                     .setLabel(`${warnEmoji} Are You Sure?`)
                     .setStyle('DANGER'),
-                cancelButtonPr,
-
+                    cancelButtonPr,
+                        
             );
+                        
+    async function registerInteraction(executor, user, action, reason, purge) {
+        const registryEmbed = new Discord.MessageEmbed()
+            .setColor('#00ff00')
+            .setAuthor(`${user.tag}`, user.displayAvatarURL({ dynamic: true }))
+            .addFields(
+                { name: 'Action:', value: `\`\`\`The user has been ${action}\`\`\`` },
+            )
+            .setFooter(executor.tag, executor.displayAvatarURL({ dynamic: true }))
+            .setTimestamp()
 
-            try {
+        if (reason) registryEmbed.addField('Reason:',`\`\`\`${reason}\`\`\``);
+        if (purge) registryEmbed.addField('Amount of days for message purge:', `\`\`\`${purge}\`\`\``);
+        
+        interaction.editReply({ embeds: [registryEmbed], components: [] });
+        const registryChannel = interaction.guild.channels.cache.find(ch => ch.name === 'bot-testing');
+        registryChannel.send({content: `Interaction log from ${Date.now()} resulting in a ${action} user ▢${user.tag}▢ \nAction was executed by ${interaction.user.tag}`, embed: registryEmbed });
+
+    }
+
+        try {
                 user = await client.users.fetch(inputID, true)
                 const userInfo = new Discord.MessageEmbed()
                     .setColor('#f6c5f8')
@@ -77,7 +151,7 @@ module.exports = {
                         { name: 'Requested ID:', value: inputID },
                         { name: 'Fetched ID:', value: user.id },
                         { name: 'Account Creation Date:', value: user.createdAt.toString() },
-                        { name: 'Mod Notes:', value: 'holder'  }
+                        { name: 'Mod Notes:', value: 'placeholder'  }
                     )
 
                 await interaction.editReply({embeds: [userInfo], components: [row] });
@@ -111,8 +185,26 @@ module.exports = {
                     break;
 
                     case 'redbanuser':
-                            interaction.guild.members.ban(inputID)
-                            console.log(`${interaction.user} has banned ${inputID}`)
+                        if (!inputReason && !inputDays) {
+                            await interaction.guild.members.ban(inputID)
+                            .then(console.log)
+                            .catch(console.error)
+                        } else if (inputReason && !inputDays) {
+                            await interaction.guild.members.ban(inputID, { reason: inputReason })
+                            .then(console.log)
+                            .catch(console.error)
+                        } else if (!inputReason && inputDays) {
+                            await interaction.guild.members.ban(inputID, { days: inputDays })
+                            .then(console.log)
+                            .catch(console.error)
+                        } else if (inputReason && inputDays) {
+                            await interaction.guild.members.ban(inputID, { days: inputDays, reason: inputReason })
+                            .then(console.log)
+                            .catch(console.error)
+                        }
+
+                        // Then create a log
+                        registerInteraction(interaction.user, user, 'banned', inputReason, inputDays)
                     break;
 
                     case 'redwarnuser':
@@ -122,8 +214,11 @@ module.exports = {
                 }
 			});
 
-		    collector.on('end', collected => console.log(`Collected ${collected.size} items`));
+		    collector.on('end', collected => {
+                
+                console.log(`The collecter has ended its collection round, and collected ${collected.size} items`)
 
+            });
                                    
             } catch(error) {
                 console.log(error)

@@ -12,7 +12,7 @@ module.exports = async (Discord, client, message) => {
         data.push({
             name: sCommand.name,
             description: sCommand.description,
-            options: [sCommand.options],
+            options: sCommand.options,
             defaultPermission: sCommand.defaultPermission,
         });
 
