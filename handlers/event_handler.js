@@ -6,10 +6,11 @@ module.exports = async (client, Discord) => {
 
         for(const file of event_files){
             const event = require(`../events/${dirs}/${file}`);
-            const event_name = file.split('.')[0];
-            client.on(event_name, event.bind(null, Discord, client));
-
-
+            if (event.once) {
+                client.once(event.name, (...args) => event.execute(...args, client));
+            } else {
+                client.on(event.name, (...args) => event.execute(...args, client));
+            }
         }
     }
     

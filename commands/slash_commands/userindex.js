@@ -58,7 +58,6 @@ module.exports = {
 
         await interaction.defer({ ephemeral: true });
 
-        
         console.log(interaction.options);
         let inputDays;
         let inputReason;
@@ -138,7 +137,7 @@ module.exports = {
         
         interaction.editReply({ embeds: [registryEmbed], components: [] });
         const registryChannel = interaction.guild.channels.cache.find(ch => ch.name === 'bot-testing');
-        registryChannel.send({content: `Interaction log from ${Date.now()} resulting in a ${action} user ▢${user.tag}▢ \nAction was executed by ${interaction.user.tag}`, embed: registryEmbed });
+        registryChannel.send({content: `Interaction log resulting in a ${action} user ${user.tag} \nAction was executed by ${interaction.user.tag}`, embed: registryEmbed });
 
     }
 

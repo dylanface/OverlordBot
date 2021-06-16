@@ -4,7 +4,7 @@ require("dotenv").config();
 const myIntents = Discord.Intents.ALL;
 const client = new Discord.Client({ partials: ["MESSAGE", "CHANNEL", "REACTION" ], intents: myIntents });
 
-const token = process.env.TEST_TOKEN
+const token = process.env.OVERLORD_TOKEN
 
 client.slashCommands = new Discord.Collection();
 client.commands = new Discord.Collection();
