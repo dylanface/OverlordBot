@@ -54,6 +54,12 @@ module.exports = {
         required: false,
 
     }],
+    defaultPermission: false,
+    permissions: [{
+        id: '146719098343129088',
+        type: 'ROLE',
+        permission: true, 
+    }],
     async execute(interaction, client) {
 
         await interaction.defer({ ephemeral: true });
@@ -136,7 +142,7 @@ module.exports = {
         if (purge) registryEmbed.addField('Amount of days for message purge:', `\`\`\`${purge}\`\`\``);
         
         interaction.editReply({ embeds: [registryEmbed], components: [] });
-        const registryChannel = interaction.guild.channels.cache.find(ch => ch.name === 'bot-testing');
+        const registryChannel = interaction.guild.channels.cache.find(ch => ch.name === 'guild-logs');
         registryChannel.send({content: `Interaction log resulting in a ${action} user ${user.tag} \nAction was executed by ${interaction.user.tag}`, embed: registryEmbed });
 
     }

@@ -5,6 +5,10 @@ module.exports = {
     async execute(oldMessage, newMessage, client) {
         if (!oldMessage.author) return;
         if (oldMessage.author.bot) return;
+        if (newMessage.embeds[0]) {
+            // Check messages because of embed
+            if (oldMessage.toString() === newMessage.toString()) return;
+        }
 
         const messageLog = client.channels.cache.find(channel => channel.name ==='message-logs');
         var registryEmbed = new Discord.MessageEmbed()

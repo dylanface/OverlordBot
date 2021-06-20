@@ -9,9 +9,9 @@ module.exports = {
     }],
     defaultPermission: false,
     permissions: [{
-        id: '819638095997698088',
+        id: '146719098343129088',
         type: 'ROLE',
-        permission: true,
+        permission: true, 
     }],
     async execute(interaction, client) {
         const deleteInput = interaction.options.get('input').value;

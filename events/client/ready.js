@@ -6,7 +6,7 @@ module.exports = {
         const testDDServer = '813358737682726934';
         const karaServer = '140247578242580481';
 
-        const guildID = karaServer;
+        const guildID = testDDServer;
         const fetchGuild = client.guilds.cache.get(guildID);
         
         if (!client.application?.owner) await client.application?.fetch();
