@@ -17,6 +17,8 @@
     "node-canvas": "^2.7.0",
     "node-fetch": "^2.6.1",
     "nodemon": "^2.0.7",
+    "sequelize": "^6.6.2",
+    "sqlite3": "^5.0.2",
     "uuid": "^8.3.2"
   }
 }

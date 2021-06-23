@@ -7,16 +7,17 @@ module.exports = {
         description: 'The number of messages to clear',
         required: true,
     }],
-    defaultPermission: false,
-    permissions: [{
-        id: '146719098343129088',
-        type: 'ROLE',
-        permission: true, 
-    }],
+    defaultPermission: true,
+    // permissions: [{
+    //     id: '146719098343129088',
+    //     type: 'ROLE',
+    //     permission: true, 
+    // }],
     async execute(interaction, client) {
         const deleteInput = interaction.options.get('input').value;
-        interaction.channel.bulkDelete(deleteInput);
-        interaction.reply(`${deleteInput} messages have been deleted`, { ephemeral: true })
 
+        interaction.channel.bulkDelete(deleteInput).catch(error => console.log(error))
+        interaction.reply(`${deleteInput} messages have been deleted`, { ephemeral: true })
+        
     }
 }

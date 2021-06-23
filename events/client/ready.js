@@ -35,6 +35,8 @@ module.exports = {
                 registeredCmd.setPermissions(registeredSCommand.permissions)
                 .then(console.log)
                 .catch(console.error);
+            } else {
+                registeredCmd.setPermissions([])
             }
         })
         

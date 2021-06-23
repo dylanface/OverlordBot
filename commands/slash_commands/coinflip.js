@@ -1,5 +1,4 @@
 const Discord = require('discord.js');
-const Canvas = require('canvas');
 
 module.exports = {
     name: 'coinflip',
@@ -9,18 +8,60 @@ module.exports = {
         type: 'STRING',
         description: 'Heads or Tails?',
         required: true,
+        choices: [
+            { 
+                name: 'Heads',
+                value: 'Heads'
+
+            },
+            { 
+                name: 'Tails',
+                value: 'Tails'
+
+            },
+
+        ],
     }],
     defaultPermission: true,
     async execute(interaction, client) {
 
-        const canvas = Canvas.createCanvas(450, 450);
-	    const context = canvas.getContext('2d');
+        await interaction.defer({ ephemeral: true });
 
-        const coinflip = await Canvas.loadImage('././media/tenor.gif');
+        const sideInput = interaction.options.get('side').value;
 
-	    context.drawImage(coinflip, 0, 0, canvas.width, canvas.height);
+        const flipEmbed = new Discord.MessageEmbed()
+            .setTitle(`... Flipping Coin`)
+            .setImage('https://media.giphy.com/media/QSRTwOPADVcR3XufBZ/giphy.gif')
 
-	    const attachment = new Discord.MessageAttachment(canvas.toBuffer(), 'coin.png');
+        await interaction.editReply({ embeds: [flipEmbed] })
+
+        if (Math.floor(Math.random() * 2) === 0) {
+            var result = 'Heads';
+        }   else {
+            var result = 'Tails';
+        }
+
+        const resultEmbed = new Discord.MessageEmbed()
+
+        async function modifyScore() {
+            
+        }
+
+        if (result == sideInput) {
+            resultEmbed.setTitle(`🎉 You Won `)
+            resultEmbed.setDescription(`✅ The coin landed on **${result}**`)
+            resultEmbed.setFooter(`You got a reward!`, 'https://creazilla-store.fra1.digitaloceanspaces.com/cliparts/60815/golden-dollar-coin-clipart-md.png')
+
+            modifyScore()
+
+        } else {
+            resultEmbed.setTitle(`💔 You Lost `)
+            resultEmbed.setDescription(`❌ The coin landed on **${result}**`)
+        }
+
+            setTimeout(function(){ 
+                interaction.editReply({ embeds: [resultEmbed] })
+            }, 1500);
         
     }
 }
