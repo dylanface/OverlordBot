@@ -44,13 +44,15 @@ module.exports = {
         const resultEmbed = new Discord.MessageEmbed()
 
         async function modifyScore() {
-            
+
         }
 
         if (result == sideInput) {
             resultEmbed.setTitle(`🎉 You Won `)
             resultEmbed.setDescription(`✅ The coin landed on **${result}**`)
             resultEmbed.setFooter(`You got a reward!`, 'https://creazilla-store.fra1.digitaloceanspaces.com/cliparts/60815/golden-dollar-coin-clipart-md.png')
+
+            client.currency.add(interaction.user.id, 10);
 
             modifyScore()
 

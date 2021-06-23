@@ -1,7 +1,12 @@
+const Users = require('../../database/dbObjects')
+
 module.exports = {
 	name: 'ready',
 	once: true,
 	async execute(client) {
+
+        const storedBalances = await Users.findAll();
+        storedBalances.forEach(b => client.currency.set(b.user_id, b));
 
         const testDDServer = '813358737682726934';
         const karaServer = '140247578242580481';
