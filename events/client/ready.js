@@ -1,4 +1,4 @@
-const Users = require('../../database/dbObjects')
+const { Users } = require('../../database/dbObjects.js')
 
 module.exports = {
 	name: 'ready',
