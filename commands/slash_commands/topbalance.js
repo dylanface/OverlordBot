@@ -1,12 +1,6 @@
 module.exports = {
     name: 'topbalance',
     description: "Display a leaderboard of user balance's",
-    defaultPermission: true,
-    // permissions: [{
-    //     id: '146719098343129088',
-    //     type: 'ROLE',
-    //     permission: true, 
-    // }],
     async execute(interaction, client) {
     
         return interaction.reply(
