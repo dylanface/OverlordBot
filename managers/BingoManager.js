@@ -1,35 +1,71 @@
-const Discord = require('discord.js');
-const myIntents = Discord.Intents.ALL;
-const client = new Discord.Client({ partials: ["MESSAGE", "CHANNEL", "REACTION"], intents: myIntents });
+ const Discord = require('discord.js')
+    
+    
+    const GameInstance = require('./GameManager.js');
 
-//const bingo = client.games.bingo
+    let gameCount = 0;
+    
+    const generatedPairs = new Discord.Collection();
+    const drawnPairs = new Discord.Collection();
+    
+    const masterB = new Discord.Collection();
+    const masterI = new Discord.Collection();
+    const masterN = new Discord.Collection();
+    const masterG = new Discord.Collection();
+    const masterO = new Discord.Collection();
+    for (let i = 1; i <= 15; i++) {
+        masterB.set(i, 'B');
+    }
+    for (let i = 16; i <= 30; i++) {
+        masterI.set(i, 'I');
+    }
+    for (let i = 31; i <= 45; i++) {
+        masterN.set(i, 'N');
+    }
+    for (let i = 46; i <= 60; i++) {
+        masterG.set(i, 'G');
+    }
+    for (let i = 61; i <= 75; i++) {
+        masterO.set(i, 'O');
+    }
 
-const { GameInstance } = require('./GameManager');
 
-// const game = new GameInstance()
-const generatedPairs = new Discord.Collection();
-const drawnPairs = new Discord.Collection();
 
-generatePairs()
-callNumber()
+    exports.createGame = function(initiatingUser) {
+        gameCount++
+        
+        const game = new GameInstance(initiatingUser, gameCount, 'bingo')
+        return game
+
+    }
+
+
+    /** 
+     * Run all functions to prepare the match and notify users.
+     * @return {MatchObject} Returns the GameInstance that represents the match.
+     */
     async function prepareMatch() {
-        
-        
+        generatePairs()
+        const bingoChannel = interaction.guild.channels.cache.find(ch => ch.name === 'channel-2');
+        bingoChannel.send({content: `A new Bingo Game is being prepared!` });
+        bingoChannel.send({content: `Bingo Game # ${gameNumber} is about to begin.` });
+        bingoChannel.send({content: `-=-=-=-=-=-=-=-` });
+        bingoChannel.send({content: `Get bingo cards with /BingoCard` });
+        bingoChannel.send({content: `The first card is Free!` });
 
-        // .randomKey(amount)
-        // Obtains unique random key(s) from this collection.
-        // Returns: * or Array<*>
-        // A single key if no amount is provided or an array
     }
     
+    /** 
+     * Generates all possible B I N G O | 1 - 75 | pairs to be randomly selected from.
+     * @return {Collection} Results in a collections of all possible bingo pairs.
+     */
     async function generatePairs() {
-        var bingoLetter;
+        let bingoLetter;
         for (let i=1; i<=75; i++) {
             if (i <= 15) {
-
                 bingoLetter = 'B';
-            } // Add letter before number
-            else if (i > 15 && i <= 30) {//Do you even need the >'s here? It won't get this far if it's not >15...?
+            }
+            else if (i > 15 && i <= 30) {
                 bingoLetter = 'I';
             }
             else if (i > 30 && i <= 45) {
@@ -43,33 +79,69 @@ callNumber()
             }
             generatedPairs.set(i, bingoLetter);
         }
-        console.log(generatedPairs)
+        //** console.log(generatedPairs) // Worked as expected.
     }
-    // TODO Finish: Call bingo numbers
+    
+    /** 
+     * Call a bingo number.
+     * @return {console.log} Returns the drawn pair as number - letter or an error
+     */
     async function callNumber() {
-        //randomKey fetches the number
-        //random fetched the letter
         let key = await generatedPairs.randomKey()
         let value = await generatedPairs.get(key)
         generatedPairs.delete(key)
         drawnPairs.set(key, value)
-        console.log(drawnPairs)
+        //** console.log(drawnPairs.lastKey()) // Worked as expected.
+        // TODO Add in output to channel, or return the key/value drawn..
         if (generatedPairs.has(key)) return console.log(`Uh oh a key has not been recorded properly`)
-        //remove key/value from generatedPairs and add to drawnPairs...
         
     }
-
+    
     
     // TODO Checking user's board vs drawn pairs.
+    // drawnPairs collection will have all drawn bingo numbers, Key = Number, Value = Letter.
+    // check bingo up till current called number
     
-    //array of numbers, and current called number
-    //check bingo up till current called number
     
     
+    
+    
+    
+    
+    // TODO: Creating boards..
+    
+    /** 
+     * Brief description of the function here.
+     * @param {Integer} amount - The amount of randomly generated bingo boards to create.
+     * @return {ReturnValueDataTypeHere} Brief description of the returning value here.
+     */
+    
+    async function createBoards(amount) {
+        const subB = masterB.clone();
+        const subI = masterI.clone();
+        const subN = masterN.clone();
+        const subG = masterG.clone();
+        const subO = masterO.clone();
+        
+        var allDrawn = [];
+        
+        for (let i = 0; i < 5; i++) {
+            [subB, subI, subN, subG, subO].forEach(letter => {
+                let drawnNumber = letter.randomKey()
+                allDrawn.push(drawnNumber)
+                letter.delete(drawnNumber)
+            })
+        }
+        
+        allDrawn[12] = 'free';
+        //** console.log(allDrawn)  // Worked as expected.
+        
+    }
+ /*
     const mockBoard = [
         [0,5,10,15,20],
         [1,6,11,16,21],
-        [2,7,null,17,22],
+        [2,7,'free',17,22],
         [3,8,13,18,23],
         [4,9,14,19,24],
     ]
@@ -82,7 +154,7 @@ callNumber()
         [``,``,``,``,``],
     ]
     
-    async function newCard(user, amount, gameNumber){
+     async function newCard(user, amount, gameNumber){
         
         var usedNums = new Array(76); 
         
@@ -104,27 +176,7 @@ callNumber()
         }
     }
     
-    /*      From Draw.js drawing numbers:
-    const rand;
-    do {
-        rand = Math.floor(Math.random() * 75)+1;
-    }
-    while (client.games.bingo.calledNumbers.includes(rand));
+    async function setFreeSpace() {
+        
+    } */
     
-    
-    matching up the current "const column" numbers with multiplied by 15, 
-    and then adding in random 1-15 to that number in theory should get you 1-75?
-    
-    I was just thinking, it bugs me a bit that the draw script does random 1-75, 
-    and the bingomanger wants to do random 1-15 plus column*15...
-    
-    Makes sense in a way, less randomness I guess, cause you'll always pull 
-    a number from the column you want to fill.
-    
-    
-    */
-   
-   
-   async function setFreeSpace() {
-       
-   }

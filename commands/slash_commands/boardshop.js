@@ -1,8 +1,7 @@
-const GameManager = require('./managers/GameManager.js')
-const BingoManager = require('./managers/BingoManager.js')
+
 
 module.exports = { 
-    name: 'bingo_board',
+    name: 'boardshop',
     description: 'Purchase bingo boards that are sent to your board inventory',
     options: [{
         name: 'boards',

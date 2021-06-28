@@ -1,15 +1,17 @@
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
+const Discord = require('discord.js');
 
-module.exports = async (client, Discord) => {
 
-    /*
+// module.exports = (client, Discord) => {
+
+    /**
     *    Represents an instance of any game within Overlord
     *    @param {object} initiatingUser The User who started the game instance
     *    @param {integer} gameNumber The order number of the gameMode game instance list
     *    @param {string} gameType The game type this instance represents
     *    @param {collection} challengers The challenged User(s) if any
-    *    @param {collection} challengers The challenged User(s) if any
+    *    @param {collection} modifiers The game modifier(s) if any
     */
     class GameInstance {
         constructor(
@@ -29,13 +31,12 @@ module.exports = async (client, Discord) => {
             this.mods = new Discord.Collection();
             this.rewards = new Discord.Collection();
             this.gameState = 'Startup';
-
-            this.gameUUID = new uuidv4();
+            this.gameUUID = uuidv4();
         }
 
         async addPlayer(id) {
             const user = await this.players.get(id);
-            if (user) return user;
+            if (user) return console.log(`This user already exists`);
             else {
                 let user = await this.players.set(id, new Discord.Collection());
                 return user;
@@ -111,6 +112,7 @@ module.exports = async (client, Discord) => {
 
 
     }
+    
+module.exports = GameInstance; 
 
-
-}
+// }
