@@ -11,7 +11,7 @@ module.exports = {
     }],
     defaultPermission: true,
     async execute(interaction, client) {
-        // if !client.games.ticTacToe.activeGame 
+       
         interaction.defer();
 
         const challengerID = interaction.options.get('challenger').value;
