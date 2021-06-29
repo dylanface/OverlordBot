@@ -1,0 +1,139 @@
+Just type normal in here
+
+
+this can be our chat box up here
+
+Requiring BingoManager means you could add in it things like const bingo = client.games.bingo etc right?
+
+true but also other games need client.games and such 
+and its better to make a game manager for features that we need a manager for that can be used for more than just bingo
+that way making more games is easier for people in the future 
+since it is open source and eventually i have to make PR formats for people to follow
+this is the first contribution besides me so its very exciting new stuff im learning to manage 
+
+Especially when the one contributing is bad at things.. xD
+
+honestly though this is super valuable experience for me since this will most likely be my career path as a senior 
+full stack developer so making a kind of script in my mind of how i could teach stuff remotely especially is great 
+
+
+Well either way, stuff like "const bingo = client.games.bingo" inside of the Bingo Manager makes sense, right? if we're requiring it in the bingo related commands anyway?
+
+ye 
+what we could do is require game manager in bingo manager 
+then chain it like that so we only need bingo
+we can import and do all the logic we need from gamemanager in bingoman
+right
+good point
+gman will be much more broad while bman and other mans can be specific 
+
+
+✔ And not all games will need "their own" manager, obviously, So game manager should include all the stat based stuff for sure, keep all that out of bingo? 
+Or do you want some bingo specific stats like "bingo games played" in bingo man? <-no. lol maybe very specific bingo stats in bman
+but general stats like wins, losses, games played, coins earned, etc will be gman
+something stats wise in bman could be heavier information for the database like what tiles you filled to get your wins, or 
+
+like maybe eventually an image of your winning boards
+    -- you'd need to be storing the winning game's number array stuff, probably the user name and game number etc..
+    but recalling the array and putting it into a bingo board format and displaying shouldn't be hard if we already figured out how to do it in the first place.. lol
+    like a "game number ## winning bingo card by (user):" [card]
+
+if bingo manager (or whatever) stores the winning bingo user/gamenumber/numbers i guess?
+
+dont even have to store it really, just print it to a certain channel like announcing someone won 
+maybe we do a spin where top 3 boards get coins or something each round 
+
+I just meant because we were talking about stats..
+
+something stats wise in bman could be heavier information for the database like what tiles you filled to get your wins, or like maybe eventually an image of your winning boards
+^ was what you wrote to begin with. xD
+Why I mentioned storing the winnings, if someone wanted to pull up the stat of a certain game, or wins by (user) etc.
+
+oh tru sorry im a bit high 
+
+I love how we're typing all this here instead of discord or whatever else.. xD
+
+lol ye the context and speed of this is unmatched
+shame
+
+
+Okay so do we want some of the function stuff to be in bingoman?
+function stuff ?
+i assumed thats all it would be 
+
+Sorry not specific haha...
+Like should things like "new card" be in bman? or in the actual board function?
+bman i think
+
+So /bingoboard or whatever would basically just call the function of making a new card instead of all that being in here. Making the command file fairly small..
+I just don't know what all should be where.. lol
+
+yeah exactly right
+
+Should the If be flipped over?
+if you don't have a card "Hey here's one for free!"
+else do everything else, since I imagine the free one will happen more? Or does it not matter?
+which if ?
+
+Sorry got distracted splitting a file.. >.>
+The if that's here now.
+
+Unless the bingo itself is changing around, The way it was working was everyone gets one card free, and then you pay for extras, but I suppose that could be changed
+
+thats staying
+
+So yeah I was wondering if it matters whether you have the "if you don't have a card, get one free" first or second in the if? from like resource point of view?
+
+go to it ill follow
+
+Not sure if you understand what I am asking? xD
+
+ok just got an idea
+for how we could make the boards kind of fun and special 
+you can buy boards whenever and they go to a persistent inventory 
+then you can choose to assign up to 4 or whatever to any game 
+and you dont have to buy it per game you can jsut have however many saved up
+
+
+Oh I think I get it.. More of  if cardInventory is zero give a free one, otherwise they stack up?
+
+idk yet
+maybe you get one free board that spawns no matter what 
+its doesnt even mention it
+
+
+So you think.. Any time someone can "buy a card" that will generate a new card and add it to an inventory of cards that they have.. 
+And then when a game starts they can choose to "play x cards" up to a certain limit, and they will be displayed?
+
+I do have a lot of raw storage available so technically if you are willing to work on this a bit for a bit we can do it
+but i was thinking it just stores the number of boards a user has access to generate in each game sans the first auto generated board every game
+
+thats a really good idea actually wasnt what i was thinking but true 
+oh.. xD That's what I thought you were trying to say.. lol
+
+All it would need is an array with 24 numbers for a card, right? We wouldn't care about game number etc, if we used it as an inventory system, just need to have like 
+"user xxx owns card yyy" and card yyy is this card... so if user decides to use the card card yyy get game number zzz added to it?
+if that logic made any sense.. cause i lost track part way through.
+
+yeah that works 
+but if we do that we have to keep the order or B I N G O they are in
+
+I keep getting sidetracked.. lol
+If we had like 1000 generated cards all stored, ie card[1]:[2,6,9,20, etc..] and someone bought a card, so user[50] owns card[1] now? Or is that just insane programming at that point..
+
+thats actually a perfect deployment plan 
+no, discord bots are js 
+
+
+What's with the convert to es6 on the other js's?
+what you mean
+
+I love how this all started out basically with just planning on doing something like draw.js currently is... 
+lol true thats always how coding starts 
+And now it's like.. "Lets figure out how to have users have an inventory of cards that they can choose to join a bingo game with and ..."
+heh
+lol true this is why i love coding so much its fun to be able to actively build things in front of your eyes
+
+I was also looking at tictactoe, mainly to compare code and learn etc.. 
+Cause I assumed building a tic tac toe grid would contain some features similar to building a bingo grid..
+I messed around a bit, before realizing that there were actually action rows and stuff.. lol

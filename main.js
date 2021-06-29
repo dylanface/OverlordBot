@@ -7,7 +7,7 @@ const { Op } = require('sequelize');
 const myIntents = Discord.Intents.ALL;
 const client = new Discord.Client({ partials: ["MESSAGE", "CHANNEL", "REACTION" ], intents: myIntents });
 
-const token = process.env.TEST_TOKEN
+const token = process.env.ALT_TOKEN
 
 client.currency = new Discord.Collection();
 client.slashCommands = new Discord.Collection();
