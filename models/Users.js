@@ -4,9 +4,9 @@ module.exports = (sequelize, DataTypes) => {
 			type: DataTypes.STRING,
 			primaryKey: true,
 		},
-		user_tag: {
-			type: DataTypes.STRING
-		},
+		// user_tag: {
+		// 	type: DataTypes.STRING
+		// },
 		balance: {
 			type: DataTypes.INTEGER,
 			defaultValue: 0,

@@ -31,7 +31,7 @@ const Discord = require('discord.js');
         this.gameUUID = new uuidv4();
       }
 
-      addPlayer(id) {
+      async addPlayer(id) {
         const user = await this.players.get(id);
         if (user) return user;
         else {
@@ -40,7 +40,7 @@ const Discord = require('discord.js');
         }
       }
       
-      removePlayer(id) {
+      async removePlayer(id) {
         const user = await this.players.get(id);
         if (user) this.players.delete(id);
         return GameInstance;
@@ -54,7 +54,7 @@ const Discord = require('discord.js');
         return this.players;
       }
 
-      addPlayerScore(id, amount) {
+      async addPlayerScore(id, amount) {
         let playerScore = await this.players.get(id);
         if (playerScore) playerScore += amount;
         else {
@@ -67,7 +67,7 @@ const Discord = require('discord.js');
       //TODO: getLeaderboard(amount)? rank players scores in the game instance
       //if amount between numbers: display number of users on leaderboard
 
-      addMod(id) {
+      async addMod(id) {
         const mod = await this.mods.get(id);
         if (mod) return mod;
         else {
@@ -86,7 +86,7 @@ const Discord = require('discord.js');
         return GameInstance;
       }
 
-      addCoinsToPot(id, amount) {
+      async addCoinsToPot(id, amount) {
         let userRewards = await this.rewards.get(id);
         if (userRewards) {
           userRewards += amount;

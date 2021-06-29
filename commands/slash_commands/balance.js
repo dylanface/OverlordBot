@@ -19,7 +19,8 @@ module.exports = {
             var target = await client.users.fetch(interaction.options.get('user').value, true)
 
         } else {
-            var target = interaction.user.id
+            interaction.user.id
+            var target = await client.users.fetch(interaction.user.id, true)
         }
 
         return interaction.reply(`${target.tag} has ${client.currency.getBalance(target.id)} coins 💰`);
