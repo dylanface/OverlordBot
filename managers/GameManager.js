@@ -1,8 +1,6 @@
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
-
-module.exports = async (client, Discord) => {
-    
+const Discord = require('discord.js');
     /*
     *    Represents an instance of any game within Overlord
     *    @param {object} initiatingUser The User who started the game instance
@@ -111,7 +109,7 @@ module.exports = async (client, Discord) => {
       //getWinners(#OfWinners?)
 
 
-    }
+}
 
     
-}
+module.exports = GameInstance;
