@@ -1,13 +1,13 @@
 const { v4: uuidv4 } = require('uuid');
 const Discord = require('discord.js');
-    
+
     /**
     *    Represents an instance of any game within Overlord
     *    @param {object} initiatingUser The User who started the game instance
     *    @param {integer} gameNumber The order number of the gameMode game instance list
     *    @param {string} gameType The game type this instance represents
     *    @param {collection} challengers The challenged User(s) if any
-    *    @param {collection} challengers The challenged User(s) if any
+    *    @param {collection} modifiers The modifiers if any
     */
     class GameInstance {
       constructor(
@@ -109,7 +109,7 @@ const Discord = require('discord.js');
       //getWinners(#OfWinners?)
 
 
-    }
+}
 
     
 module.exports = GameInstance;
