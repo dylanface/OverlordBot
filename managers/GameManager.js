@@ -1,9 +1,7 @@
-const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
-
-module.exports = async (client, Discord) => {
+const Discord = require('discord.js');
     
-    /*
+    /**
     *    Represents an instance of any game within Overlord
     *    @param {object} initiatingUser The User who started the game instance
     *    @param {integer} gameNumber The order number of the gameMode game instance list
@@ -114,4 +112,4 @@ module.exports = async (client, Discord) => {
     }
 
     
-}
+module.exports = GameInstance;
