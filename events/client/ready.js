@@ -1,12 +1,12 @@
-const { Users } = require('../../database/dbObjects.js')
+const Users = require('../../database/dbObjects.js')
 
 module.exports = {
 	name: 'ready',
 	once: true,
 	async execute(client) {
 
-        // const storedBalances = await Users.findAll();
-        // storedBalances.forEach(b => client.currency.set(b.user_id, b));
+        const storedBalances = await Users.findAll();
+        storedBalances.forEach(b => client.currency.set(b.user_id, b));
 
         const testDDServer = '813358737682726934';
         const karaServer = '140247578242580481';
@@ -34,7 +34,7 @@ module.exports = {
         cmd.forEach(async registeredCmd => {
             const registeredSCommand = await client.slashCommands.get(registeredCmd.name);
             registeredSCommand.registryID = registeredCmd.id;
-            console.log(registeredSCommand);
+            //console.log(registeredSCommand);
             if (registeredSCommand.permissions) {
                 
                 registeredCmd.setPermissions(registeredSCommand.permissions)

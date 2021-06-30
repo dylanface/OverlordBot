@@ -8,6 +8,7 @@
     const generatedPairs = new Discord.Collection();
     const drawnPairs = new Discord.Collection();
     
+    
     const masterB = new Discord.Collection();
     const masterI = new Discord.Collection();
     const masterN = new Discord.Collection();
@@ -30,35 +31,51 @@
     }
 
 
-
-    exports.createGame = function(initiatingUser) {
+    let game;
+    exports.createGame = function(name, initiatingUser, interaction) {
         gameCount++
         
-        const game = new GameInstance(initiatingUser, gameCount, 'bingo')
-        return game
-
+        game = new GameInstance(name, initiatingUser, gameCount, 'bingo')
+        prepareMatch(game, interaction) 
     }
 
 
     /** 
      * Run all functions to prepare the match and notify users.
+     * @param {object} interaction The interaction you would like to manipulate
      * @return {MatchObject} Returns the GameInstance that represents the match.
      */
-    async function prepareMatch() {
+    const boardButton = new Discord.MessageButton()
+        .setCustomID('buyboard')
+        .setLabel(`Buy Board`)
+        .setStyle('PRIMARY')
+
+    const boardButton2 = new Discord.MessageButton()
+        .setCustomID('test2')
+        .setLabel(`Test Button 2`)
+        .setStyle('PRIMARY')
+
+    const bingoButtons = new Discord.MessageActionRow()
+        .addComponents(
+            [boardButton, boardButton2]
+    );
+    
+
+    function prepareMatch(game, interaction) {
         generatePairs()
-        const bingoChannel = interaction.guild.channels.cache.find(ch => ch.name === 'channel-2');
-        bingoChannel.send({content: `A new Bingo Game is being prepared!` });
-        bingoChannel.send({content: `Bingo Game # ${gameNumber} is about to begin.` });
-        bingoChannel.send({content: `-=-=-=-=-=-=-=-` });
-        bingoChannel.send({content: `Get bingo cards with /BingoCard` });
-        bingoChannel.send({content: `The first card is Free!` });
+        const gamePrepEmbed = new Discord.MessageEmbed()
+            .setTitle(`Bingo Game #${game.gameNumber}`)
+            .setDescription(`\`\`\`diff\nA new Bingo Game is being prepared!\n-=-=-=-=-=-=-=-\nGet bingo cards with /BingoCard\nThe first card is Free!\`\`\``)
+
+        //const bingoChannel = interaction.guild.channels.cache.find(ch => ch.name === 'commands-here');
+        interaction.editReply({ embeds: [gamePrepEmbed], components: [bingoButtons] })
 
     }
     
     /** 
      * Generates all possible B I N G O | 1 - 75 | pairs to be randomly selected from.
      * @return {Collection} Results in a collections of all possible bingo pairs.
-     */
+    */
     async function generatePairs() {
         let bingoLetter;
         for (let i=1; i<=75; i++) {
@@ -116,7 +133,7 @@
      * @return {ReturnValueDataTypeHere} Brief description of the returning value here.
      */
     
-    async function createBoards(amount) {
+    exports.createBoards = function() {
         const subB = masterB.clone();
         const subI = masterI.clone();
         const subN = masterN.clone();
@@ -135,6 +152,7 @@
         
         allDrawn[12] = 'free';
         //** console.log(allDrawn)  // Worked as expected.
+        return allDrawn;
         
     }
  /*

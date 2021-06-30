@@ -5,20 +5,17 @@ module.exports = {
     description: "The main bingo command",
     options: [
         {
-            name: 'match',
-			type: 'SUB_COMMAND',
-			description: 'The input which should be echoed back',
-            options: [
-                {
-                    name: 'input',
-				    type: 'STRING',
-				    description: 'The input which should be echoed back',
-                }
-            ],
+            name: 'name',
+			type: 'STRING',
+			description: 'Input name of game',
+            required: true,
         }
     ],
     async execute(interaction, client) {
-        const match = BingoManager.createGame(interaction.user)
-        console.log(match)
-    }
+        interaction.defer()
+
+        const name = await interaction.options.get('name').value
+
+        const match = BingoManager.createGame(name, interaction.user, interaction)
+        }
 }

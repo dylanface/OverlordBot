@@ -2,11 +2,11 @@ const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const Discord = require('discord.js');
 
-
-// module.exports = (client, Discord) => {
+const gameRegistry = new Discord.Collection();
 
     /**
     *    Represents an instance of any game within Overlord
+    *    @param {string} name The name of this game instance
     *    @param {object} initiatingUser The User who started the game instance
     *    @param {integer} gameNumber The order number of the gameMode game instance list
     *    @param {string} gameType The game type this instance represents
@@ -15,12 +15,14 @@ const Discord = require('discord.js');
     */
     class GameInstance {
         constructor(
+            name,
             initiatingUser,
             gameNumber,
             gameType,
             challengers,
             modifiers
         ) {
+            this.name = name;
             this.initiatingUser = initiatingUser;
             this.gameNumber = gameNumber;
             this.gameType = gameType;
@@ -31,7 +33,11 @@ const Discord = require('discord.js');
             this.mods = new Discord.Collection();
             this.rewards = new Discord.Collection();
             this.gameState = 'Startup';
+            this.gameID = Discord.SnowflakeUtil.generate();
+
             this.gameUUID = uuidv4();
+
+            gameRegistry.set(this.gameID, GameInstance);
         }
 
         async addPlayer(id) {
@@ -110,9 +116,8 @@ const Discord = require('discord.js');
         //TODO: Assigning rewards
         //getWinners(#OfWinners?)
 
+        //TODO: delete/remove game from registry
 
     }
     
-module.exports = GameInstance; 
-
-// }
+module.exports = GameInstance, gameRegistry; 
