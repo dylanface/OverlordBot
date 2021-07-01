@@ -166,13 +166,13 @@ function sendBoardEmbed(channel, game, interaction) {
   /* collector.on('collect', async i => {
         if (game.gameState === 'Startup') {
             if (i.customID === 'buy_board') {
-                i.update({ embeds: [boardEmbed], components: [i.message.components[0]] });
+                i.update({ embeds: boardEmbed, components: [i.message.components[0]] });
                 //TODO buy boards code
             }  else if (i.customID === 'call_bingo' ) { // Game in Startup, can't have a bingo
-                i.update({ embeds: [boardEmbed], components: [i.message.components[0]] });
+                i.update({ embeds: boardEmbed, components: [i.message.components[0]] });
                 console.log('Tried to claim bingo when game hasn't started');
             } else if (i.customID === 'leavegame') { // Should we refund boards if game hadn't started yet?
-                i.update({ embeds: [boardEmbed], components: [i.message.components[0]] });
+                i.update({ embeds: boardEmbed, components: [i.message.components[0]] });
                 let user = i.user
                 if (game.players.get(user.id)) {
                     game.delPlayerChannel(user.id)
@@ -185,13 +185,23 @@ function sendBoardEmbed(channel, game, interaction) {
             }
         } else if (game.gameState === 'Active') {
             if (i.customID === 'buy_board') { // Game Active can't buy more boards..
-                i.update({ embeds: [boardEmbed], components: [i.message.components[0]] });
+                i.update({ embeds: boardEmbed, components: [i.message.components[0]] });
                 console.log('User tried to buy a board after game was 'started')
             } else if (i.customID === 'call_bingo' ) {
-                i.update({ embeds: [boardEmbed], components: [i.message.components[0]] });
+                i.update({ embeds: boardEmbed, components: [i.message.components[0]] });
                 //TODO Go to function for checking user's bingo boards...
             } else if (i.customID === 'leavegame') {
+                i.update({ embeds: boardEmbed, components: [i.message.components[0]] });
                 //Confirm leave during active game?
+                //{
+                    let user = i.user
+                    if (game.players.get(user.id)) {
+                        game.delPlayerChannel(user.id)
+                        game.removePlayer(user.id)
+                    } else { // Error, cause this code should be inside their channel
+                        console.log('User tried to delete channel they didn\'t have')
+                    } 
+                }
             } else { // Error, cause there should only be three button possibilities
                 console.log('error button that doesn\'t exist was clicked')
             }
