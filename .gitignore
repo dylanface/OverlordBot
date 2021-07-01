@@ -1,2 +1,5 @@
 .env
 lovenotes.js
+database.sqlite
+codenotes.txt
+main.js
