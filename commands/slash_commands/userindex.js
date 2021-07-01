@@ -54,12 +54,6 @@ module.exports = {
         required: false,
 
     }],
-    defaultPermission: true,
-    // permissions: [{
-    //     id: '146719098343129088',
-    //     type: 'ROLE',
-    //     permission: true, 
-    // }],
     async execute(interaction, client) {
 
         await interaction.defer({ ephemeral: true });

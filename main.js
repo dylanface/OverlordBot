@@ -1,7 +1,7 @@
 const Discord = require('discord.js');
 
 require("dotenv").config();
-const { Users } = require('./database/dbObjects');
+const Users = require('./database/dbObjects');
 const { Op } = require('sequelize');
 
 const myIntents = Discord.Intents.ALL;
