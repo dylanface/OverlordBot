@@ -12,6 +12,7 @@ const gameRegistry = new Discord.Collection();
     *    @param {string} gameType The game type this instance represents
     *    @param {collection} challengers The challenged User(s) if any
     *    @param {collection} modifiers The game modifier(s) if any
+    *    @param {object} guild The guild in which this game was created
     */
     class GameInstance {
         constructor(
@@ -20,7 +21,8 @@ const gameRegistry = new Discord.Collection();
             gameNumber,
             gameType,
             challengers,
-            modifiers
+            modifiers,
+            guild,
         ) {
             this.name = name;
             this.initiatingUser = initiatingUser;
@@ -34,6 +36,7 @@ const gameRegistry = new Discord.Collection();
             this.rewards = new Discord.Collection();
             this.gameState = 'Startup';
             this.gameID = Discord.SnowflakeUtil.generate();
+            this.guild = guild;
 
             this.gameUUID = uuidv4();
 
@@ -108,6 +111,20 @@ const gameRegistry = new Discord.Collection();
         changeGameState(gameState) {
             this.gameState = gameState;
             return this.gameState;
+        }
+
+        addPlayerChannel(id, channel) {
+            const player = this.getPlayer(id)
+            player.set('playChannel', channel)
+            return GameInstance;
+        }
+        
+        delPlayerChannel(id) {
+            const player = this.getPlayer(id)
+            const channel = player.get('playChannel')
+            channel.delete()
+            player.delete('playChannel')
+            return GameInstance;
         }
 
 
