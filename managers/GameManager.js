@@ -15,6 +15,7 @@ const gameRegistry = new Discord.Collection();
     *    @param {object} guild The guild in which this game was created
     */
     class GameInstance {
+<<<<<<< Updated upstream
         constructor(
             name,
             initiatingUser,
@@ -41,6 +42,40 @@ const gameRegistry = new Discord.Collection();
             this.gameUUID = uuidv4();
 
             gameRegistry.set(this.gameID, GameInstance);
+=======
+      constructor(
+        name,
+        initiatingUser,
+        gameNumber,
+        gameType,
+        challengers,
+        modifiers
+      ) {
+        this.name = name;
+        this.initiatingUser = initiatingUser;
+        this.gameNumber = gameNumber;
+        this.gameType = gameType;
+        this.dateOfCreation = new Date();
+        this.challengers = challengers;
+        this.modifiers = modifiers;
+        this.players = new Discord.Collection();
+        this.mods = new Discord.Collection();
+        this.rewards = new Discord.Collection();
+        this.gameState = 'Startup';
+        this.gameID = Discord.SnowflakeUtil.generate();
+
+        this.gameUUID = uuidv4();
+
+        gameRegistry.set(this.gameID, GameInstance);
+      }
+
+      async addPlayer(id) {
+        const user = await this.players.get(id);
+        if (user) return user;
+        else {
+          let user = await this.players.set(id, new Discord.Collection());
+          return GameInstance;
+>>>>>>> Stashed changes
         }
 
         async addPlayer(id) {
@@ -137,4 +172,8 @@ const gameRegistry = new Discord.Collection();
 
     }
     
+<<<<<<< Updated upstream
 module.exports = GameInstance, gameRegistry; 
+=======
+module.exports = GameInstance, gameRegistry;
+>>>>>>> Stashed changes

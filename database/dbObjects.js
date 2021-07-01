@@ -9,4 +9,8 @@ const sequelize = new Sequelize('database', 'username', 'password', {
 
 const Users = require('../models/Users')(sequelize, Sequelize.DataTypes);
 
+<<<<<<< Updated upstream
 module.exports =  Users;
+=======
+module.exports = Users;
+>>>>>>> Stashed changes
