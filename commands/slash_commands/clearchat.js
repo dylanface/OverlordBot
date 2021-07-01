@@ -13,8 +13,8 @@ module.exports = {
         type: 'INTEGER',
         description: 'The number of bot messages to clear',
         required: false,
-    },
-],
+    }
+    ],
     // defaultPermission: true,
     // permissions: [{
     //     id: '146719098343129088',

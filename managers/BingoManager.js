@@ -148,55 +148,94 @@ async function createRoom(game, interaction) {
 * @return {ReturnValueDataTypeHere} Brief description of the returning value here.
 */
 function sendBoardEmbed(channel, game, interaction) {
-    const buyBoards = new Discord.MessageButton()
-        .setCustomID('buy_board')
-        .setLabel(`Buy Board`)
-        .setStyle('PRIMARY')
+  const buyBoards = new Discord.MessageButton()
+    .setCustomID('buy_board')
+    .setLabel(`Buy Board`)
+    .setStyle('SECONDARY');
 
-    const callBingo = new Discord.MessageButton()
-        .setCustomID('call_bingo')
-        .setLabel(`Test Button 2`)
-        .setStyle('PRIMARY')
+  const callBingo = new Discord.MessageButton()
+    .setCustomID('call_bingo')
+    .setLabel(`Call BINGO`)
+    .setStyle('SUCCESS');
 
-    const leaveGame = new Discord.MessageButton()
-        .setCustomID('leave_game')
-        .setLabel(`Leave Game`)
-        .setStyle('DANGER')
+  const leaveGame = new Discord.MessageButton()
+    .setCustomID('leave_game')
+    .setLabel(`Leave Game`)
+    .setStyle('DANGER');
 
-    // else if (i.customID === 'leavegame') {
-    //     i.update({ embeds: [gamePrepEmbed], components: [i.message.components[0]] });
-    //     let user = i.user
-    //     if (game.players.get(user.id)) {
-    //         game.delPlayerChannel(user.id)
-    //         game.removePlayer(user.id)
-    //     } else {
-    //         console.log('User tried to delete channel they didn\'t have')
-    //     }
-    // }
-    
-    // const hhhhhhh = new Discord.MessageActionRow()
-    //     .addComponents(
-        
-    // );
-    
-    const boardEmbed = new Discord.MessageEmbed()
-        .setTitle(`Welcome to Bingo ${interaction.user.username}!`)
-        .setDescription(`Bingo Game #${game.gameNumber} will being shortly \nYou can use the button below to buy extra boards for $$$ coins!\nHere, have a board on the house!`)
-        .addFields(
-            {
-                name: `hello`,
-                value: `hi`,
-                inline: true,
-            },
-            {
-                name: `yo`,
-                value: `hi`,
-                inline: true,
-            },
-        )
+  /* collector.on('collect', async i => {
+        if (game.gameState === 'Startup') {
+            if (i.customID === 'buy_board') {
+                i.update({ embeds: [boardEmbed], components: [i.message.components[0]] });
+                //TODO buy boards code
+            }  else if (i.customID === 'call_bingo' ) { // Game in Startup, can't have a bingo
+                i.update({ embeds: [boardEmbed], components: [i.message.components[0]] });
+                console.log('Tried to claim bingo when game hasn't started');
+            } else if (i.customID === 'leavegame') { // Should we refund boards if game hadn't started yet?
+                i.update({ embeds: [boardEmbed], components: [i.message.components[0]] });
+                let user = i.user
+                if (game.players.get(user.id)) {
+                    game.delPlayerChannel(user.id)
+                    game.removePlayer(user.id)
+                } else { // Error, cause this code should be inside their channel
+                    console.log('User tried to delete channel they didn\'t have')
+                } 
+            } else { // Error, cause there should only be three button possibilities
+                console.log('error button that doesn\'t exist was clicked')
+            }
+        } else if (game.gameState === 'Active') {
+            if (i.customID === 'buy_board') { // Game Active can't buy more boards..
+                i.update({ embeds: [boardEmbed], components: [i.message.components[0]] });
+                console.log('User tried to buy a board after game was 'started')
+            } else if (i.customID === 'call_bingo' ) {
+                i.update({ embeds: [boardEmbed], components: [i.message.components[0]] });
+                //TODO Go to function for checking user's bingo boards...
+            } else if (i.customID === 'leavegame') {
+                //Confirm leave during active game?
+            } else { // Error, cause there should only be three button possibilities
+                console.log('error button that doesn\'t exist was clicked')
+            }
+        } else if (game.gameState === 'Ended') {
+            if (i.customID === 'buy_board' || i.customID === 'call_bingo' || i.customID === 'leave_game') {
+                // Game has ended, Please wait for the next game to begin
+                // Stats will be recorded automatically, and channel will be removed.
+            } 
+        }
+                
+                
+    */
 
-    channel.send({ embed: boardEmbed })
-    createBoards(game, interaction)
+  const playerRoomButtons = new Discord.MessageActionRow().addComponents([
+    buyBoards,
+    callBingo,
+    leaveGame,
+  ]);
+
+  const embedUserList = [];
+  game.players.each((player) => {
+    console.log(player);
+    embedUserList.push(player.tag);
+  });
+
+  const boardEmbed = new Discord.MessageEmbed()
+    .setTitle(`Welcome to Bingo ${interaction.user.username}!`)
+    .setDescription(
+      `Bingo Game #${game.gameNumber} will being shortly \nYou can use the button below to buy extra boards for $$$ coins!\nHere, have a board on the house!`
+    )
+    .addFields(
+      {
+        name: `Players:`,
+        value: `${embedUserList}`,
+      },
+      {
+        name: `yo`,
+        value: `hi`,
+        inline: true,
+      }
+    );
+
+  channel.send({ embed: boardEmbed, components: [playerRoomButtons] });
+  createBoards(game, interaction);
 }
 /** 
  * Generates all possible B I N G O | 1 - 75 | pairs to be randomly selected from.
@@ -345,7 +384,7 @@ async function createBoards(game, interaction) {
     // const message = interaction.fetchReply();
     const filter = i => i.customID !== null && i.user.id === interaction.user.id;
 
-    const collector = message.createMessageComponentInteractionCollector(filter, { time: 60000 });
+    const collector = message.createMessageComponentInteractionCollector(filter);
 
     const pressedButtons = [];
 
