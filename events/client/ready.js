@@ -34,11 +34,6 @@ module.exports = {
         cmd.forEach(async registeredCmd => {
             const registeredSCommand = await client.slashCommands.get(registeredCmd.name);
             registeredSCommand.registryID = registeredCmd.id;
-<<<<<<< Updated upstream
-            //console.log(registeredSCommand);
-=======
-            // console.log(registeredSCommand);
->>>>>>> Stashed changes
             if (registeredSCommand.permissions) {
                 
                 registeredCmd.setPermissions(registeredSCommand.permissions)

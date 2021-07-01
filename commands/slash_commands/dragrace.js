@@ -1,7 +1,4 @@
-<<<<<<< Updated upstream
 const Discord = require('discord.js');
-=======
->>>>>>> Stashed changes
 const { GameInstance, gameRegistry } = require('../../managers/GameManager.js');
 
 module.exports = {
@@ -22,7 +19,6 @@ module.exports = {
         },
     ],
     execute(interaction, client) {
-<<<<<<< Updated upstream
         
         let gameCount = 0;
         //TODO gameRegistry.get()
@@ -47,11 +43,6 @@ module.exports = {
             console.log('Dragrace somehow ended up in gamestate other than Active/Ended/Startup.')
         } */
 
-=======
-
-        let gameCount = 0;
-        
->>>>>>> Stashed changes
         const betAmount = interaction.options.get('bet').value;
         const carNum = interaction.options.get('carnumber').value;
 
@@ -61,20 +52,10 @@ module.exports = {
         if (betAmount <= 0) return interaction.reply(`You can not bet a negative amount of coins, ${interaction.user}.`);
 
         client.currency.add(interaction.user.id, -payment);
-<<<<<<< Updated upstream
-        
-=======
-
->>>>>>> Stashed changes
         //TODO add user to dragrace game with bet amount
         return interaction.reply(`Successfully joined race with ${betAmount} coins 💰 on car ${carnumber}. Your remaining balance is ${client.currency.getBalance(interaction.user.id)} coins 💰`);
 
     }
-<<<<<<< Updated upstream
-    
-=======
-
->>>>>>> Stashed changes
 }
     function createGame(name, initiatingUser) {
         gameCount++
@@ -82,7 +63,6 @@ module.exports = {
             //TODO players join race.
             // set gameState to Active
             // players join while Active
-<<<<<<< Updated upstream
             
 
         }, 120000)
@@ -91,13 +71,3 @@ module.exports = {
         
         return game
     }
-=======
-
-
-        }, 120000)
-        .then()
-
-
-        return game
-    }
->>>>>>> Stashed changes

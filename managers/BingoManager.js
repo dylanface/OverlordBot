@@ -13,7 +13,6 @@ const masterN = new Discord.Collection();
 const masterG = new Discord.Collection();
 const masterO = new Discord.Collection();
 
-<<<<<<< Updated upstream
 for (let i = 1; i <= 15; i++) {
     masterB.set(i, 'B');
 }
@@ -45,22 +44,12 @@ exports.createGame = function(name, initiatingUser, interaction) {
     prepareMatch(game, interaction) 
     game.drawnBallsCanvasList = [];
 }
-=======
-    let game;
-    exports.createGame = function(name, initiatingUser, interaction) {
-        gameCount++
-
-        game = new GameInstance(name, initiatingUser, gameCount, 'bingo')
-        prepareMatch(game, interaction) 
-    }
->>>>>>> Stashed changes
 
 const bingoJoin = new Discord.MessageButton()
     .setCustomID('joingame')
     .setLabel(`Join the game!`)
     .setStyle('PRIMARY')
 
-<<<<<<< Updated upstream
 const bingoDraw = new Discord.MessageButton()
     .setCustomID('drawball')
     .setLabel(`Draw a Bingo Ball!`)
@@ -104,51 +93,6 @@ async function prepareMatch(game, interaction) {
                 await callNumber(game, i)
             } else {
                 console.log('Button that wasn\'t join or draw was clicked somehow')
-=======
-    const boardButton = new Discord.MessageButton()
-        .setCustomID('buyboard')
-        .setLabel(`Buy Board`)
-        .setStyle('PRIMARY')
-
-    const boardButton2 = new Discord.MessageButton()
-        .setCustomID('test2')
-        .setLabel(`Test Button 2`)
-        .setStyle('PRIMARY')
-
-    const bingoButtons = new Discord.MessageActionRow()
-        .addComponents(
-            [boardButton, boardButton2]
-        );
-
-
-    function prepareMatch(game, interaction) {
-    generatePairs()
-    const gamePrepEmbed = new Discord.MessageEmbed()
-        .setTitle(`Bingo Game #${game.gameNumber}`)
-        .setDescription(`\`\`\`diff\nA new Bingo Game is being prepared!\n-=-=-=-=-=-=-=-\nGet bingo cards with /BingoCard\nThe first card is Free!\`\`\``)
-    }
-    /** 
-     * Generates all possible B I N G O | 1 - 75 | pairs to be randomly selected from.
-     * @return {Collection} Results in a collections of all possible bingo pairs.
-     */
-    async function generatePairs() {
-        let bingoLetter;
-        for (let i=1; i<=75; i++) {
-            if (i <= 15) {
-                bingoLetter = 'B';
-            }
-            else if (i > 15 && i <= 30) {
-                bingoLetter = 'I';
-            }
-            else if (i > 30 && i <= 45) {
-                bingoLetter = 'N';
-            }
-            else if (i > 45 && i <= 60) {
-                bingoLetter = 'G';
-            }
-            else {
-                bingoLetter = 'O';
->>>>>>> Stashed changes
             }
         }
         i.update({ embeds: [gamePrepEmbed], components: [i.message.components[0]] });
@@ -318,7 +262,6 @@ async function createBoards(game, interaction) {
     
     const allDrawn = [];
     
-<<<<<<< Updated upstream
     for (let i = 0; i < 5; i++) {
         [subB, subI, subN, subG, subO].forEach(letter => {
             let drawnNumber = letter.randomKey()
@@ -338,29 +281,6 @@ async function createBoards(game, interaction) {
             //Too many boards?
         }
         
-=======
-     exports.createBoards = function() {
-        const subB = masterB.clone();
-        const subI = masterI.clone();
-        const subN = masterN.clone();
-        const subG = masterG.clone();
-        const subO = masterO.clone();
-        
-        var allDrawn = [];
-        
-        for (let i = 0; i < 5; i++) {
-            [subB, subI, subN, subG, subO].forEach(letter => {
-                let drawnNumber = letter.randomKey()
-                allDrawn.push(drawnNumber)
-                letter.delete(drawnNumber)
-            })
-        }
-        
-        allDrawn[12] = 'free';
-        return allDrawn;
-        //** console.log(allDrawn)  // Worked as expected.
-
->>>>>>> Stashed changes
         
     }
     else if (!player.get('boards')) {
