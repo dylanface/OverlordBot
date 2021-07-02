@@ -36,12 +36,10 @@ module.exports = {
             registeredSCommand.registryID = registeredCmd.id;
             if (registeredSCommand.permissions) {
                 
-                registeredCmd.setPermissions(registeredSCommand.permissions)
+                registeredCmd.permissions.set(registeredSCommand.permissions)
                 .then(console.log)
                 .catch(console.error);
-            } else {
-                registeredCmd.setPermissions([])
-            }
+            } 
         })
         
         client.user.setPresence({

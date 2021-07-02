@@ -147,7 +147,7 @@ async function createRoom(game, interaction) {
 * @param {ParamDataTypeHere} parameterNameHere - Brief description of the parameter here. Note: For other notations of data types, please refer to JSDocs: DataTypes command.
 * @return {ReturnValueDataTypeHere} Brief description of the returning value here.
 */
-function sendBoardEmbed(channel, game, interaction) {
+async function sendBoardEmbed(channel, game, interaction) {
   const buyBoards = new Discord.MessageButton()
     .setCustomID('buy_board')
     .setLabel(`Buy Board`)
@@ -163,35 +163,66 @@ function sendBoardEmbed(channel, game, interaction) {
     .setLabel(`Leave Game`)
     .setStyle('DANGER');
 
-  /* collector.on('collect', async i => {
+    const playerRoomButtons = new Discord.MessageActionRow().addComponents([
+        buyBoards,
+        callBingo,
+        leaveGame,
+    ]);
+    
+    const boardEmbed = new Discord.MessageEmbed()
+    .setTitle(`Welcome to Bingo ${interaction.user.username}!`)
+    .setDescription(
+        `Bingo Game #${game.gameNumber} will being shortly \nYou can use the button below to buy extra boards for $$$ coins!\nHere, have a board on the house!`
+        )
+        .addFields(
+            {
+                name: `Players:`,
+                value: `hi`,
+            },
+            {
+                name: `yo`,
+                value: `hi`,
+                inline: true,
+            }
+            );
+            
+    const playerEmbed = await channel.send({ embed: boardEmbed, components: [playerRoomButtons] });
+    const filter = interaction => interaction.customID === 'buy_board' || 'call_bingo' || 'leave_game';
+    
+    const collector = playerEmbed.createMessageComponentInteractionCollector(filter);
+
+    let buttonPresser;
+
+    collector.on('collect', async i => {
         if (game.gameState === 'Startup') {
             if (i.customID === 'buy_board') {
-                i.update({ embeds: boardEmbed, components: [i.message.components[0]] });
+                i.update({ embed: boardEmbed, components: [i.message.components[0]] });
                 //TODO buy boards code
             }  else if (i.customID === 'call_bingo' ) { // Game in Startup, can't have a bingo
-                i.update({ embeds: boardEmbed, components: [i.message.components[0]] });
-                console.log('Tried to claim bingo when game hasn't started');
-            } else if (i.customID === 'leavegame') { // Should we refund boards if game hadn't started yet?
-                i.update({ embeds: boardEmbed, components: [i.message.components[0]] });
-                let user = i.user
-                if (game.players.get(user.id)) {
-                    game.delPlayerChannel(user.id)
-                    game.removePlayer(user.id)
+                i.update({ embed: boardEmbed, components: [i.message.components[0]] });
+                console.log("Tried to claim bingo when game hasn't started");
+            } else if (i.customID === 'leave_game') { // Should we refund boards if game hadn't started yet?
+                i.update({ embed: boardEmbed, components: [i.message.components[0]] });
+                buttonPresser = i.user
+                if (game.players.get(buttonPresser.id)) {
+                    collector.stop()
+                    //Wait till you collect everything...
+                    
                 } else { // Error, cause this code should be inside their channel
-                    console.log('User tried to delete channel they didn\'t have')
+                    console.log("User tried to delete channel they didn't have")
                 } 
             } else { // Error, cause there should only be three button possibilities
                 console.log('error button that doesn\'t exist was clicked')
             }
         } else if (game.gameState === 'Active') {
             if (i.customID === 'buy_board') { // Game Active can't buy more boards..
-                i.update({ embeds: boardEmbed, components: [i.message.components[0]] });
-                console.log('User tried to buy a board after game was 'started')
+                i.update({ embed: boardEmbed, components: [i.message.components[0]] });
+                console.log('User tried to buy a board after game was started')
             } else if (i.customID === 'call_bingo' ) {
-                i.update({ embeds: boardEmbed, components: [i.message.components[0]] });
+                i.update({ embed: boardEmbed, components: [i.message.components[0]] });
                 //TODO Go to function for checking user's bingo boards...
             } else if (i.customID === 'leavegame') {
-                i.update({ embeds: boardEmbed, components: [i.message.components[0]] });
+                i.update({ embed: boardEmbed, components: [i.message.components[0]] });
                 //Confirm leave during active game?
                 //{
                     let user = i.user
@@ -199,47 +230,30 @@ function sendBoardEmbed(channel, game, interaction) {
                         game.delPlayerChannel(user.id)
                         game.removePlayer(user.id)
                     } else { // Error, cause this code should be inside their channel
-                        console.log('User tried to delete channel they didn\'t have')
+                        console.log("User tried to delete channel they didn't have")
                     } 
-                }
+                //}
             } else { // Error, cause there should only be three button possibilities
-                console.log('error button that doesn\'t exist was clicked')
+                console.log("error button that doesn't exist was clicked")
             }
         } else if (game.gameState === 'Ended') {
-            if (i.customID === 'buy_board' || i.customID === 'call_bingo' || i.customID === 'leave_game') {
+            if (i.customID === 'buy_board' || 'call_bingo' || 'leave_game') {
                 // Game has ended, Please wait for the next game to begin
                 // Stats will be recorded automatically, and channel will be removed.
             } 
+        } else { // Invalid gameState found..
+            console.log(`${game.gameState} wasn't \'Startup\', \'Active\', or \'Ended\'`)
         }
-    }
-*/
+    })
+    collector.on('end', collected => {
 
-  const playerRoomButtons = new Discord.MessageActionRow().addComponents([
-    buyBoards,
-    callBingo,
-    leaveGame,
-  ]);
+        game.delPlayerChannel(buttonPresser.id)
+        game.removePlayer(buttonPresser.id)
+    });
 
-  const boardEmbed = new Discord.MessageEmbed()
-    .setTitle(`Welcome to Bingo ${interaction.user.username}!`)
-    .setDescription(
-      `Bingo Game #${game.gameNumber} will being shortly \nYou can use the button below to buy extra boards for $$$ coins!\nHere, have a board on the house!`
-    )
-    .addFields(
-      {
-        name: `Players:`,
-        value: `hi`,
-      },
-      {
-        name: `yo`,
-        value: `hi`,
-        inline: true,
-      }
-    );
-
-  channel.send({ embed: boardEmbed, components: [playerRoomButtons] });
-  createBoards(game, interaction);
-}
+    createBoards(game, interaction);
+  }
+  
 /** 
  * Generates all possible B I N G O | 1 - 75 | pairs to be randomly selected from.
  * @return {Collection} Results in a collections of all possible bingo pairs.

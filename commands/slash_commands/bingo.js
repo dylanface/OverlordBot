@@ -12,7 +12,7 @@ module.exports = {
         }
     ],
     async execute(interaction, client) {
-        interaction.defer()
+        await interaction.defer()
 
         const name = await interaction.options.get('name').value
 

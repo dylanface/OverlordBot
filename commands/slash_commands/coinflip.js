@@ -22,7 +22,6 @@ module.exports = {
 
         ],
     }],
-    defaultPermission: true,
     async execute(interaction, client) {
 
         await interaction.defer({ ephemeral: true });

@@ -7,12 +7,6 @@ module.exports = {
         description: 'User\'s balance to view',
         required: false,
     }],
-    defaultPermission: true,
-    // permissions: [{
-    //     id: '146719098343129088',
-    //     type: 'ROLE',
-    //     permission: true, 
-    // }],
     async execute(interaction, client) {
 
         if (interaction.options.get('user')) {

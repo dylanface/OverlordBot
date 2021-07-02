@@ -15,12 +15,6 @@ module.exports = {
         required: false,
     }
     ],
-    // defaultPermission: true,
-    // permissions: [{
-    //     id: '146719098343129088',
-    //     type: 'ROLE',
-    //     permission: true, 
-    // }],
     async execute(interaction, client) {
         
         
@@ -35,8 +29,9 @@ module.exports = {
             const messages = await clearChannel.messages.fetch({ limit: interaction.options.get('bot_messages').value })
             messages.forEach(msg => {if(msg.author.bot)msg.delete()} )
 
+            interaction.reply(`${interaction.options.get('bot_messages').value} messages have been deleted`, { ephemeral: true })
+
             // interaction.channel.bulkDelete(messages).catch(error => console.log(error))
-            // interaction.reply(`100 messages have been deleted`, { ephemeral: true })
         } else {
             console.log('nothing deleted')
         }
