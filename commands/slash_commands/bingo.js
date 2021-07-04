@@ -16,6 +16,6 @@ module.exports = {
 
         const name = await interaction.options.get('name').value
 
-        const match = BingoManager.createGame(name, interaction.user, interaction)
-        }
+        BingoManager.createGame(name, interaction.user, interaction)
+    }
 }

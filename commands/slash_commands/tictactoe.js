@@ -1,4 +1,5 @@
 const Discord = require('discord.js');
+const TicTacManager = require('../../managers/TicTacManager.js');
 
 module.exports = {
     name: 'tictactoe',
@@ -11,61 +12,20 @@ module.exports = {
     }],
     defaultPermission: true,
     async execute(interaction, client) {
-       
-        interaction.defer();
+        await interaction.defer()
+        const match = TicTacManager.createGame(interaction, client)
 
-        const challengerID = interaction.options.get('challenger').value;
-        const challenger = await client.users.fetch(challengerID, true);
+        const { value: challengerID } = interaction.options.get('challenger')
+        const challenger = await client.users.fetch(challengerID, true)
 
-        const board = [];
+        const generated = new Discord.MessageEmbed()
+            .setTitle(`❌ ⊲ TicTacToe Game ⊳ ⭕`)
+            .setDescription(
+                `\`\`\`${interaction.user.tag} ⚔️ ${challenger.tag}
+                ⇣
+    Your match has been created!\`\`\``)
 
-        const emptyButton = [
-            new Discord.MessageButton()
-            .setCustomID('empty')
-            .setLabel(`-`)
-            .setStyle('SECONDARY')
-        ]
-
-        const playerButton = [
-            new Discord.MessageButton()
-            .setCustomID('player')
-            .setLabel(`❌`)
-            .setStyle('DANGER')
-            .setDisabled(true)
-        ]
-
-        const challengerButton = [
-            new Discord.MessageButton()
-            .setCustomID('challenger')
-            .setLabel(`🔵`)
-            .setStyle('PRIMARY')
-            .setDisabled(true)
-        ]
-
-        const emptyBoard = [
-            emptyButton,
-            emptyButton,
-            emptyButton,
-        ]
-
-        const row1 = new Discord.MessageActionRow()
-            .addComponents(
-                emptyBoard
-        );
-
-        const row2 = new Discord.MessageActionRow()
-            .addComponents(
-                emptyBoard
-        );
-
-        const row3 = new Discord.MessageActionRow()
-            .addComponents(
-                emptyBoard
-        );
-
-        interaction.editReply(``, {components: [row1, row2, row3]})
-
-
+        await interaction.editReply({ embeds: [generated] })
 
     }
 }

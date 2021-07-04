@@ -344,15 +344,12 @@ async function createBoards(game, interaction) {
         boards.set(`board${boards.size}`, allDrawn)
     }
 
-
-
-
     const row1Buttons = new Discord.MessageActionRow()
     const row2Buttons = new Discord.MessageActionRow()
     const row3Buttons = new Discord.MessageActionRow()
     const row4Buttons = new Discord.MessageActionRow()
     const row5Buttons = new Discord.MessageActionRow()
-
+    
     const row1 = await allDrawn.slice(0, 5).forEach(number => {
         row1Buttons.addComponents(
             new Discord.MessageButton()

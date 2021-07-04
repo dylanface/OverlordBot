@@ -18,12 +18,15 @@ client.cooldowns = new Discord.Collection();
 Reflect.defineProperty(client.currency, 'add', {
 	/* eslint-disable-next-line func-name-matching */
 	value: async function add(id, amount) {
-		const user = client.currency.get(id);
-		if (user) {
-			user.balance += Number(amount);
-			return user.save();
+		const userEcon = client.currency.get(id);
+		const user = await client.users.fetch(id, true)
+		const tag = user.tag
+
+		if (userEcon) {
+			userEcon.balance += Number(amount);
+			return userEcon.save();
 		}
-		const newUser = await Users.create({ user_id: id, balance: amount });
+		const newUser = await Users.create({ user_id: id, user_tag: tag, balance: amount });
 		client.currency.set(id, newUser);
 		return newUser;
 	},

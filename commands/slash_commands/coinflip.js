@@ -52,8 +52,8 @@ module.exports = {
             resultEmbed.setFooter(`You got a reward!`, 'https://creazilla-store.fra1.digitaloceanspaces.com/cliparts/60815/golden-dollar-coin-clipart-md.png')
 
             client.currency.add(interaction.user.id, 1);
-            const rewardChannel = interaction.guild.channels.cache.find(ch => ch.name === 'reward-log');
-            rewardChannel.send({content: `${interaction.user.tag} was given 1 coin` });
+            // const rewardChannel = interaction.guild.channels.cache.find(ch => ch.name === 'reward-log');
+            // rewardChannel.send({content: `${interaction.user.tag} was given 1 coin` });
 
             modifyScore()
 

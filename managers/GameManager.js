@@ -31,7 +31,7 @@ const gameRegistry = new Discord.Collection();
             this.challengers = challengers;
             this.modifiers = modifiers;
             this.players = new Discord.Collection();
-            this.mods = new Discord.Collection();
+            this.gameMasters = new Discord.Collection();
             this.rewards = new Discord.Collection();
             this.gameState = 'Startup';
             this.gameID = Discord.SnowflakeUtil.generate();
@@ -40,13 +40,14 @@ const gameRegistry = new Discord.Collection();
             this.gameUUID = uuidv4();
 
             gameRegistry.set(this.gameID, GameInstance);
+            this.gameMasters.set(this.initiatingUser.id, new Discord.Collection());
         }
 
         async addPlayer(id) {
             const user = await this.players.get(id);
             if (user) return console.log(`This user already exists`);
             else {
-                let user = await this.players.set(id, new Discord.Collection());
+                let user = this.players.set(id, new Discord.Collection());
                 return user;
             }
         }
@@ -79,11 +80,11 @@ const gameRegistry = new Discord.Collection();
         //if amount between numbers: display number of users on leaderboard
 
         async addMod(id) {
-            const mod = await this.mods.get(id);
-            if (mod) return mod;
+            const gameMasters = await this.gameMasters.get(id);
+            if (gameMasters) return gameMasters;
             else {
-                let mod = await this.mods.set(id, new Discord.Collection());
-                return mod;
+                let gameMasters = await this.gameMasters.set(id, new Discord.Collection());
+                return gameMasters;
             }
         }
 

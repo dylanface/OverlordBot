@@ -12,7 +12,7 @@ module.exports = {
         //const karaServer = '140247578242580481';
 
         const guildID = testDDServer;
-        const fetchGuild = client.guilds.cache.get(guildID);
+        const fetchGuild = await client.guilds.cache.get(guildID);
         
         if (!client.application?.owner) await client.application?.fetch();
         
@@ -29,7 +29,7 @@ module.exports = {
             
         })
         
-        const cmd = await fetchGuild?.commands.set(data);
+        const cmd = await fetchGuild.commands.set(data);
         
         cmd.forEach(async registeredCmd => {
             const registeredSCommand = await client.slashCommands.get(registeredCmd.name);
@@ -39,7 +39,10 @@ module.exports = {
                 registeredCmd.permissions.set(registeredSCommand.permissions)
                 .then(console.log)
                 .catch(console.error);
-            } 
+            } else {
+
+            //     registeredCmd.permissions.set([])
+            }
         })
         
         client.user.setPresence({
