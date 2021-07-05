@@ -15,17 +15,6 @@ module.exports = {
         await interaction.defer()
         const match = TicTacManager.createGame(interaction, client)
 
-        const { value: challengerID } = interaction.options.get('challenger')
-        const challenger = await client.users.fetch(challengerID, true)
-
-        const generated = new Discord.MessageEmbed()
-            .setTitle(`❌ ⊲ TicTacToe Game ⊳ ⭕`)
-            .setDescription(
-                `\`\`\`${interaction.user.tag} ⚔️ ${challenger.tag}
-                ⇣
-    Your match has been created!\`\`\``)
-
-        await interaction.editReply({ embeds: [generated] })
 
     }
 }
