@@ -57,7 +57,7 @@ module.exports = {
 
     }
 }
-    function createGame(name, initiatingUser) {
+    function createGame(name, master) {
         gameCount++
         setTimeout(function () {
             //TODO players join race.

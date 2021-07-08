@@ -9,12 +9,12 @@ const Discord = require('discord.js');
 * @return {Image Buffer} Brief description of the returning value here.
 */
 
-exports.generateCanvas = async function(game, numbers, interaction) {
+exports.generateBingoCanvas = async function(game, numbers, interaction) {
     const channel = interaction.channel;
     if (!channel) return;
 
-    const canvas = Canvas.createCanvas(700, 300);
-    const context = canvas.getContext('2d');
+    const canvas = await Canvas.createCanvas(700, 300);
+    const context = await canvas.getContext('2d');
 
     const Letter = numbers.last(4);
     const Number = numbers.lastKey(4);
@@ -256,26 +256,27 @@ exports.generateCanvas = async function(game, numbers, interaction) {
     
     
     const CanvasList = await game.drawnBallsCanvasList;
-    var buf = canvas.toBuffer();
-    fs.writeFileSync("test.png", buf);
     
-    //let n = new Discord.MessageAttachment(canvas.toBuffer(), `bingo_balls.png`)
-    let n = new Discord.MessageAttachment(canvas.toBuffer(), `bingo_balls${numbers.size}.png`)
+    const attachment = new Discord.MessageAttachment(canvas.toBuffer(), `bingo_balls.png`)
+    // let  = new Discord.MessageAttachment(canvas.toBuffer(), `bingo_balls${numbers.size}.png`)
     //console.log(n)
-    const ballEmbed = new Discord.MessageEmbed()
-        .setTitle(`Bingo Numbers for Game #${game.gameNumber}`)
-        .setDescription('New number appears on right, last three numbers to left of it.')
-        .attachFiles(n)
-        .setImage(`attachment://bingo_balls${numbers.size}.png`);
+
+    //Did they change it? console throws an error on .setTitle ...?
+    // const ballEmbed = new Discord.MessageEmbed()
+    //     .setTitle(`Bingo Numbers for Game #${game.gameNumber}`)
+    //     .setDescription('New number appears on right, last three numbers to left of it.')
+    //     .attachFiles(n)
+    //     .setImage(`attachment://bingo_balls${numbers.size}.png`);
     //ballEmbed.setImage('https://.../bingo_balls1.png')
     
     if (CanvasList.length >= 1) {
-        var newCanvas = await CanvasList[0].edit(ballEmbed)
+        await CanvasList[0].delete()
         
         CanvasList.splice(0, 1);
+        var newCanvas = await channel.send({ files: [{attachment: canvas.toBuffer(), name: 'bingo_balls.png' }]})
         game.drawnBallsCanvasList.push(newCanvas);
     } else { 
-        var newCanvas = await channel.send(ballEmbed);
+        var newCanvas = await channel.send({ files: [{attachment: canvas.toBuffer(), name: 'bingo_balls.png' }]})
         game.drawnBallsCanvasList.push(newCanvas);
         console.log(CanvasList.length)
     }

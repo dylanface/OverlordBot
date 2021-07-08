@@ -6,29 +6,29 @@ const gameRegistry = new Discord.Collection();
     /**
     *    Represents an instance of any game within Overlord
     *    @param {string} name The name of this game instance
-    *    @param {object} initiatingUser The User who started the game instance
+    *    @param {object} master The User who started the game instance
     *    @param {integer} gameNumber The order number of the gameMode game instance list
     *    @param {string} gameType The game type this instance represents
-    *    @param {collection} challengers The challenged User(s) if any
+    *    @param {collection} challenger The challenged User(s) if any
     *    @param {collection} modifiers The game modifier(s) if any
     *    @param {object} guild The guild in which this game was created
     */
     class GameInstance {
         constructor(
             name,
-            initiatingUser,
+            master, //made this master ✔ 
             gameNumber,
             gameType,
-            challengers,
+            challenger, //made this challenger ✔?
             modifiers,
-            guild,
+            guild, //what were you saying about messing around with stuff ? Anything cool ?
         ) {
             this.name = name;
-            this.initiatingUser = initiatingUser;
+            this.master = master; //made this.master ✔
             this.gameNumber = gameNumber;
             this.gameType = gameType;
             this.dateOfCreation = new Date();
-            this.challengers = challengers;
+            this.challenger = challenger; //made this.challenger ✔
             this.modifiers = modifiers;
             this.players = new Discord.Collection();
             this.gameMasters = new Discord.Collection();
@@ -40,7 +40,8 @@ const gameRegistry = new Discord.Collection();
             this.gameUUID = uuidv4();
 
             gameRegistry.set(this.gameID, GameInstance);
-            this.gameMasters.set(this.initiatingUser.id, new Discord.Collection());
+            this.gameMasters.set(this.master.id, new Discord.Collection());
+            
         }
 
         async addPlayer(id) {
@@ -119,14 +120,36 @@ const gameRegistry = new Discord.Collection();
             return GameInstance;
         }
         
-        delPlayerChannel(id) {
+        /* delPlayerChannel(id) { //wasn't working correctly when I was trying it.
             const player = this.getPlayer(id)
             const channel = player.get('playChannel')
             channel.delete()
             player.delete('playChannel')
             return GameInstance;
+        } */
+        //Had to expand it out a bit so it stopped erroring ✔
+        delPlayerChannel(id) {
+            const player = this.players.get(id)
+            let channel = null
+            if (player.get('playChannel')) {
+                channel = player.get('playChannel')
+            }
+            else {
+                console.log('Player didn\'t have playChannel to delete')
+                return GameInstance;
+            }
+            channel.delete()
+            player.delete('playChannel')
+            return GameInstance;
         }
+       
 
+        //we didn't have a "get player channel" ✔
+        getPlayerChannel(id) {
+            const player = this.players.get(id)
+            let channel = player.get('playChannel')
+            return channel;
+        }
 
         //TODO: getCoinsInPot
 

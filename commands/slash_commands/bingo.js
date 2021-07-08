@@ -12,10 +12,13 @@ module.exports = {
         }
     ],
     async execute(interaction, client) {
+        //doesn't need client ^
         await interaction.defer()
 
         const name = await interaction.options.get('name').value
+        //const gameName = await interaction.options.get('name').value
 
-        BingoManager.createGame(name, interaction.user, interaction)
+        BingoManager.createGame(name, interaction.user, interaction, client)
+        //BingoManager.createGame(gameName, interaction.user, interaction)
     }
 }
