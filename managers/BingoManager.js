@@ -74,37 +74,17 @@ async function prepareMatch(game, interaction, client) {
         .setTitle(`Bingo Game #${game.gameNumber}`)
         .setDescription(`\`\`\`diff\nA new Bingo Game is starting soon!\n-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\nJoin the bingo game with the button.\`\`\``)
         .addField(`Current Players:`, `${game.players.size}`)
-        // How did we even break the canvas ? Rate limit
-        // right now it no work, it used to work oh...
+
     const message = await interaction.editReply({ embeds: [gamePrepEmbed], components: [bingoButtons] });
     const filter = interaction => interaction.customID !== null;
 
     const collector = message.createMessageComponentInteractionCollector(filter);
 
-    /* collector.on('collect', async i => {
-        if (game.gameState === 'Startup') {
-            if (i.customID === 'joingame'){
-                let user = i.user
-                if (game.players.get(user.id)) {
-                    console.log('Player already has channel in server')
-                } else {
-                    await game.addPlayer(user.id).catch(error => console.log(error))
-                    createRoom(game, i)
-                }
-            } else if (i.customID === 'drawball') {
-                await callNumber(game, i)
-            } else {
-                console.log('Button that wasn\'t join or draw was clicked somehow')
-            }
-        }
-        i.update({ embeds: [gamePrepEmbed], components: [i.message.components[0]] });
-    }) */
-    
     collector.on('collect', async i => {
         if (game.gameState === 'Startup') {
             if (i.customID === 'joingame'){
                 //console.log(i.member.guild.presences.cache.get(i.user.id))
-                i.member.fetch(true).then(console.log(i.member.presence.clientStatus))
+                console.log(i.member.presence.clientStatus)
 
                 let user = i.user
                 if (!game.players.get(user.id)) {
@@ -135,7 +115,7 @@ async function prepareMatch(game, interaction, client) {
 * @param {ParamDataTypeHere} parameterNameHere - Brief description of the parameter here. Note: For other notations of data types, please refer to JSDocs: DataTypes command.
 * @return {ReturnValueDataTypeHere} Brief description of the returning value here.
 */
-/* async function createRoom(game, interaction) {
+async function createRoom(game, interaction) {
     const guild = interaction.guild
     const bingo_roomsChannel = await guild.channels.cache.find(cat => cat.name === 'Bingo Rooms')
     if (!bingo_roomsChannel) {
@@ -169,19 +149,19 @@ async function prepareMatch(game, interaction, client) {
         
 
     }
-} */
-
-async function createRoom(game, interaction, client) {
-    const bingoThread = await interaction.channel.threads.create({
-        name:`${interaction.user.username}'s BINGO cards go here`,
-        autoArchiveDuration: 60,
-        type: 'private_thread',
-        reason: 'Thread for Bingo match'})
-        .catch(console.error);
-    game.addPlayerChannel(interaction.user.id, bingoThread)
-    await bingoThread.members.add(interaction.user)
-    sendBoardEmbed(bingoThread, game, interaction, client)
 }
+
+// async function createRoom(game, interaction, client) {
+//     const bingoThread = await interaction.channel.threads.create({
+//         name:`${interaction.user.username}'s BINGO cards go here`,
+//         autoArchiveDuration: 60,
+//         type: 'private_thread',
+//         reason: 'Thread for Bingo match'})
+//         .catch(console.error);
+//     game.addPlayerChannel(interaction.user.id, bingoThread)
+//     await bingoThread.members.add(interaction.user)
+//     sendBoardEmbed(bingoThread, game, interaction, client)
+// }
 
 
 /** 

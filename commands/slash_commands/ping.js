@@ -1,4 +1,5 @@
 const Discord = require('discord.js');
+const { generateTicTacCanvas } = require('../../handlers/canvas_handler');
 
 module.exports = {
     name: 'ping',
@@ -33,9 +34,9 @@ module.exports = {
         
         const filter = i => i.customID === 'select';
 
-		const collector = interaction.channel.createMessageComponentInteractionCollector(filter, { time: 15000 });
+		const collector = interaction.channel.createMessageComponentInteractionCollector(filter);
 
-		collector.on('collect', i => i.update(`Collected ${i.values.join(', ')} from ${i.customID}`));
+		collector.on('collect', interaction => {});
 		collector.on('end', collected => console.log(`Collected ${collected.size} items`));
     }
 }

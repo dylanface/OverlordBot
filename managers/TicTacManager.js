@@ -1,5 +1,6 @@
 const Discord = require('discord.js');
 const GameInstance = require('./GameManager.js');
+const Canvas = require('../handlers/canvas_handler.js')
 
 let gameCount = 0;
 let master;
@@ -24,39 +25,16 @@ async function prepareMatch(game, interaction) {
         //name: `TicTacToe ${gameCount} - ${master.username} vs ${challenger.username}`,
         autoArchiveDuration: 60,
         type: 'private_thread',
-        reason: 'Thread for TicTacToe match'})
-        .catch(console.error);
+        reason: 'Thread for TicTacToe match'
+    })
+    .catch(console.error);
         
         game.addPlayerChannel(game.master.id, ticTacThread)
         game.addPlayerChannel(game.challenger.id, ticTacThread)
         ticTacThread.members.add(game.master);
         ticTacThread.members.add(game.challenger);
-        /* 
-        game.addPlayerChannel(master.id, ticTacThread)
-        game.addPlayerChannel(challenger.id, ticTacThread)
-        ticTacThread.members.add(master);
-        ticTacThread.members.add(challenger);
-        */
         
-    /* const  gameReply = 
-        `\`\`\`    ❌ ⊲ TicTacToe Game ⊳ ⭕ 
-${interaction.user.tag} ⚔️ ${challenger.tag}
-    Your match has been created!\`\`\``
-    
-    const replyEmbed = new Discord.MessageEmbed()
-        .setDescription(gameReply)
-        .setTimestamp() */
-            
-    const gameReply = new Discord.MessageEmbed()
-        .setTitle(' ⊲ ⊲ ⊲ TicTacToe Game ⊳ ⊳ ⊳ ')
-        .addField(`❌`, `${game.master.username}`, true)
-        .addField(`⚔️`, `⚔️`, true)
-        .addField(`⭕`, `${game.challenger.username}`, true)
-        .setFooter('Your match has been created!')
-        .setTimestamp()
-
-    await interaction.editReply({ embeds: [gameReply] })
-    //await interaction.editReply({ embeds: [replyEmbed] })
+    Canvas.generateTicTacCanvas(game, interaction)
     generatePlayField(game, ticTacThread)
 }
 
@@ -125,6 +103,7 @@ async function generatePlayField(game, playThread) {
                 } 
             })
         })
+    await evaluateBoard(game, i)
     await i.update({ content: `Tic Tac Toe`, components: [i.message.components[0], i.message.components[1], i.message.components[2]] })
     })
 
@@ -141,30 +120,52 @@ async function generatePlayField(game, playThread) {
 }
 
 async function evaluateBoard(game, interaction) {
-
     const sliceWins = [
         [1, 5, 9],
         [3, 5, 7]
     ]
-
     const HorizonWins = [
         [1, 2, 3],
         [4, 5, 6],
         [7, 8, 9]
     ]
-
     const VertaWins = [
         [1, 4, 7],
         [2, 5, 8],
         [3, 6, 9]
     ]
-    //are we going to set this up like if button 1, 4, 7 = same label...?
-    // Kind of
-    /* 
-    1,4,7
-    2,5,8
-    3,6,9
-    */
-    // masterPressedButtons
-    // challengerPressedButton
+
+    const winTypes = [sliceWins, HorizonWins, VertaWins]
+
+    const masterColl = await game.gameMasters.get(master.id);
+    const challengerColl = await game.players.get(challenger.id);
+
+    const masterMovesRaw = await masterColl.get('moves');
+    const challengerMovesRaw = await challengerColl.get('moves');
+
+    const masterMoves = await masterMovesRaw.map(i => i.customID.slice(0, 1));
+    const challengerMoves = await challengerMovesRaw.map(i => i.customID.slice(0, 1));
+
+    winTypes.forEach(type => { 
+        type.forEach(winSet => {
+            if (masterMoves.length > 3 /* && masterMoves.includes(winSet[1]) && masterMoves.includes(winSet[2]) */) {
+                interaction.update({ content: 'hi', embeds: [
+                    new Discord.MessageEmbed()
+                    .setTitle('⊲ ⊲ ⊲ TicTacToe Game ⊳ ⊳ ⊳ ')
+                    .setDescription(`${master.username} wins game ${game.name}!`)
+                    .setTimestamp()
+                ]
+                })
+            }
+            else if (challengerMoves.includes(winSet[0]) && challengerMoves.includes(winSet[1]) && challengerMoves.includes(winSet[2])) {
+                interaction.update({content: 'hi', embeds: [
+                    new Discord.MessageEmbed()
+                    .setTitle('⊲ ⊲ ⊲ TicTacToe Game ⊳ ⊳ ⊳ ')
+                    .setDescription(`${challenger.username} wins game ${game.name}!`)
+                    .setTimestamp()
+                ]
+                })
+            }
+        })
+    })
 }

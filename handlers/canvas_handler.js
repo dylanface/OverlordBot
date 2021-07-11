@@ -3,12 +3,46 @@ const Canvas = require('canvas');
 const Discord = require('discord.js');
 
 /** 
-* Generate image of bingo balls.
+*   Generate the TicTacToe match start image
+*   @param {object} game - The game instance this image belongs to
+*   @param {object} interaction - The interaction to use when replying
+*   @return {ReturnValueDataTypeHere} Brief description of the returning value here.
+*/
+exports.generateTicTacCanvas = async function(game, interaction) {  
+    const channel = interaction.channel;
+    if (!channel) return;
+    
+    const canvas = await Canvas.createCanvas(400, 150);
+    const context = await canvas.getContext('2d');
+
+    // Draw the background
+    context.fillStyle = '#3b3b3b';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw the text
+    context.font = '40px Sans';
+    context.fillStyle = '#ffffff';
+    context.textAlign = 'center';
+    context.fillText(`${game.name}`, 200, 55);
+    context.font = '20px Sans';
+    context.fillStyle = '#e7baff';
+    context.fillText(`${game.master.username} ⚔️ ${game.challenger.username}`, 200, 100)
+
+    // Draw the border
+    context.beginPath();
+    context.lineWidth = 3;
+    context.strokeStyle = '#e7baff';
+    context.strokeRect(0, 0, canvas.width, canvas.height);
+
+    await channel.send({ files: [{attachment: canvas.toBuffer(), name: `${game.name}_image.png` }]})
+}
+
+/** 
+* Generate image of bingo balls. 
 * @param {collection} numbers - Brief description of the parameter here. Note: For other notations of data types, please refer to JSDocs: DataTypes command.
 * @param {object} interaction - Brief description of the parameter here. Note: For other notations of data types, please refer to JSDocs: DataTypes command.
 * @return {Image Buffer} Brief description of the returning value here.
 */
-
 exports.generateBingoCanvas = async function(game, numbers, interaction) {
     const channel = interaction.channel;
     if (!channel) return;
