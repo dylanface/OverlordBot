@@ -3,6 +3,7 @@ const GameInstance = require('./GameManager.js');
 const Canvas = require('../handlers/canvas_handler')
 
 let gameCount = 0;
+let pressedButtons = [];
 
 const generatedPairs = new Discord.Collection();
 const drawnPairs = new Discord.Collection();
@@ -60,7 +61,6 @@ const bingoButtons = new Discord.MessageActionRow()
         [bingoJoin, bingoDraw]
 );
 
-
 /** 
  * Run all functions to prepare the match and notify users.
  * @param {object} game The game object you would like to manipulate
@@ -68,6 +68,8 @@ const bingoButtons = new Discord.MessageActionRow()
  * @return {MatchObject} Returns the GameInstance that represents the match.
  */
 async function prepareMatch(game, interaction, client) {
+    
+    game.createDungeon(game, interaction, client);
     generatePairs()
     
     const gamePrepEmbed = new Discord.MessageEmbed()
@@ -93,7 +95,7 @@ async function prepareMatch(game, interaction, client) {
                 if (game.getPlayerChannel(user.id)) {
                     console.log('Player already has channel in server')
                 } else {
-                    createRoom(game, i, client)
+                    createRoom(game, i, client);
                     i.message.embeds[0].fields[0].value = `${game.players.size}`
                 }
             } else if (i.customID === 'drawball' && i.user.id === game.master.id) {
@@ -109,13 +111,19 @@ async function prepareMatch(game, interaction, client) {
    
 }
 
+function updateBoard(game, interaction, client) {
+    setTimeout(() => {
+        interaction.update({ embeds: interaction.message.embeds, components: [interaction.message.components[0]] })
+    }, 10000)
+}
+
 /** 
-* Brief description of the function here.
-* @summary If the description is long, write your summary here. Otherwise, feel free to remove this.
-* @param {ParamDataTypeHere} parameterNameHere - Brief description of the parameter here. Note: For other notations of data types, please refer to JSDocs: DataTypes command.
-* @return {ReturnValueDataTypeHere} Brief description of the returning value here.
+* Create a room for each player of the game.
+* @param {object} game - The game instance to create a dungeon for.
+* @param {object} interaction - The command interaction that called createRoom().
+* @param {object} client - Static passthrough of client object.
 */
-async function createRoom(game, interaction) {
+async function createRoom(game, interaction, client) {
     const guild = interaction.guild
     const bingo_roomsChannel = await guild.channels.cache.find(cat => cat.name === 'Bingo Rooms')
     if (!bingo_roomsChannel) {
@@ -145,7 +153,7 @@ async function createRoom(game, interaction) {
     if (playerChannel) {
 
         game.addPlayerChannel(interaction.user.id, playerChannel)
-        sendBoardEmbed(playerChannel, game, interaction)
+        sendBoardEmbed(playerChannel, game, interaction, client)
         
 
     }
@@ -163,7 +171,6 @@ async function createRoom(game, interaction) {
 //     sendBoardEmbed(bingoThread, game, interaction, client)
 // }
 
-
 /** 
 * Brief description of the function here.
 * @summary If the description is long, write your summary here. Otherwise, feel free to remove this.
@@ -180,8 +187,8 @@ async function sendBoardEmbed(playThread, game, interaction, client) {
     const callBingo = new Discord.MessageButton()
         .setCustomID('call_bingo')
         .setLabel(`Call BINGO`)
-        .setStyle('SUCCESS')
-        .setDisabled(true);
+        .setStyle('SUCCESS');
+        //.setDisabled(true);
 
     const leaveGame = new Discord.MessageButton()
         .setCustomID('leave_game')
@@ -193,24 +200,6 @@ async function sendBoardEmbed(playThread, game, interaction, client) {
         callBingo,
         leaveGame,
     ]);
-    
-  /*   const boardEmbed = new Discord.MessageEmbed()
-    .setTitle(`Welcome to Bingo ${interaction.user.username}!`)
-    .setDescription(
-        `Bingo Game #${game.gameNumber} will being shortly \nYou can use the button below to buy extra boards for $$$ coins!\nHere, have a board on the house!`
-        )
-        .addFields(
-            {
-                name: `Players:`,
-                value: `hi`,
-            },
-            {
-                name: `yo`,
-                value: `hi`,
-                inline: true,
-            }
-            );
-     */
     
     const boardEmbed = new Discord.MessageEmbed()
         .setTitle(`Welcome ${interaction.user.username} to Bingo`)
@@ -228,68 +217,6 @@ async function sendBoardEmbed(playThread, game, interaction, client) {
 
     let buttonPresser;
 
-    /* collector.on('collect', async i => {
-        if (game.gameState === 'Startup') {
-            if (i.customID === 'buy_board') {
-                i.update({ embed: boardEmbed, components: [i.message.components[0]] });
-                //TODO buy boards code
-            }  else if (i.customID === 'call_bingo' ) { // Game in Startup, can't have a bingo
-                i.update({ embed: boardEmbed, components: [i.message.components[0]] });
-                console.log("Tried to claim bingo when game hasn't started");
-            } else if (i.customID === 'leave_game') { // Should we refund boards if game hadn't started yet?
-                i.update({ embed: boardEmbed, components: [i.message.components[0]] });
-                buttonPresser = i.user
-                if (game.players.get(buttonPresser.id)) {
-                    collector.stop()
-                    //Wait till you collect everything...
-                    
-                } else { // Error, cause this code should be inside their channel
-                    console.log("User tried to delete channel they didn't have")
-                } 
-            } else { // Error, cause there should only be three button possibilities
-                console.log('error button that doesn\'t exist was clicked')
-            }
-        } else if (game.gameState === 'Active') {
-            if (i.customID === 'buy_board') { // Game Active can't buy more boards..
-                i.update({ embed: boardEmbed, components: [i.message.components[0]] });
-                console.log('User tried to buy a board after game was started')
-            } else if (i.customID === 'call_bingo' ) {
-                i.update({ embed: boardEmbed, components: [i.message.components[0]] });
-                //TODO Go to function for checking user's bingo boards...
-            } else if (i.customID === 'leavegame') {
-                i.update({ embed: boardEmbed, components: [i.message.components[0]] });
-                //Confirm leave during active game?
-                //{
-                    let user = i.user
-                    if (game.players.get(user.id)) {
-                        game.delPlayerChannel(user.id)
-                        game.removePlayer(user.id)
-                    } else { // Error, cause this code should be inside their channel
-                        console.log("User tried to delete channel they didn't have")
-                    } 
-                //}
-            } else { // Error, cause there should only be three button possibilities
-                console.log("error button that doesn't exist was clicked")
-            }
-        } else if (game.gameState === 'Ended') {
-            if (i.customID === 'buy_board' || 'call_bingo' || 'leave_game') {
-                // Game has ended, Please wait for the next game to begin
-                // Stats will be recorded automatically, and channel will be removed.
-            } 
-        } else { // Invalid gameState found..
-            console.log(`${game.gameState} wasn't \'Startup\', \'Active\', or \'Ended\'`)
-        }
-    })
-    collector.on('end', collected => {
-
-        game.delPlayerChannel(buttonPresser.id)
-        game.removePlayer(buttonPresser.id)
-    });
-
-    createBoards(game, interaction);
-  } */
-
-
     collector.on('collect', async i => {
         buttonPresser = i.user
         const player = game.getPlayer(i.user.id)
@@ -299,7 +226,6 @@ async function sendBoardEmbed(playThread, game, interaction, client) {
                     i.message.embeds[0].fields[0].value = `1`
                 } else {
                     let boards = await player.get('boards')
-                    console.log(boards)
                     if (boards.size >= 5) {
                         //Too many boards, disable button
                         i.message.components.forEach(row => {
@@ -316,14 +242,15 @@ async function sendBoardEmbed(playThread, game, interaction, client) {
                         const balance = client.currency.getBalance(buttonPresser.id);
                         if (balance < 150) return i.reply({ content: `Sorry ${buttonPresser}, you only have ${balance} coins.`, ephemeral: true });
                         client.currency.add(buttonPresser.id, -150);
-                        createBoards(game, interaction);
+                        await createBoards(game, interaction);
                     }
+                    console.log(boards)
                     i.message.embeds[0].fields[0].value = `${boards.size}`
                 }
                 i.update({ embed: i.message.embeds, components: [i.message.components[0]] });
             }  else if (i.customID === 'call_bingo' ) { // Game in Startup, can't have a bingo
                 i.update({ embed: i.message.embeds, components: [i.message.components[0]] });
-                console.log("Somehow clicked Call Bingo before bingo was active");
+                console.log("clicked Call Bingo before bingo was active");
             } else if (i.customID === 'leave_game') { // Confirm Leave
                 i.message.components.forEach(row => {
                     row.components.forEach(button => {
@@ -338,6 +265,17 @@ async function sendBoardEmbed(playThread, game, interaction, client) {
                 i.update({ embed: i.message.embeds, components: [i.message.components[0]] });
             } else if (i.customID === 'confirm_leave') {
                 if (game.players.get(buttonPresser.id)) {
+                    //TODO Refund bought boards
+                    if (!player.get('boards')) {
+                        //No extra boards?
+                    } else {
+                        let boards = await player.get('boards')
+                        // console.log(boards.size)
+                        if (boards.size > 1) {
+                            let coins = 150 * (boards.size - 1)
+                            client.currency.add(buttonPresser.id, coins);
+                        }
+                    }
                     collector.stop()
                     //Wait till you collect everything...
                 } else { // Error, cause this code should be inside their channel
@@ -354,6 +292,7 @@ async function sendBoardEmbed(playThread, game, interaction, client) {
                 i.update({ embed: i.message.embeds, components: [i.message.components[0]] });
             } else if (i.customID === 'call_bingo' ) {
                 //TODO Go to function for checking user's bingo boards...
+                checkBingo(game,i)
                 i.update({ embed: i.message.embeds, components: [i.message.components[0]] });
             } else if (i.customID === 'leave_game') { // Confirm Leave
                 i.message.components.forEach(row => {
@@ -436,7 +375,6 @@ async function callNumber(game, interaction) {
     drawnPairs.set(key, value)
     //** console.log(drawnPairs.lastKey()) // Worked as expected.
     if (generatedPairs.has(key)) return console.log(`Uh oh a key has not been recorded properly`)
-    // else interaction.channel.send(`${drawnPairs.last()}-${drawnPairs.lastKey()}`)
     Canvas.generateBingoCanvas(game, drawnPairs, interaction);
 }
 
@@ -473,7 +411,6 @@ async function createBoards(game, interaction) {
 
     const player = game.getPlayer(interaction.user.id)
     if (player.get('boards')) {
-        //const boards = player.get('boards')
         let boards = player.get('boards')
         if (boards.size < 5){
             boards.set(`board${boards.size}`, allDrawn)
@@ -487,11 +424,7 @@ async function createBoards(game, interaction) {
         player.set('boards', new Discord.Collection())
         const boards = player.get('boards')
         boards.set(`board${boards.size}`, allDrawn)
-    }/* 
-    else if (!player.get('boards')) {
-        const boards = player.set('boards', new Discord.Collection())
-        boards.set(`board${boards.size}`, allDrawn)
-    } */
+    }
 
 
     const row1Buttons = new Discord.MessageActionRow()
@@ -506,6 +439,7 @@ async function createBoards(game, interaction) {
                 .setCustomID(`${number}_button`)
                 .setLabel(`${number} `)
                 .setStyle('PRIMARY'),
+                //.setDisabled(true),
         );
     })
 
@@ -515,6 +449,7 @@ async function createBoards(game, interaction) {
                 .setCustomID(`${number}_button`)
                 .setLabel(`${number} `)
                 .setStyle('PRIMARY'),
+                //.setDisabled(true),
         );
     })
     const row3 = await allDrawn.slice(10, 15).forEach(number => {
@@ -523,6 +458,7 @@ async function createBoards(game, interaction) {
                 .setCustomID(`${number}_button`)
                 .setLabel(`${number} `)
                 .setStyle('PRIMARY'),
+                //.setDisabled(true),
         );
     })
     const row4 = await allDrawn.slice(15, 20).forEach(number => {
@@ -531,6 +467,7 @@ async function createBoards(game, interaction) {
                 .setCustomID(`${number}_button`)
                 .setLabel(`${number} `)
                 .setStyle('PRIMARY'),
+                //.setDisabled(true),
         );
     })
     const row5 = await allDrawn.slice(20, 25).forEach(number => {
@@ -539,20 +476,18 @@ async function createBoards(game, interaction) {
                 .setCustomID(`${number}_button`)
                 .setLabel(`${number} `)
                 .setStyle('PRIMARY'),
+                //.setDisabled(true),
         );
     })
  
     const userChannel = player.get('playChannel')
-    //const message = await userChannel.send(` 🇧        🇮       🇳       🇬       🇴  `, { components: [row1Buttons, row2Buttons, row3Buttons, row4Buttons, row5Buttons] })
-    const message = await userChannel.send({ content: ` 🇧        🇮       🇳       🇬       🇴  `, components: [row1Buttons, row2Buttons, row3Buttons, row4Buttons, row5Buttons] })
+    const message = await userChannel.send({ content: ` 🇧        🇮       🇳       🇬      🇴  `, components: [row1Buttons, row2Buttons, row3Buttons, row4Buttons, row5Buttons] })
 
-    
-    // const message = interaction.fetchReply();
     const filter = i => i.customID !== null && i.user.id === interaction.user.id;
 
     const collector = message.createMessageComponentInteractionCollector(filter, { time: 10000 });
 
-    const pressedButtons = [];
+    const pressedButtonsRaw = [];
 
     collector.on('collect', async i => {
         i.message.components.forEach(row => {
@@ -560,17 +495,64 @@ async function createBoards(game, interaction) {
                 if (button.customID === i.customID) {
                     button.setStyle('DANGER')
                     button.setDisabled(true)
-                    pressedButtons.push(button)
-                    //console.log(button.label)
+                    pressedButtonsRaw.push(button.customID.split('_')[0])
                 }
             })
         })
         //console.log(i.message.components[0])
         //TODO if mobile remove spacing between Bingo letters?
-        await i.update({ content: ` 🇧        🇮       🇳       🇬       🇴  `, components: [i.message.components[0], i.message.components[1], i.message.components[2], i.message.components[3], i.message.components[4]] });
+        await i.update({ content: ` 🇧        🇮       🇳       🇬      🇴  `, components: [i.message.components[0], i.message.components[1], i.message.components[2], i.message.components[3], i.message.components[4]] });
+        pressedButtons = pressedButtonsRaw;
     });
     collector.on('end', async collected => {});
 
     //return allDrawn;
-    console.log(pressedButtons)
+}
+
+async function checkBingo(game, interaction) {
+    const player = game.getPlayer(interaction.user.id)
+    let boards = player.get('boards')
+
+    const SliceWins = [
+        [0, 6, 18, 24],
+        [4, 8, 16, 20]
+    ]
+
+    const HorizonWins = [
+        [0, 1, 2, 3, 4],
+        [5, 6, 7, 8, 9],
+        [10, 11, 13, 14],
+        [15, 16, 17, 18, 19],
+        [20, 21, 22, 23, 24]
+    ]
+
+    const VirtaWins = [
+        [0, 5, 10, 15, 20],
+        [1, 6, 11, 16, 21],
+        [2, 7, 17, 22],
+        [3, 8, 13, 18, 23],
+        [4, 9, 14, 19, 24]
+    ]
+    const winTypes = [sliceWins, HorizonWins, VertaWins]
+
+    for (let i = 0; i < boards.size; i++ ) {
+
+        let test = boards.get(`board${i}`)
+
+        // winTypes.forEach(type => { 
+        //     type.forEach(async winSet => {
+        //         if .includes(winSet[0]) {
+        //             console.log(winSet)
+        //         }
+        //     })
+        // })
+
+
+        test.forEach(function(value, key) {
+            console.log(key + ' = ' + value)
+        })
+        console.log(test)
+        console.log(drawnPairs.keys())
+    }
+
 }

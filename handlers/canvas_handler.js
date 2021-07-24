@@ -200,15 +200,11 @@ exports.generateBingoCanvas = async function(game, numbers, interaction) {
         break;
     }
 
-    // console.log(`big color: ${bigColor}, big letter: ${bigLetter[0]}`)
-    // console.log(`medium color: ${medColor}, medium letter: ${medLetter[0]}`)
-    // console.log(`small color: ${smallColor}, small letter: ${smallLetter[0]}`)
-    // console.log(`mini color: ${miniColor}, mini letter: ${miniLetter[0]}`)
-
     context.shadowColor = '#262626';
     context.shadowBlur = 1;
     context.shadowOffsetX = 0;
     context.shadowOffsetY = 16;
+
     // Big
     context.beginPath();
     context.arc(568, 150, 122, 0, Math.PI * 2, true);
@@ -218,8 +214,6 @@ exports.generateBingoCanvas = async function(game, numbers, interaction) {
     gradient.addColorStop(1, bigBGColor);
     context.fillStyle = gradient;
     context.fill(5, 5, 200, 200);
-
-    //Add numbers.last letter and numbers.lastkey number
 
     // Medium
     context.beginPath();
@@ -251,6 +245,7 @@ exports.generateBingoCanvas = async function(game, numbers, interaction) {
     context.fillStyle = gradient;
     context.fill(5, 5, 200, 200);
 
+    // Text
     context.shadowColor = null;
     context.shadowBlur = null;
     context.shadowOffsetX = null;
@@ -285,24 +280,10 @@ exports.generateBingoCanvas = async function(game, numbers, interaction) {
         context.fillText(`${miniLetter[1]}`, 75, 265);
     }
 
-    // const avatar = await Canvas.loadImage(member.user.displayAvatarURL({ format: 'jpg' }));
-    // context.drawImage(avatar, 25, 25, 200, 200);
-    
-    
     const CanvasList = await game.drawnBallsCanvasList;
     
     const attachment = new Discord.MessageAttachment(canvas.toBuffer(), `bingo_balls.png`)
-    // let  = new Discord.MessageAttachment(canvas.toBuffer(), `bingo_balls${numbers.size}.png`)
-    //console.log(n)
 
-    //Did they change it? console throws an error on .setTitle ...?
-    // const ballEmbed = new Discord.MessageEmbed()
-    //     .setTitle(`Bingo Numbers for Game #${game.gameNumber}`)
-    //     .setDescription('New number appears on right, last three numbers to left of it.')
-    //     .attachFiles(n)
-    //     .setImage(`attachment://bingo_balls${numbers.size}.png`);
-    //ballEmbed.setImage('https://.../bingo_balls1.png')
-    
     if (CanvasList.length >= 1) {
         await CanvasList[0].delete()
         
@@ -312,6 +293,5 @@ exports.generateBingoCanvas = async function(game, numbers, interaction) {
     } else { 
         var newCanvas = await channel.send({ files: [{attachment: canvas.toBuffer(), name: 'bingo_balls.png' }]})
         game.drawnBallsCanvasList.push(newCanvas);
-        console.log(CanvasList.length)
     }
 }

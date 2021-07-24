@@ -16,19 +16,19 @@ const gameRegistry = new Discord.Collection();
     class GameInstance {
         constructor(
             name,
-            master, //made this master ✔ 
+            master,
             gameNumber,
             gameType,
-            challenger, //made this challenger ✔?
+            challenger,
             modifiers,
-            guild, //what were you saying about messing around with stuff ? Anything cool ?
+            guild,
         ) {
             this.name = name;
-            this.master = master; //made this.master ✔
+            this.master = master;
             this.gameNumber = gameNumber;
             this.gameType = gameType;
             this.dateOfCreation = new Date();
-            this.challenger = challenger; //made this.challenger ✔
+            this.challenger = challenger;
             this.modifiers = modifiers;
             this.players = new Discord.Collection();
             this.gameMasters = new Discord.Collection();
@@ -39,9 +39,15 @@ const gameRegistry = new Discord.Collection();
 
             this.gameUUID = uuidv4();
 
-            gameRegistry.set(this.gameID, GameInstance);
             this.gameMasters.set(this.master.id, new Discord.Collection());
+            gameRegistry.set(this.gameID, this);
             
+        }
+
+        async updateRegistry() {
+            gameRegistry.set(this.gameID, this);
+            console.log(`Game Instance ${this.gameID} updated in registry`);
+            console.log(gameRegistry);
         }
 
         async addPlayer(id) {
@@ -49,14 +55,14 @@ const gameRegistry = new Discord.Collection();
             if (user) return console.log(`This user already exists`);
             else {
                 let user = this.players.set(id, new Discord.Collection());
-                return user;
             }
+            return this.updateRegistry()
         }
 
         async removePlayer(id) {
             const user = await this.players.get(id);
             if (user) this.players.delete(id);
-            return this.players;
+            return this.updateRegistry()
         }
 
         getPlayer(id) {
@@ -74,29 +80,33 @@ const gameRegistry = new Discord.Collection();
                 playerScore = this.addPlayer(id);
                 playerScore += amount;
             }
-            return playerScore;
+            return this.updateRegistry()
         }
 
         //TODO: getLeaderboard(amount)? rank players scores in the game instance
         //if amount between numbers: display number of users on leaderboard
 
-        async addMod(id) {
+        async addMaster(id) {
             const gameMasters = await this.gameMasters.get(id);
-            if (gameMasters) return gameMasters;
+            if (gameMasters) return this.updateRegistry()
             else {
                 let gameMasters = await this.gameMasters.set(id, new Discord.Collection());
-                return gameMasters;
+                return this.updateRegistry()
             }
+        }
+
+        getMaster(id) {
+            return this.gameMasters.get(id);
         }
 
         clearModifiers() {
             this.modifiers.clear();
-            return this.modifiers;
+            return this.updateRegistry()
         }
 
         setGameType(gameType) {
             this.gameType = gameType;
-            return this.gameType;
+            return this.updateRegistry()
         }
 
         async addCoinsToPot(id, amount) {
@@ -107,27 +117,36 @@ const gameRegistry = new Discord.Collection();
                 this.rewards.set(id, amount);
             }
             client.currency.add(id, -amount)
+            return this.updateRegistry()
         }
 
         changeGameState(gameState) {
             this.gameState = gameState;
-            return this.gameState;
+            return this.updateRegistry()
+        }
+
+        endGame() {
+            if (this.gameState === 'Active') {
+                this.gameState = 'Ended';
+                gameRegistry.delete(this.gameID);
+            }   
+
+            return console.log(`There are currently ${gameRegistry.size} games in the registry.`);
+        }
+
+        startGame() {
+            if (this.gameState === 'Startup') {
+                this.gameState = 'Active';
+            } 
+            return this.updateRegistry()
         }
 
         addPlayerChannel(id, channel) {
             const player = this.getPlayer(id)
             player.set('playChannel', channel)
-            return GameInstance;
+            return this.updateRegistry()
         }
         
-        /* delPlayerChannel(id) { //wasn't working correctly when I was trying it.
-            const player = this.getPlayer(id)
-            const channel = player.get('playChannel')
-            channel.delete()
-            player.delete('playChannel')
-            return GameInstance;
-        } */
-        //Had to expand it out a bit so it stopped erroring ✔
         delPlayerChannel(id) {
             const player = this.players.get(id)
             let channel = null
@@ -136,15 +155,13 @@ const gameRegistry = new Discord.Collection();
             }
             else {
                 console.log('Player didn\'t have playChannel to delete')
-                return GameInstance;
+                return this.updateRegistry()
             }
             channel.delete()
             player.delete('playChannel')
-            return GameInstance;
+            return this.updateRegistry()
         }
        
-
-        //we didn't have a "get player channel" ✔
         getPlayerChannel(id) {
             const player = this.players.get(id)
             let channel = player.get('playChannel')
@@ -156,8 +173,96 @@ const gameRegistry = new Discord.Collection();
         //TODO: Assigning rewards
         //getWinners(#OfWinners?)
 
-        //TODO: delete/remove game from registry
+        /** 
+        * Create a dungeon for the master of the game.
+        * @param {object} game - The game instance to create a dungeon for.
+        * @param {object} interaction - The command interaction that called createDungeon().
+        * @param {object} client - Static passthrough of client object.
+        */
+        async createDungeon(game, interaction, client) {
+            if (!game || game === null) return;
+            const guild = interaction.guild
+            const everyone = guild.roles.cache.find(role => role.name == '@everyone')
+            
+            const gameType = game.gameType;
+            
+            if (gameType == 'bingo') {
+                const masterSupports = guild.roles.cache.find(role => role.permissions.has('MANAGE_CHANNELS'));
+                const modTools = await guild.channels.cache.find(cat => cat.name === '⚙  Mod Tools  ⚙')
+                
+                const dungeonChannel = await guild.channels.create(`${game.name} Moderation`, 
+                    {
+                        topic: `${game.name} Moderation Tools`,
+                        parent: modTools,
+                        permissionOverwrites: [
+                            {
+                                id: everyone.id,
+                                deny: ['CREATE_INSTANT_INVITE', 'VIEW_CHANNEL'],
+                                type: "role",
+                            },
+                            {
+                                id: masterSupports.id,
+                                allow: ['VIEW_CHANNEL'],
+                                type: "role",
+                            },
+                        ],
+                    })
+                
+                const dungeonEmbed = new Discord.MessageEmbed()
+                    .setTitle(`${game.gameType} #${game.gameNumber} - Mod Tools`)
+                    .setDescription('Stuff In Here')
+                    .addField(`Current Players:`, `${game.players.size}`, true)
+                    .addField(`Game Status:`, `${game.gameState}`, true)
+                
 
-    }
-    
+                const refresh = new Discord.MessageButton()
+                    .setCustomID('refresh')
+                    .setLabel(`Refresh`)
+                    .setStyle('PRIMARY')
+                const startGame = new Discord.MessageButton()
+                    .setCustomID('startGame')
+                    .setLabel(`Start Game`)
+                    .setStyle('SUCCESS')
+                const endGame = new Discord.MessageButton()
+                    .setCustomID('endGame')
+                    .setLabel(`End Game`)
+                    .setStyle('DANGER')
+
+                const modButtons = new Discord.MessageActionRow()
+                    .addComponents(
+                        [refresh, startGame, endGame]
+                    );
+
+                const dungeonPanel = await dungeonChannel.send({ embeds: [dungeonEmbed], components: [modButtons] })
+
+                const filter = interaction => interaction.customID !== null;
+                const collector = dungeonPanel.createMessageComponentInteractionCollector(filter);
+
+                collector.on('collect', async i => {
+                    if (i.customID === 'refresh'){
+                        //meh
+                    } else if (i.customID === 'startGame'){
+                        game.startGame()
+                    } else if (i.customID === 'endGame'){
+                        game.endGame();
+                        collector.stop()
+                    }
+                    i.message.embeds[0].fields[0].value = `${game.players.size}`
+                    i.message.embeds[0].fields[1].value = `${game.gameState}`
+                    i.update({ embeds: i.message.embeds, components: [i.message.components[0]] });
+                });
+
+                collector.on('end', collected => {
+                    //TODO End game stuff...?
+                    dungeonChannel.delete()
+                });
+
+            }
+
+            return this.updateRegistry()
+        }
+
+}
+
+
 module.exports = GameInstance, gameRegistry; 
