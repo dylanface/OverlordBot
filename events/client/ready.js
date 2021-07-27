@@ -8,8 +8,8 @@ module.exports = {
         const storedBalances = await Users.findAll();
         storedBalances.forEach(b => client.currency.set(b.user_id, b));
 
-        const testDDServer = '813358737682726934';
-        //const karaServer = '140247578242580481';
+        const testDDServer = '869137600282259466';
+        const karaServer = '140247578242580481';
 
         const guildID = testDDServer;
         const fetchGuild = await client.guilds.cache.get(guildID);

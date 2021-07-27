@@ -24,7 +24,7 @@ async function preparegame(game, interaction) {
         name: `TicTacToe ${gameCount} - ${game.master.username} vs ${game.challenger.username}`, //we already use master and challenger here.
         //name: `TicTacToe ${gameCount} - ${master.username} vs ${challenger.username}`,
         autoArchiveDuration: 60,
-        type: 'private_thread',
+        type: 'public_thread',
         reason: 'Thread for TicTacToe game'
     })
     .catch(console.error);
@@ -141,18 +141,18 @@ async function evaluateBoard(game, playThread) {
         ['1', '5', '9'],
         ['3', '5', '7']
     ]
-    const HorizonWins = [
+    const horizonWins = [
         ['1', '2', '3'],
         ['4', '5', '6'],
         ['7', '8', '9']
     ]
-    const VertaWins = [
+    const vertaWins = [
         ['1', '4', '7'],
         ['2', '5', '8'],
         ['3', '6', '9']
     ]
 
-    const winTypes = [sliceWins, HorizonWins, VertaWins]
+    const winTypes = [sliceWins, horizonWins, vertaWins]
 
     const masterColl = await game.gameMasters.get(master.id);
     const challengerColl = await game.players.get(challenger.id);

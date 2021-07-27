@@ -1,4 +1,6 @@
 const Discord = require('discord.js');
+const { DiscordTogether } = require('discord-together');
+
 
 require("dotenv").config();
 const Users = require('./database/dbObjects');
@@ -8,6 +10,8 @@ const myIntents = Discord.Intents.ALL;
 const client = new Discord.Client({ partials: ["MESSAGE", "CHANNEL", "REACTION" ], intents: myIntents });
 
 const token = process.env.TEST_TOKEN
+
+client.discordTogether = new DiscordTogether(client);
 
 client.currency = new Discord.Collection();
 client.slashCommands = new Discord.Collection();

@@ -31,7 +31,7 @@ for (let i = 61; i <= 75; i++) {
 }
 
 /** 
-* Create a game that can be manipulated by the BingoManager.
+* SECTION Create a game that can be manipulated by the BingoManager.
 * @param {string} name - Brief description of the parameter here. Note: For other notations of data types, please refer to JSDocs: DataTypes command.
 * @param {object} master - Brief description of the parameter here. Note: For other notations of data types, please refer to JSDocs: DataTypes command.
 * @param {object} interaction - Brief description of the parameter here. Note: For other notations of data types, please refer to JSDocs: DataTypes command.
@@ -44,7 +44,7 @@ exports.createGame = function(name, master, interaction, client) {
     game = new GameInstance(name, master, gameCount, 'bingo')
     prepareMatch(game, interaction, client) 
     game.drawnBallsCanvasList = [];
-}
+} // !SECTION
 
 const bingoJoin = new Discord.MessageButton()
     .setCustomID('joingame')
@@ -62,7 +62,7 @@ const bingoButtons = new Discord.MessageActionRow()
 );
 
 /** 
- * Run all functions to prepare the match and notify users.
+ * SECTION Run all functions to prepare the match and notify users.
  * @param {object} game The game object you would like to manipulate
  * @param {object} interaction The interaction you would like to manipulate
  * @return {MatchObject} Returns the GameInstance that represents the match.
@@ -85,8 +85,8 @@ async function prepareMatch(game, interaction, client) {
     collector.on('collect', async i => {
         if (game.gameState === 'Startup') {
             if (i.customID === 'joingame'){
-                //console.log(i.member.guild.presences.cache.get(i.user.id))
-                console.log(i.member.presence.clientStatus)
+                //console.log(i.member.presence.clientStatus)
+                //TODO change bingo on line 480 if mobile... 
 
                 let user = i.user
                 if (!game.players.get(user.id)) {
@@ -109,7 +109,7 @@ async function prepareMatch(game, interaction, client) {
         i.update({ embeds: i.message.embeds, components: [i.message.components[0]] });
     })
    
-}
+} // !SECTION
 
 function updateBoard(game, interaction, client) {
     setTimeout(() => {
@@ -118,58 +118,74 @@ function updateBoard(game, interaction, client) {
 }
 
 /** 
-* Create a room for each player of the game.
+* SECTION Create a room for each player of the game.
 * @param {object} game - The game instance to create a dungeon for.
 * @param {object} interaction - The command interaction that called createRoom().
 * @param {object} client - Static passthrough of client object.
 */
 async function createRoom(game, interaction, client) {
     const guild = interaction.guild
-    const bingo_roomsChannel = await guild.channels.cache.find(cat => cat.name === 'Bingo Rooms')
-    if (!bingo_roomsChannel) {
-        var bingoRooms = guild.channels.create('Bingo Rooms', 
-        { type: 'category', position: 100 },
-        )
-    }
 
-    const everyone = guild.roles.cache.find(role => role.name == '@everyone')
-    
-    const playerChannel = await guild.channels.create(interaction.user.username, 
-        {
-            topic: `${interaction.user.username}'s BINGO cards go here`,
-            parent: bingo_roomsChannel || bingoRooms,
-            permissionOverwrites: [
-                {
-                    id: everyone.id,
-                    deny: ['CREATE_INSTANT_INVITE', 'VIEW_CHANNEL'],
-                    type: "role",
-                },
-                {
-                    id: interaction.user.id,
-                    allow: ['VIEW_CHANNEL']
-                },
-            ],
-        })
-    if (playerChannel) {
+    if(!interaction.guild.features.includes('PRIVATE_THREADS')) {
 
-        game.addPlayerChannel(interaction.user.id, playerChannel)
-        sendBoardEmbed(playerChannel, game, interaction, client)
+        const bingo_roomsChannel = await guild.channels.cache.find(cat => cat.name === 'Bingo Rooms')
+        if (!bingo_roomsChannel) {
+            var bingoRooms = guild.channels.create('Bingo Rooms', 
+            { type: 'category', position: 100 },
+            )
+        }
+
+        const everyone = guild.roles.cache.find(role => role.name == '@everyone')
         
+        const playerChannel = await guild.channels.create(interaction.user.username, 
+            {
+                topic: `${interaction.user.username}'s BINGO cards go here`,
+                parent: bingo_roomsChannel || bingoRooms,
+                permissionOverwrites: [
+                    {
+                        id: everyone.id,
+                        deny: ['CREATE_INSTANT_INVITE', 'VIEW_CHANNEL'],
+                        type: "role",
+                    },
+                    {
+                        id: interaction.user.id,
+                        allow: ['VIEW_CHANNEL']
+                    },
+                ],
+            })
+        if (playerChannel) {
 
+            game.addPlayerChannel(interaction.user.id, playerChannel)
+            sendBoardEmbed(playerChannel, game, interaction, client)
+        
+        }
+
+        if (game.players.size == 1) {
+            interaction.followUp(`This server does not support private threads, channels will be used to create private rooms.`)
+        } else {
+            return;
+        }
+
+    } else if (interaction.guild.features.includes('PRIVATE_THREADS')) {
+        
+        const bingoThread = await interaction.channel.threads.create({
+            name:`${interaction.user.username}'s BINGO cards go here`,
+            autoArchiveDuration: 60,
+            type: 'private_thread',
+            reason: 'Thread for Bingo match'})
+            .catch(console.error);
+            game.addPlayerChannel(interaction.user.id, bingoThread)
+            await bingoThread.members.add(interaction.user)
+            sendBoardEmbed(bingoThread, game, interaction, client)
+        
+    } else {
+        interaction.editReply(`This server does not support private threads, and channels are restricted, check your config.`)
     }
-}
 
-// async function createRoom(game, interaction, client) {
-//     const bingoThread = await interaction.channel.threads.create({
-//         name:`${interaction.user.username}'s BINGO cards go here`,
-//         autoArchiveDuration: 60,
-//         type: 'private_thread',
-//         reason: 'Thread for Bingo match'})
-//         .catch(console.error);
-//     game.addPlayerChannel(interaction.user.id, bingoThread)
-//     await bingoThread.members.add(interaction.user)
-//     sendBoardEmbed(bingoThread, game, interaction, client)
-// }
+} // !SECTION
+
+
+    
 
 /** 
 * Brief description of the function here.
@@ -179,7 +195,7 @@ async function createRoom(game, interaction, client) {
 */
 //async function sendBoardEmbed(channel, game, interaction) {
 async function sendBoardEmbed(playThread, game, interaction, client) {
-    const buyBoards = new Discord.MessageButton() //let?
+    const buyBoards = new Discord.MessageButton()
         .setCustomID('buy_board')
         .setLabel(`Buy Board`)
         .setStyle('SECONDARY');
@@ -207,12 +223,9 @@ async function sendBoardEmbed(playThread, game, interaction, client) {
         .addField(`Player Number:`, `${game.players.size}`, true)
         .addField(`Number of Boards`, `1`, true)
    
-            
-    //const playerEmbed = await channel.send({ embed: boardEmbed, components: [playerRoomButtons] });
     const message = await playThread.send({ embeds: [boardEmbed], components: [playerRoomButtons] });
     const filter = interaction => interaction.customID === 'buy_board' || 'call_bingo' || 'leave_game';
     
-    //const collector = playerEmbed.createMessageComponentInteractionCollector(filter);
     const collector = message.createMessageComponentInteractionCollector(filter);
 
     let buttonPresser;
@@ -526,14 +539,14 @@ async function checkBingo(game, interaction) {
         [20, 21, 22, 23, 24]
     ]
 
-    const VirtaWins = [
+    const VertaWins = [
         [0, 5, 10, 15, 20],
         [1, 6, 11, 16, 21],
         [2, 7, 17, 22],
         [3, 8, 13, 18, 23],
         [4, 9, 14, 19, 24]
     ]
-    const winTypes = [sliceWins, HorizonWins, VertaWins]
+    const winTypes = [SliceWins, HorizonWins, VertaWins]
 
     for (let i = 0; i < boards.size; i++ ) {
 

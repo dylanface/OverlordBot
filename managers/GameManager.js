@@ -4,7 +4,7 @@ const Discord = require('discord.js');
 const gameRegistry = new Discord.Collection();
 
     /**
-    *    Represents an instance of any game within Overlord
+    *    SECTION Represents an instance of any game within Overlord
     *    @param {string} name The name of this game instance
     *    @param {object} master The User who started the game instance
     *    @param {integer} gameNumber The order number of the gameMode game instance list
@@ -145,8 +145,9 @@ const gameRegistry = new Discord.Collection();
         startGame() {
             if (this.gameState === 'Startup') {
                 this.gameState = 'Active';
-            } 
-            return this.updateRegistry()
+                console.log(`Game ${this.gameID} is now active!`);
+                return this.updateRegistry()
+            }
         }
 
         addPlayerChannel(id, channel) {
@@ -181,19 +182,19 @@ const gameRegistry = new Discord.Collection();
         //getWinners(#OfWinners?)
 
         /** 
-        * Create a dungeon for the master of the game.
+        * SECTION Create a dungeon for the master of the game.
         * @param {object} game - The game instance to create a dungeon for.
         * @param {object} interaction - The command interaction that called createDungeon().
         * @param {object} client - Static passthrough of client object.
         */
-        async createDungeon(game, interaction, client) {
+        async createDungeon(game, interaction, client) { 
             if (!game || game === null) return;
             const guild = interaction.guild
             const everyone = guild.roles.cache.find(role => role.name == '@everyone')
             
             const gameType = game.gameType;
             
-            if (gameType == 'bingo') {
+            if (gameType == 'bingo') { //SECTION Bingo
                 const masterSupports = guild.roles.cache.find(role => role.permissions.has('MANAGE_CHANNELS'));
                 const modTools = await guild.channels.cache.find(cat => cat.name === '⚙  Mod Tools  ⚙')
                 
@@ -260,16 +261,16 @@ const gameRegistry = new Discord.Collection();
                 });
 
                 collector.on('end', collected => {
-                    //TODO End game stuff...?
+                    // TODO[epic=test] End game stuff...?
                     dungeonChannel.delete()
                 });
 
-            }
+            } //!SECTION
 
             return this.updateRegistry()
-        }
+        } //!SECTION
 
-}
+} //!SECTION
 
 
 module.exports = GameInstance, gameRegistry; 
