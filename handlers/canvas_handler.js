@@ -23,10 +23,10 @@ exports.generateTicTacCanvas = async function(game, interaction) {
     context.font = '40px Sans';
     context.fillStyle = '#ffffff';
     context.textAlign = 'center';
-    context.fillText(`${game.name}`, 200, 55);
+    context.fillText(`${game.name}`, 200, 60);
     context.font = '20px Sans';
     context.fillStyle = '#e7baff';
-    context.fillText(`${game.master.username} ⚔️ ${game.challenger.username}`, 200, 100)
+    context.fillText(`${game.master.username} ⚔️ ${game.challenger.username}`, 200, 105)
 
     // Draw the border
     context.beginPath();
@@ -34,7 +34,7 @@ exports.generateTicTacCanvas = async function(game, interaction) {
     context.strokeStyle = '#e7baff';
     context.strokeRect(0, 0, canvas.width, canvas.height);
 
-    await channel.send({ files: [{attachment: canvas.toBuffer(), name: `${game.name}_image.png` }]})
+    await interaction.editReply({ files: [{attachment: canvas.toBuffer(), name: `${game.name}_image.png` }]})
 }
 
 /** 

@@ -46,8 +46,7 @@ const gameRegistry = new Discord.Collection();
 
         async updateRegistry() {
             gameRegistry.set(this.gameID, this);
-            console.log(`Game Instance ${this.gameID} updated in registry`);
-            console.log(gameRegistry);
+            console.log(`Game Instance ${this.gameID} updated in registry.`);
         }
 
         async addPlayer(id) {
@@ -128,6 +127,9 @@ const gameRegistry = new Discord.Collection();
         endGame() {
             if (this.gameState === 'Active') {
                 this.gameState = 'Ended';
+                if(this.getPlayer(this.master.id).has('playChannel')) {
+                    this.delPlayerChannel(this.master.id)
+                }
                 gameRegistry.delete(this.gameID);
             }   
 
@@ -157,9 +159,8 @@ const gameRegistry = new Discord.Collection();
                 console.log('Player didn\'t have playChannel to delete')
                 return this.updateRegistry()
             }
-            channel.delete()
-            player.delete('playChannel')
-            return this.updateRegistry()
+
+            setTimeout(() => channel.delete(), 10000)
         }
        
         getPlayerChannel(id) {

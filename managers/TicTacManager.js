@@ -10,9 +10,9 @@ exports.createGame = async function(interaction, client) {
     gameCount++
     const { value: challengerID } = interaction.options.get('challenger');
     challenger = await client.users.fetch(challengerID, true);
-    master = interaction.user
-    const gameName = `Tic Tac Toe ${gameCount}`
-    var game = new GameInstance(gameName, master, gameCount, 'ticTac', challenger)
+    master = await interaction.user
+    const gameName = `TicTacToe - ${gameCount}`;
+    var game = new GameInstance(gameName, master, gameCount, 'ticTacToe', challenger)
     game.addPlayer(interaction.user.id)
     game.addPlayer(challengerID)
     prepareMatch(game, interaction) 
@@ -75,10 +75,10 @@ async function generatePlayField(game, playThread) {
 
     const message = await playThread.send({ content: `Tic Tac Toe`,  components: [row1Buttons, row2Buttons, row3Buttons] })
     const filter = i => i.customID !== null && i.user.id === interaction.user.id;
-    const collector = message.createMessageComponentInteractionCollector(filter, {time: 500});
+    const collector = message.createMessageComponentInteractionCollector(filter);
 
-    const masterPressedButtons = [];
-    const challengerPressedButton = [];
+    this.masterPressedButtons = [];
+    this.challengerPressedButton = [];
 
     let masterTurn = true;
     game.startGame();
@@ -91,13 +91,13 @@ async function generatePlayField(game, playThread) {
                         button.setLabel(`❌`)
                         button.setStyle('DANGER')
                         button.setDisabled(true)
-                        masterPressedButtons.push(button)
+                        this.masterPressedButtons.push(button)
                         masterTurn = false; 
                     } else if (i.user.id === game.challenger.id && masterTurn === false) {
                         button.setLabel(`🔵`)
                         button.setStyle('PRIMARY')
                         button.setDisabled(true)
-                        challengerPressedButton.push(button)
+                        this.challengerPressedButton.push(button)
                         masterTurn = true;
                     } else {
                         // Not your turn
@@ -146,32 +146,47 @@ async function evaluateBoard(game, interaction, playThread, collector) {
     
     const masterMoves = await masterMovesRaw.map(i => i.customID.slice(0, 1));
     const challengerMoves = await challengerMovesRaw.map(i => i.customID.slice(0, 1));
-    winTypes.forEach(type => { 
-        type.forEach(async winSet => {
-            if (masterMoves.includes(winSet[0]) && masterMoves.includes(winSet[1]) && masterMoves.includes(winSet[2])) {
-                await playThread.send({embeds: [
-                    new Discord.MessageEmbed()
-                    .setTitle('⊲ ⊲ ⊲ TicTacToe Game ⊳ ⊳ ⊳ ')
-                    .setDescription(`${master.username} wins game ${game.name}!`)
-                    .setTimestamp()
-                ]
-                })
-            collector.stop()
-            game.endGame()
-            console.log(winSet)
-            }
-            else if (challengerMoves.includes(winSet[0]) && challengerMoves.includes(winSet[1]) && challengerMoves.includes(winSet[2])) {
-                await playThread.send({embeds: [
-                    new Discord.MessageEmbed()
-                    .setTitle('⊲ ⊲ ⊲ TicTacToe Game ⊳ ⊳ ⊳ ')
-                    .setDescription(`${challenger.username} wins game ${game.name}!`)
-                    .setTimestamp()
-                ]
-                })
-            collector.stop()
-            game.endGame()
-            console.log(winSet)
-            }
+
+    if (masterMoves.length >= 5 && challengerMoves.length >= 4 && null) { // TODO this has an edge case where the game is declared a tie before the last move is made
+        await playThread.send({embeds: [
+            new Discord.MessageEmbed()
+            .setTitle('⊲ ⊲ ⊲ TicTacToe Game ⊳ ⊳ ⊳ ')
+            .setDescription(`${game.name} has ended in a tie!`)
+            .setTimestamp()
+        ]
         })
-    })
+    collector.stop()
+    game.endGame()
+    } else {
+
+        winTypes.forEach(type => { 
+            type.forEach(async winSet => {
+                if (masterMoves.includes(winSet[0]) && masterMoves.includes(winSet[1]) && masterMoves.includes(winSet[2])) {
+                    await playThread.send({embeds: [
+                        new Discord.MessageEmbed()
+                        .setTitle('⊲ ⊲ ⊲ TicTacToe Game ⊳ ⊳ ⊳ ')
+                        .setDescription(`${master.username} wins game ${game.name}!`)
+                        .setTimestamp()
+                    ]
+                    })
+                collector.stop()
+                game.endGame()
+                console.log(winSet)
+                }
+                else if (challengerMoves.includes(winSet[0]) && challengerMoves.includes(winSet[1]) && challengerMoves.includes(winSet[2])) {
+                    await playThread.send({embeds: [
+                        new Discord.MessageEmbed()
+                        .setTitle('⊲ ⊲ ⊲ TicTacToe Game ⊳ ⊳ ⊳ ')
+                        .setDescription(`${challenger.username} wins game ${game.name}!`)
+                        .setTimestamp()
+                    ]
+                    })
+                collector.stop()
+                game.endGame()
+                console.log(winSet)
+                }  
+            })
+        })
+    }
+
 }
