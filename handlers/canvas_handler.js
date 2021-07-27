@@ -8,8 +8,8 @@ const Discord = require('discord.js');
 *   @param {object} interaction - The interaction to use when replying
 *   @return {ReturnValueDataTypeHere} Brief description of the returning value here.
 */
-exports.generateTicTacCanvas = async function(game, interaction) {  
-    const channel = interaction.channel;
+exports.generateTicTacCanvas = async function(game, ticTacThread) {  
+    const channel = ticTacThread;
     if (!channel) return;
     
     const canvas = await Canvas.createCanvas(400, 150);
@@ -34,7 +34,8 @@ exports.generateTicTacCanvas = async function(game, interaction) {
     context.strokeStyle = '#e7baff';
     context.strokeRect(0, 0, canvas.width, canvas.height);
 
-    await interaction.editReply({ files: [{attachment: canvas.toBuffer(), name: `${game.name}_image.png` }]})
+    //await interaction.editReply({ files: [{attachment: canvas.toBuffer(), name: `${game.name}_image.png` }]})
+    await channel.send({ files: [{attachment: canvas.toBuffer(), name: `${game.name}_image.png` }]})
 }
 
 /** 

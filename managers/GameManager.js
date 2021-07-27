@@ -128,11 +128,17 @@ const gameRegistry = new Discord.Collection();
             if (this.gameState === 'Active') {
                 this.gameState = 'Ended';
                 if(this.getPlayer(this.master.id).has('playChannel')) {
-                    this.delPlayerChannel(this.master.id)
+                    setTimeout(() => this.delPlayerChannel(this.master.id), 10000)
                 }
                 gameRegistry.delete(this.gameID);
             }   
 
+            return console.log(`There are currently ${gameRegistry.size} games in the registry.`);
+        }
+
+        softEnd() {
+            this.gameState = 'Ended';
+            gameRegistry.delete(this.gameID);
             return console.log(`There are currently ${gameRegistry.size} games in the registry.`);
         }
 
