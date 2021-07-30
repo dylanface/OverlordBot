@@ -3,6 +3,7 @@ const Discord = require('discord.js');
 module.exports = {
 	name: 'message',
 	async execute (message, client) {
+		if (message.hasThread) return;
 
 		const prefix = '+';
 		if(!message.content.startsWith(prefix) || message.author.bot) return;

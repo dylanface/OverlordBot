@@ -1,11 +1,11 @@
 module.exports = {
-    name: 'youtube',
-    description: "Watch youtube videos with the help of Discord-Together!",
+    name: 'poker',
+    description: "Play Discord Poker Night with the help of Discord-Together!",
     async execute(interaction, client) {
 
         if (interaction.member.voice.channel) {
 
-            await client.discordTogether.createTogetherCode(interaction.member.voice.channelID, 'youtube').then(async invite => {
+            await client.discordTogether.createTogetherCode(interaction.member.voice.channelID, 'poker').then(async invite => {
                 return interaction.reply(`<${invite.code}> ← Click Me!`);
             });
         } else {
@@ -13,6 +13,3 @@ module.exports = {
         }
     }
 }
-
-
-

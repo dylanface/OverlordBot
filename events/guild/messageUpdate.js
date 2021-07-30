@@ -3,6 +3,7 @@ const Discord = require('discord.js');
 module.exports = {
     name: 'messageUpdate',
     async execute(oldMessage, newMessage, client) {
+        if (newMessage.hasThread) return;
         if (!oldMessage.author) return;
         if (oldMessage.author.bot) return;
         if (newMessage.embeds[0]) {

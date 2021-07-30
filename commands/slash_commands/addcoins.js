@@ -3,10 +3,10 @@ module.exports = {
     description: "admin add coins to player",
     options: [
         {
-        name: 'user',
-        type: 'USER',
-        description: 'User\'s balance to add to',
-        required: true,
+            name: 'user',
+            type: 'USER',
+            description: 'User\'s balance to add to',
+            required: true,
         },
         {
             name: 'payment',
@@ -15,11 +15,12 @@ module.exports = {
             required: true,
         },
     ],
+    defaultPermission: false,
+    // TODO add perms for devs or whatever..
     async execute(interaction, client) {
         var target = await client.users.fetch(interaction.options.get('user').value, true)
         var amount = await interaction.options.get('payment').value
         await client.currency.add(target.id, amount);
         return interaction.reply(`${target.tag} has ${client.currency.getBalance(target.id)} coins 💰`);
-
     }
 }

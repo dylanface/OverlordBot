@@ -31,7 +31,8 @@ for (let i = 61; i <= 75; i++) {
 }
 
 /** 
-* SECTION Create a game that can be manipulated by the BingoManager.
+* SECTION Create Game
+* Create a game that can be manipulated by the BingoManager.
 * @param {string} name - Brief description of the parameter here. Note: For other notations of data types, please refer to JSDocs: DataTypes command.
 * @param {object} master - Brief description of the parameter here. Note: For other notations of data types, please refer to JSDocs: DataTypes command.
 * @param {object} interaction - Brief description of the parameter here. Note: For other notations of data types, please refer to JSDocs: DataTypes command.
@@ -62,7 +63,8 @@ const bingoButtons = new Discord.MessageActionRow()
 );
 
 /** 
- * SECTION Run all functions to prepare the match and notify users.
+ * SECTION Prepare Match
+ * Run all functions to prepare the match and notify users.
  * @param {object} game The game object you would like to manipulate
  * @param {object} interaction The interaction you would like to manipulate
  * @return {MatchObject} Returns the GameInstance that represents the match.
@@ -86,7 +88,7 @@ async function prepareMatch(game, interaction, client) {
         if (game.gameState === 'Startup') {
             if (i.customID === 'joingame'){
                 //console.log(i.member.presence.clientStatus)
-                //TODO change bingo on line 480 if mobile... 
+                //TODO Save player's clientStatus for later
 
                 let user = i.user
                 if (!game.players.get(user.id)) {
@@ -118,7 +120,8 @@ function updateBoard(game, interaction, client) {
 }
 
 /** 
-* SECTION Create a room for each player of the game.
+* SECTION Create Room
+* Create a room for each player of the game.
 * @param {object} game - The game instance to create a dungeon for.
 * @param {object} interaction - The command interaction that called createRoom().
 * @param {object} client - Static passthrough of client object.
@@ -188,12 +191,12 @@ async function createRoom(game, interaction, client) {
     
 
 /** 
-* Brief description of the function here.
+* SECTION Send Embed
+* Send initial message with buttons to joined player
 * @summary If the description is long, write your summary here. Otherwise, feel free to remove this.
 * @param {ParamDataTypeHere} parameterNameHere - Brief description of the parameter here. Note: For other notations of data types, please refer to JSDocs: DataTypes command.
 * @return {ReturnValueDataTypeHere} Brief description of the returning value here.
 */
-//async function sendBoardEmbed(channel, game, interaction) {
 async function sendBoardEmbed(playThread, game, interaction, client) {
     const buyBoards = new Discord.MessageButton()
         .setCustomID('buy_board')
@@ -346,10 +349,11 @@ async function sendBoardEmbed(playThread, game, interaction, client) {
     });
 
     createBoards(game, interaction);
-}
+} // !SECTION
 
   
 /** 
+ * SECTION Generate Pairs
  * Generates all possible B I N G O | 1 - 75 | pairs to be randomly selected from.
  * @return {Collection} Results in a collections of all possible bingo pairs.
 */
@@ -374,13 +378,13 @@ async function generatePairs() {
         generatedPairs.set(i, bingoLetter);
     }
     //** console.log(generatedPairs) // Worked as expected.
-}
+} // !SECTION
 
 /** 
+ * SECTION Call Number
  * Call a bingo number.
  * @return {console.log} Returns the drawn pair as number - letter or an error
  */
-
 async function callNumber(game, interaction) {
     let key = await generatedPairs.randomKey()
     let value = await generatedPairs.get(key)
@@ -389,17 +393,11 @@ async function callNumber(game, interaction) {
     //** console.log(drawnPairs.lastKey()) // Worked as expected.
     if (generatedPairs.has(key)) return console.log(`Uh oh a key has not been recorded properly`)
     Canvas.generateBingoCanvas(game, drawnPairs, interaction);
-}
-
-
-// TODO Checking user's board vs drawn pairs.
-// drawnPairs collection will have all drawn bingo numbers, Key = Number, Value = Letter.
-// check bingo up till current called number
-
-
+} // !SECTION
 
 /**
- * Brief description of the function here.
+ * SECTION Create Board
+ * Create boards with bingo numbers randomly drawn
  * @param {interaction} - The interaction of generated bingo board button press
  * @return {ReturnValueDataTypeHere} Brief description of the returning value here.
  */
@@ -438,7 +436,6 @@ async function createBoards(game, interaction) {
         const boards = player.get('boards')
         boards.set(`board${boards.size}`, allDrawn)
     }
-
 
     const row1Buttons = new Discord.MessageActionRow()
     const row2Buttons = new Discord.MessageActionRow()
@@ -494,6 +491,7 @@ async function createBoards(game, interaction) {
     })
  
     const userChannel = player.get('playChannel')
+    // TODO if mobile remove spacing between Bingo letters?
     const message = await userChannel.send({ content: ` 🇧        🇮       🇳       🇬      🇴  `, components: [row1Buttons, row2Buttons, row3Buttons, row4Buttons, row5Buttons] })
 
     const filter = i => i.customID !== null && i.user.id === interaction.user.id;
@@ -513,15 +511,20 @@ async function createBoards(game, interaction) {
             })
         })
         //console.log(i.message.components[0])
-        //TODO if mobile remove spacing between Bingo letters?
         await i.update({ content: ` 🇧        🇮       🇳       🇬      🇴  `, components: [i.message.components[0], i.message.components[1], i.message.components[2], i.message.components[3], i.message.components[4]] });
         pressedButtons = pressedButtonsRaw;
     });
     collector.on('end', async collected => {});
 
     //return allDrawn;
-}
+} // !SECTION
 
+/** 
+* SECTION Check Bingo
+* Checks player bingo boards with drawn numbers to determine if player has a bingo.
+* @param {ParamDataTypeHere} parameterNameHere - Brief description of the parameter here. Note: For other notations of data types, please refer to JSDocs: DataTypes command.
+* @return {ReturnValueDataTypeHere} Brief description of the returning value here.
+*/
 async function checkBingo(game, interaction) {
     const player = game.getPlayer(interaction.user.id)
     let boards = player.get('boards')
@@ -568,4 +571,4 @@ async function checkBingo(game, interaction) {
         console.log(drawnPairs.keys())
     }
 
-}
+} // !SECTION

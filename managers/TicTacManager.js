@@ -6,6 +6,12 @@ let gameCount = 0;
 let master;
 let challenger;
 
+/** 
+* SECTION Create Game
+* Creates the game and the channel used for Tic Tac Toe
+* @param {object} interaction - The interaction used to request a game.
+* @param {object} client - Static client passthrough.
+*/
 exports.createGame = async function(interaction, client) {
     gameCount++
     const { value: challengerID } = interaction.options.get('challenger');
@@ -15,16 +21,15 @@ exports.createGame = async function(interaction, client) {
     var game = new GameInstance(gameName, master, gameCount, 'ticTacToe', challenger)
     game.addPlayer(interaction.user.id)
     game.addPlayer(challengerID)
-    preparegame(game, interaction) 
-}
 
-async function preparegame(game, interaction) {
-    
+    if (!interaction.guild.features.includes('PRIVATE_THREADS')) var threadType = 'public_thread'
+    else var threadType = 'private_thread'
+
     const ticTacThread = await interaction.channel.threads.create({
         name: `TicTacToe ${gameCount} - ${game.master.username} vs ${game.challenger.username}`, //we already use master and challenger here.
         //name: `TicTacToe ${gameCount} - ${master.username} vs ${challenger.username}`,
         autoArchiveDuration: 60,
-        type: 'public_thread',
+        type: threadType,
         reason: 'Thread for TicTacToe game'
     })
     .catch(console.error);
@@ -37,15 +42,21 @@ async function preparegame(game, interaction) {
     interaction.editReply({ content: `Tic Tac Toe ${master.username} vs ${challenger.username}` })
     await Canvas.generateTicTacCanvas(game, ticTacThread)
     generatePlayField(game, ticTacThread)
-}
+} // !SECTION Create Game
 
-async function rematch(oldGame, ticTacThread) {
-    console.log('making rematch')
+/** 
+* SECTION Rematch
+* Creates the rematch game using the same channel as previous game
+* @param {GameInstance} oldGame - The existing game to create a rematch for.
+* @param {object} ticTacToeThread - The interaction used to request a game.
+*/
+async function rematch(oldGame, ticTacToeThread) {
+    console.log(`${oldGame.name} has been rematched!`)
     gameCount++;
     const gameName = `TicTacToe - ${gameCount}`;
     master = oldGame.master;
     challenger = oldGame.challenger;
-    let thread = ticTacThread;
+    let thread = ticTacToeThread;
     var rematch = new GameInstance(gameName, master, gameCount, 'ticTacToe', challenger, 'rematch')
     await rematch.addPlayer(master.id)
     await rematch.addPlayer(challenger.id)
@@ -53,7 +64,7 @@ async function rematch(oldGame, ticTacThread) {
     rematch.addPlayerChannel(rematch.challenger.id, thread)
     await Canvas.generateTicTacCanvas(rematch, thread)
     generatePlayField(rematch, thread)
-}
+} // !SECTION Rematch
 
 const row1Buttons = new Discord.MessageActionRow()
 const row2Buttons = new Discord.MessageActionRow()
@@ -84,6 +95,12 @@ for (let i = 7; i < 10; i++){
     );
 } 
 
+/** 
+* SECTION Create TicTacToe
+* Creates the Tic Tac Toe board and records button presses
+* @param {GameInstance} game - The game instance to generate a field for.
+* @param {object} playThread - The thread or channel to place the field.
+*/
 async function generatePlayField(game, playThread) {
 
     const masterColl = await game.gameMasters.get(master.id);
@@ -93,14 +110,21 @@ async function generatePlayField(game, playThread) {
     const filter = i => i.customID !== null && i.user.id === interaction.user.id;
     const collector = message.createMessageComponentInteractionCollector(filter);
 
-    this.masterPressedButtons = [];
-    this.challengerPressedButton = [];
+    if (!masterColl.has('moves')) { 
+        await masterColl.set('moves', [])
+        var masterMoves = await masterColl.get('moves');
+        await challengerColl.set('moves', [])
+        var challengerMoves = await challengerColl.get('moves');
+    }
 
     let masterTurn = true;
-    let gameEnd = false;
     game.startGame();
 
     collector.on('collect', async i => {
+        if (game.gameState === 'Ended') {
+            await i.update({ content: `Tic Tac Toe`, components: [i.message.components[0], i.message.components[1], i.message.components[2]] })
+            return collector.stop();
+        }
         i.message.components.forEach(row => {
             row.components.forEach(button => {
                 if (button.customID === i.customID) {
@@ -108,13 +132,13 @@ async function generatePlayField(game, playThread) {
                         button.setLabel(`❌`)
                         button.setStyle('DANGER')
                         button.setDisabled(true)
-                        this.masterPressedButtons.push(button)
-                        masterTurn = false; 
+                        masterMoves.push(button)
+                        masterTurn = false;
                     } else if (i.user.id === game.challenger.id && masterTurn === false) {
                         button.setLabel(`🔵`)
                         button.setStyle('PRIMARY')
                         button.setDisabled(true)
-                        this.challengerPressedButton.push(button)
+                        challengerMoves.push(button)
                         masterTurn = true;
                     } else {
                         // Not your turn
@@ -122,20 +146,23 @@ async function generatePlayField(game, playThread) {
                 } 
             })
         })
-    gameEnd = await evaluateBoard(game, playThread)
-    await i.update({ content: `Tic Tac Toe`, components: [i.message.components[0], i.message.components[1], i.message.components[2]] })
-    if (gameEnd) collector.stop();
+        evaluateBoard(game, playThread)
+        await i.update({ content: `Tic Tac Toe`, components: [i.message.components[0], i.message.components[1], i.message.components[2]] })
     })
     
     collector.on('end', async collected => {
-        // Not Needed
+        
+        // 
     })
 
-    await masterColl.set('moves', masterPressedButtons)
-    await challengerColl.set('moves', challengerPressedButton)
+} // !SECTION Create TicTacToe
 
-}
-
+/** 
+* SECTION Evaluate Board
+* Evaluates the board for wins, starting from the 3rd move by first player
+* @param {GameInstance} game - The game instance to evaluate.
+* @param {object} playThread - The thread or channel containing the current field.
+*/
 async function evaluateBoard(game, playThread) {
     const sliceWins = [
         ['1', '5', '9'],
@@ -162,31 +189,38 @@ async function evaluateBoard(game, playThread) {
     
     const masterMoves = await masterMovesRaw.map(i => i.customID.slice(0, 1));
     const challengerMoves = await challengerMovesRaw.map(i => i.customID.slice(0, 1));
-    console.log(masterMoves.length)
+    let doBreak = false
     if (masterMoves.length > 2) {
-        winTypes.forEach(type => { 
-            type.forEach(async winSet => {
+        for (type of winTypes) {
+            for (winSet of type) {
                 if (masterMoves.includes(winSet[0]) && masterMoves.includes(winSet[1]) && masterMoves.includes(winSet[2])) {
                     let winner = game.master;
                     generateResultsEmbed(game, playThread, winner)
-                    return true;
+                    doBreak = true;
+                    break;
                 } else if (challengerMoves.includes(winSet[0]) && challengerMoves.includes(winSet[1]) && challengerMoves.includes(winSet[2])) {
                     let winner = game.challenger;
                     generateResultsEmbed(game, playThread, winner)
-                    return true;
-                } else if (masterMoves.length >= 5 && challengerMoves.length >= 4) { // TODO this has an edge case where the game is declared a tie before the last move is made
+                    doBreak = true;
+                    break;
+                } else if (masterMoves.length >= 5 && challengerMoves.length >= 4) { // Checked last in case player wins on final move.
                     let winType = 'tie';
                     generateResultsEmbed(game, playThread, winType)
-                    return true;
+                    doBreak = true;
+                    break;
                 }
-            })
-        })
-    } else {
-        return false;
+            }
+            if (doBreak) {
+                game.softEnd();
+                break;
+            } //needs to be in an if..
+        }
     }
-}
+
+} // !SECTION Evaluate Board
 
 /** 
+* SECTION Generate Results
 * Generate an embed with the results of the Tic Tac Toe game.
 * @summary Print result in a discord embed with player stats for each player in the game as fields; along with the result of the game on top, whether it be a tie or a winners name.
 * @param {GameInstance} game - Game instance .
@@ -249,27 +283,25 @@ async function generateResultsEmbed(game, thread, result) {
     const message = await thread.send({ embeds: [embed], components: [embedButtons] });
     await thread.send({ embeds: [embedStats]});
     await thread.send({ embeds: [embedStats2]});
-    //const filter = i => i.customID !== null;
     const filter = i => i.customID === 'end_game' || 're_match';
     const collector = await message.channel.createMessageComponentInteractionCollector(filter);
     //console.log(message)
     collector.on('collect', async i => {
         //console.log(i)
         if (i.customID == 'end_game') {
+            await i.channel.send({embeds: [new Discord.MessageEmbed().setTitle(`${game.name}`).setDescription(`\`\`\`Game Ended! Channel will be deleted in 10 seconds.\`\`\``)]})
             game.endGame()
             collector.stop()
-            //TODO end game stuff
         }
         else if (i.customID == 're_match') {
             console.log('rematch was clicked')
             await rematch(game, thread);
-            game.softEnd();
             collector.stop();
         }
     })
 
     collector.on('end', async collected => {
-        // Save stats stuff?
+        // TODO Stats and Stuff
     })
 
-}
+} // !SECTION Generate Results
