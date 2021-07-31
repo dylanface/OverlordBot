@@ -22,6 +22,7 @@ exports.createGame = async function(interaction, client) {
     game.addPlayer(interaction.user.id)
     game.addPlayer(challengerID)
 
+
     if (!interaction.guild.features.includes('PRIVATE_THREADS')) var threadType = 'public_thread'
     else var threadType = 'private_thread'
 
@@ -103,7 +104,7 @@ for (let i = 7; i < 10; i++){
 */
 async function generatePlayField(game, playThread) {
 
-    const masterColl = await game.gameMasters.get(master.id);
+    const masterColl = await game.masters.get(master.id);
     const challengerColl = await game.players.get(challenger.id);
 
     const message = await playThread.send({ content: `Tic Tac Toe`,  components: [row1Buttons, row2Buttons, row3Buttons] })
@@ -181,7 +182,7 @@ async function evaluateBoard(game, playThread) {
 
     const winTypes = [sliceWins, horizonWins, vertaWins]
 
-    const masterColl = await game.gameMasters.get(master.id);
+    const masterColl = await game.masters.get(master.id);
     const challengerColl = await game.players.get(challenger.id);
 
     const masterMovesRaw = await masterColl.get('moves');
@@ -295,8 +296,8 @@ async function generateResultsEmbed(game, thread, result) {
         }
         else if (i.customID == 're_match') {
             console.log('rematch was clicked')
-            await rematch(game, thread);
             collector.stop();
+            await rematch(game, thread);
         }
     })
 
@@ -305,3 +306,4 @@ async function generateResultsEmbed(game, thread, result) {
     })
 
 } // !SECTION Generate Results
+

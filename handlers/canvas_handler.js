@@ -3,10 +3,11 @@ const Canvas = require('canvas');
 const Discord = require('discord.js');
 
 /** 
-*   Generate the TicTacToe match start image
-*   @param {object} game - The game instance this image belongs to
-*   @param {object} interaction - The interaction to use when replying
-*   @return {ReturnValueDataTypeHere} Brief description of the returning value here.
+* SECTION Generate Tic Tac Toe Canvas
+* Generate the TicTacToe match start image
+* @param {object} game - The game instance this image belongs to
+* @param {object} interaction - The interaction to use when replying
+* @return {ReturnValueDataTypeHere} Brief description of the returning value here.
 */
 exports.generateTicTacCanvas = async function(game, ticTacThread) {  
     const channel = ticTacThread;
@@ -36,9 +37,10 @@ exports.generateTicTacCanvas = async function(game, ticTacThread) {
 
     //await interaction.editReply({ files: [{attachment: canvas.toBuffer(), name: `${game.name}_image.png` }]})
     await channel.send({ files: [{attachment: canvas.toBuffer(), name: `${game.name}_image.png` }]})
-}
+} // !SECTION Generate Tic Tac Toe Canvas
 
 /** 
+* SECTION Generate Bingo Canvas
 * Generate image of bingo balls. 
 * @param {collection} numbers - Brief description of the parameter here. Note: For other notations of data types, please refer to JSDocs: DataTypes command.
 * @param {object} interaction - Brief description of the parameter here. Note: For other notations of data types, please refer to JSDocs: DataTypes command.
@@ -295,4 +297,4 @@ exports.generateBingoCanvas = async function(game, numbers, interaction) {
         var newCanvas = await channel.send({ files: [{attachment: canvas.toBuffer(), name: 'bingo_balls.png' }]})
         game.drawnBallsCanvasList.push(newCanvas);
     }
-}
+} // !SECTION Generate Bingo Canvas

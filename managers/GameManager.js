@@ -31,7 +31,7 @@ class GameInstance {
         this.challenger = challenger;
         this.modifiers = modifiers;
         this.players = new Discord.Collection();
-        this.gameMasters = new Discord.Collection();
+        this.masters = new Discord.Collection();
         this.rewards = new Discord.Collection();
         this.gameState = 'Startup';
         this.gameID = Discord.SnowflakeUtil.generate();
@@ -39,7 +39,7 @@ class GameInstance {
 
         this.gameUUID = uuidv4();
 
-        this.gameMasters.set(this.master.id, new Discord.Collection());
+        this.masters.set(this.master.id, new Discord.Collection());
         gameRegistry.set(this.gameID, this);
         
     }
@@ -49,13 +49,11 @@ class GameInstance {
         // console.log(`Game Instance ${this.gameID} updated in registry.`);
     }
 
-    // SECTION Players
+    // SECTION Players 
     async addPlayer(id) {
         const user = await this.players.get(id);
         if (user) return console.log(`This user already exists`);
-        else {
-            let user = this.players.set(id, new Discord.Collection());
-        }
+        else this.players.set(id, new Discord.Collection());
         return this.updateRegistry()
     }
 
@@ -66,7 +64,8 @@ class GameInstance {
     }
 
     getPlayer(id) {
-        return this.players.get(id);
+        if (this.players.has(id)) return this.players.get(id);
+        else if (this.masters.has(id)) return this.masters.get(id);
     }
 
     getPlayers() {
@@ -74,16 +73,16 @@ class GameInstance {
     }
 
     async addMaster(id) {
-        const gameMasters = await this.gameMasters.get(id);
+        const gameMasters = await this.masters.get(id);
         if (gameMasters) return this.updateRegistry()
         else {
-            let gameMasters = await this.gameMasters.set(id, new Discord.Collection());
+            this.masters.set(id, new Discord.Collection());
             return this.updateRegistry()
         }
     }
 
     getMaster(id) {
-        return this.gameMasters.get(id);
+        return this.masters.get(id);
     }
     // !SECTION Players
 
@@ -294,4 +293,4 @@ class GameInstance {
 }
 
 
-module.exports = GameInstance, gameRegistry; 
+module.exports = GameInstance; 

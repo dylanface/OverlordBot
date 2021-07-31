@@ -50,4 +50,4 @@ Reflect.defineProperty(client.currency, 'getBalance', {
 
 
 
-client.login(token);
+client.login(token)
