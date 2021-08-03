@@ -15,19 +15,25 @@ exports.generateTicTacCanvas = async function(game, ticTacThread) {
     
     const canvas = await Canvas.createCanvas(400, 150);
     const context = await canvas.getContext('2d');
-
+    const swordImage = await Canvas.loadImage('../media/sword.png')
+    //?
     // Draw the background
-    context.fillStyle = '#3b3b3b';
+    context.fillStyle = '#36393f'; //discord background color
     context.fillRect(0, 0, canvas.width, canvas.height);
 
     // Draw the text
     context.font = '40px Sans';
     context.fillStyle = '#ffffff';
     context.textAlign = 'center';
-    context.fillText(`${game.name}`, 200, 60);
+    context.fillText(`${game.name}`, 200, 50);
     context.font = '20px Sans';
-    context.fillStyle = '#e7baff';
-    context.fillText(`${game.master.username} ⚔️ ${game.challenger.username}`, 200, 105)
+    context.fillStyle = '#f42200' //Red 
+    context.fillText(`${game.master.username}`, 200, 70)
+    context.fillStyle = 'none';
+    context.drawImage(swordImage, 182, 82, 36, 36) //
+    context.fillStyle = '#00aff4'; //Blue
+    context.fillText(`${game.challenger.username}`, 200, 130)  
+
 
     // Draw the border
     context.beginPath();
