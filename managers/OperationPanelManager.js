@@ -21,7 +21,7 @@ class OperationPanelManager {
 
 // SECTION Guild Panel
 class GuildPanel extends OperationPanelManager {
-    constructor() {
+    constructor(guild) {
         super(guild);
     }
 
@@ -30,7 +30,7 @@ class GuildPanel extends OperationPanelManager {
 
 // SECTION User Panel
 class UserPanel extends GuildPanel {
-    constructor() {
+    constructor(guild) {
         super(guild);
     }
 

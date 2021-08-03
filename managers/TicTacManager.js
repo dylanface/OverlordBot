@@ -55,8 +55,8 @@ async function rematch(oldGame, ticTacToeThread) {
     console.log(`${oldGame.name} has been rematched!`)
     gameCount++;
     const gameName = `TicTacToe - ${gameCount}`;
-    master = oldGame.master;
-    challenger = oldGame.challenger;
+    challenger = oldGame.master;
+    master = oldGame.challenger;
     let thread = ticTacToeThread;
     var rematch = new GameInstance(gameName, master, gameCount, 'ticTacToe', challenger, 'rematch')
     await rematch.addPlayer(master.id)
@@ -111,7 +111,7 @@ async function generatePlayField(game, playThread) {
     const filter = i => i.customID !== null && i.user.id === interaction.user.id;
     const collector = message.createMessageComponentInteractionCollector(filter);
 
-    if (!masterColl.has('moves')) { 
+    if (!masterColl.has('moves') && !challengerColl.has('moves')) { 
         await masterColl.set('moves', [])
         var masterMoves = await masterColl.get('moves');
         await challengerColl.set('moves', [])
@@ -191,6 +191,7 @@ async function evaluateBoard(game, playThread) {
     const masterMoves = await masterMovesRaw.map(i => i.customID.slice(0, 1));
     const challengerMoves = await challengerMovesRaw.map(i => i.customID.slice(0, 1));
     let doBreak = false
+
     if (masterMoves.length > 2) {
         for (type of winTypes) {
             for (winSet of type) {
@@ -204,7 +205,7 @@ async function evaluateBoard(game, playThread) {
                     generateResultsEmbed(game, playThread, winner)
                     doBreak = true;
                     break;
-                } else if (masterMoves.length >= 5 && challengerMoves.length >= 4) { // Checked last in case player wins on final move.
+                } else if (masterMoves.length >= 5 && challengerMoves.length >= 4 && !(masterMoves.includes(winSet) && masterMoves.includes(winSet[1]) && masterMoves.includes(winSet[2]))) { // Checked last in case player wins on final move.
                     let winType = 'tie';
                     generateResultsEmbed(game, playThread, winType)
                     doBreak = true;
@@ -282,8 +283,8 @@ async function generateResultsEmbed(game, thread, result) {
     ]);
     
     const message = await thread.send({ embeds: [embed], components: [embedButtons] });
-    await thread.send({ embeds: [embedStats]});
-    await thread.send({ embeds: [embedStats2]});
+    // await thread.send({ embeds: [embedStats]});
+    // await thread.send({ embeds: [embedStats2]});
     const filter = i => i.customID === 'end_game' || 're_match';
     const collector = await message.channel.createMessageComponentInteractionCollector(filter);
     //console.log(message)
