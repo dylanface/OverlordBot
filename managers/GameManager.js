@@ -36,13 +36,16 @@ class GameInstance {
         this.gameState = 'Startup';
         this.gameID = Discord.SnowflakeUtil.generate();
         this.guild = guild;
+        this.statsCache = new Discord.Collection('players', new Discord.Collection());
 
         this.gameUUID = uuidv4();
 
         this.gameMasters.set(this.master.id, new Discord.Collection());
-        gameRegistry.set(this.gameID, this);
+        gameRegistry.set(this.gameID, this); 
         
     }
+
+
 
     async updateRegistry() {
         gameRegistry.set(this.gameID, this);
