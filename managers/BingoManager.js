@@ -14,6 +14,7 @@ const masterN = new Discord.Collection();
 const masterG = new Discord.Collection();
 const masterO = new Discord.Collection();
 
+
 for (let i = 1; i <= 15; i++) {
     masterB.set(i, 'B');
 }
@@ -26,7 +27,7 @@ for (let i = 31; i <= 45; i++) {
 for (let i = 46; i <= 60; i++) {
     masterG.set(i, 'G');
 }
-for (let i = 61; i <= 75; i++) {
+for (let i = 61; i <= 75; i++) {                                                                                                                        
     masterO.set(i, 'O');
 }
 
