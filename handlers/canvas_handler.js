@@ -13,10 +13,10 @@ exports.generateTicTacCanvas = async function(game, ticTacThread) {
     const channel = ticTacThread;
     if (!channel) return;
     
-    const canvas = await Canvas.createCanvas(400, 150);
+    const canvas = await Canvas.createCanvas(400, 160);
     const context = await canvas.getContext('2d');
-    const swordImage = await Canvas.loadImage('../media/sword.png')
-    //?
+    const swordImage = await Canvas.loadImage('media/sword.png')
+    // For some reason it doesn't want to relative path it. lol weird ok good catch
     // Draw the background
     context.fillStyle = '#36393f'; //discord background color
     context.fillRect(0, 0, canvas.width, canvas.height);
@@ -25,21 +25,20 @@ exports.generateTicTacCanvas = async function(game, ticTacThread) {
     context.font = '40px Sans';
     context.fillStyle = '#ffffff';
     context.textAlign = 'center';
-    context.fillText(`${game.name}`, 200, 50);
+    context.fillText(`${game.name}`, 200, 40); //White
     context.font = '20px Sans';
-    context.fillStyle = '#f42200' //Red 
-    context.fillText(`${game.master.username}`, 200, 70)
-    context.fillStyle = 'none';
-    context.drawImage(swordImage, 182, 82, 36, 36) //
-    context.fillStyle = '#00aff4'; //Blue
-    context.fillText(`${game.challenger.username}`, 200, 130)  
+    context.fillStyle = '#f42200' // Red
+    context.fillText(`${game.master.username}`, 200, 69)
+    context.drawImage(swordImage, 182, 79, 36, 36)
+    context.fillStyle = '#00aff4'; // Blue
+    context.fillText(`${game.challenger.username}`, 200, 140)  
 
 
     // Draw the border
-    context.beginPath();
-    context.lineWidth = 3;
-    context.strokeStyle = '#e7baff';
-    context.strokeRect(0, 0, canvas.width, canvas.height);
+    // context.beginPath();
+    // context.lineWidth = 3;
+    // context.strokeStyle = '#e7baff';
+    // context.strokeRect(0, 0, canvas.width, canvas.height);
 
     //await interaction.editReply({ files: [{attachment: canvas.toBuffer(), name: `${game.name}_image.png` }]})
     await channel.send({ files: [{attachment: canvas.toBuffer(), name: `${game.name}_image.png` }]})
