@@ -36,6 +36,7 @@ class GameInstance {
         this.gameState = 'Startup';
         this.gameID = Discord.SnowflakeUtil.generate();
         this.guild = guild;
+        this.statsCache = new Discord.Collection();
 
         this.gameUUID = uuidv4();
 
