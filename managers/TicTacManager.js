@@ -23,7 +23,7 @@ exports.createGame = async function(interaction, client) {
     game.addPlayer(challengerID)
 
 
-    if (!interaction.guild.features.includes('PRIVATE_THREADS')) var threadType = 'public_thread'
+    if (!interaction?.guild.features.includes('PRIVATE_THREADS')) var threadType = 'public_thread'
     else var threadType = 'private_thread'
 
     const ticTacThread = await interaction.channel.threads.create({
@@ -116,6 +116,9 @@ async function generatePlayField(game, playThread) {
         var masterMoves = await masterColl.get('moves');
         await challengerColl.set('moves', [])
         var challengerMoves = await challengerColl.get('moves');
+    } else {
+        masterMoves = await masterColl.get('moves');
+        challengerMoves = await challengerColl.get('moves');
     }
 
     let masterTurn = true;
@@ -254,7 +257,7 @@ async function generateResultsEmbed(game, thread, result) {
     const embedStats = new Discord.MessageEmbed()
     .setTitle('Stats')
     .setDescription(`Stats for ${game.master.username}`)
-    .setColor(0xFF0000)
+    .setColor('#FF0000')
     // .addField('Wins', masterStats.wins, true)
     // .addField('Losses', masterStats.losses, true)
     // .addField('Draws', masterStats.draws, true)
@@ -262,7 +265,7 @@ async function generateResultsEmbed(game, thread, result) {
     const embedStats2 = new Discord.MessageEmbed()
     .setTitle('Stats')
     .setDescription(`Stats for ${game.challenger.username}`)
-    .setColor(0x0000FF)
+    .setColor('#0000FF')
     // .addField('Wins', challengerStats.wins, true)
     // .addField('Losses', challengerStats.losses, true)
     // .addField('Draws', challengerStats.draws, true)
