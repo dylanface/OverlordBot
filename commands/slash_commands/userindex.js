@@ -58,19 +58,15 @@ module.exports = {
 
         await interaction.defer({ ephemeral: true });
 
-        console.log(interaction.options);
-        let inputDays;
-        let inputReason;
+        // console.log(interaction.options);
         
         const inputID = await interaction.options.get('userid').value;
         if (interaction.options.has('purgetime')) {
-            inputDays = await interaction.options.get('purgetime').value;
+            var inputDays = await interaction.options.get('purgetime').value;
         }
         if (interaction.options.has('reason')) {
-            inputReason = await interaction.options.get('reason').value;
+            var inputReason = await interaction.options.get('reason').value;
         }
-
-        let user; 
         
         const banEmoji = '🔨';
         const warnEmoji = '⚠️';
@@ -137,12 +133,12 @@ module.exports = {
         
         interaction.editReply({ embeds: [registryEmbed], components: [] });
         const registryChannel = interaction.guild.channels.cache.find(ch => ch.name === 'guild-logs');
-        registryChannel.send({content: `Interaction log resulting in a ${action} user ${user.tag} \nAction was executed by ${interaction.user.tag}`, embed: registryEmbed });
+        registryChannel.send({content: `Interaction log resulting in a ${action} user ${user.tag}`, embeds: [registryEmbed] });
 
     }
 
         try {
-                user = await client.users.fetch(inputID, true)
+                var user = await client.users.fetch(inputID, true)
                 const userInfo = new Discord.MessageEmbed()
                     .setColor('#f6c5f8')
                     .setAuthor(`${user.tag}`, user.displayAvatarURL({ dynamic: true }))
@@ -158,29 +154,30 @@ module.exports = {
             const channel = interaction.channel;
 		    const filter = interaction => interaction.customID === 'banuser' || 'warnuser' || 'makenote' || 'cancel';
 
-		    const collector = channel.createMessageComponentInteractionCollector(filter, { time: 30000 });
+		    const collector = channel.createMessageComponentInteractionCollector(filter);
 
             collector.on('collect', async interaction => {
-
+                if (!interaction.isButton()) return;
+                else await interaction.deferUpdate({ ephemeral: true });
                 switch (interaction.customID) {
 
                     case 'banuser':
-                        await interaction.update({ embeds: [userInfo], components: [] });
+                        await interaction.editReply({ embeds: [userInfo], components: [] });
                         await interaction.editReply({ embeds: [userInfo], components: [banSelect] });
                     break;
 
                     case 'warnuser':
-                        await interaction.update({ embeds: [userInfo], components: [] });
+                        await interaction.editReply({ embeds: [userInfo], components: [] });
                         await interaction.editReply({ embeds: [userInfo], components: [warnSelect] });
                     break;
 
                     case 'makenote':
-                        await interaction.update({ embeds: [userInfo], components: [] });
+                        await interaction.editReply({ embeds: [userInfo], components: [] });
                     break;
 
                     case 'cancel':
-                        await interaction.update(('All actions canceled, the user has been added to the cache.'), { components: [] });
-                        
+                        await interaction.editReply(('All actions canceled, the user has been added to the cache.'), { components: [] });
+                        collector.stop()
                     break;
 
                     case 'redbanuser':
@@ -204,6 +201,7 @@ module.exports = {
 
                         // Then create a log
                         registerInteraction(interaction.user, user, 'banned', inputReason, inputDays)
+                        collector.stop()
                     break;
 
                     case 'redwarnuser':
