@@ -9,16 +9,13 @@ let INCREMENT = 0;
 /**
  * A container for useful snowflake-related methods.
  */
-class SnowflakeUtil {
-  constructor() {
-    throw new Error(`The ${this.constructor.name} class may not be instantiated.`);
-  }
-
+class SnowflakeUtil extends null {
   /**
-   * A Twitter snowflake, except the epoch is 2015-01-01T00:00:00.000Z
-   * ```
-   * If we have a snowflake '266241948824764416' we can represent it as binary:
+   * A {@link https://developer.twitter.com/en/docs/twitter-ids Twitter snowflake},
+   * except the epoch is 2015-01-01T00:00:00.000Z.
    *
+   * If we have a snowflake '266241948824764416' we can represent it as binary:
+   * ```
    * 64                                          22     17     12          0
    *  000000111011000111100001101001000101000000  00001  00000  000000000000
    *       number of ms since Discord epoch       worker  pid    increment
@@ -28,7 +25,7 @@ class SnowflakeUtil {
 
   /**
    * Generates a Discord snowflake.
-   * <info>This hardcodes the worker ID as 1 and the process ID as 0.</info>
+   * <info>This hardcodes the worker's id as 1 and the process's id as 0.</info>
    * @param {number|Date} [timestamp=Date.now()] Timestamp or date of the snowflake to generate
    * @returns {Snowflake} The generated snowflake
    */
@@ -43,7 +40,7 @@ class SnowflakeUtil {
     const BINARY = `${(timestamp - EPOCH).toString(2).padStart(42, '0')}0000100000${(INCREMENT++)
       .toString(2)
       .padStart(12, '0')}`;
-    return Util.binaryToID(BINARY);
+    return Util.binaryToId(BINARY);
   }
 
   /**
@@ -51,8 +48,8 @@ class SnowflakeUtil {
    * @typedef {Object} DeconstructedSnowflake
    * @property {number} timestamp Timestamp the snowflake was created
    * @property {Date} date Date the snowflake was created
-   * @property {number} workerID Worker ID in the snowflake
-   * @property {number} processID Process ID in the snowflake
+   * @property {number} workerId The worker's id in the snowflake
+   * @property {number} processId The process's id in the snowflake
    * @property {number} increment Increment in the snowflake
    * @property {string} binary Binary representation of the snowflake
    */
@@ -60,7 +57,7 @@ class SnowflakeUtil {
   /**
    * Deconstructs a Discord snowflake.
    * @param {Snowflake} snowflake Snowflake to deconstruct
-   * @returns {DeconstructedSnowflake} Deconstructed snowflake
+   * @returns {DeconstructedSnowflake}
    */
   static deconstruct(snowflake) {
     const BINARY = Util.idToBinary(snowflake).toString(2).padStart(64, '0');
@@ -69,8 +66,8 @@ class SnowflakeUtil {
       get date() {
         return new Date(this.timestamp);
       },
-      workerID: parseInt(BINARY.substring(42, 47), 2),
-      processID: parseInt(BINARY.substring(47, 52), 2),
+      workerId: parseInt(BINARY.substring(42, 47), 2),
+      processId: parseInt(BINARY.substring(47, 52), 2),
       increment: parseInt(BINARY.substring(52, 64), 2),
       binary: BINARY,
     };
