@@ -14,7 +14,7 @@ module.exports = {
     async execute(interaction, client) {
         
         const row = new Discord.MessageSelectMenu()
-			.setCustomID('select')
+			.setCustomId('select')
 			.setPlaceholder('Nothing selected')
 			.addOptions([
 				{
@@ -32,9 +32,9 @@ module.exports = {
 		const message = await interaction.reply({ content: 'Pong!', components: [[row]] });
 
         
-        const filter = i => i.customID === 'select';
+        const filter = i => i.customId === 'select';
 
-		const collector = interaction.channel.createMessageComponentInteractionCollector(filter);
+		const collector = interaction.channel.createMessageComponentCollector(filter);
 
 		collector.on('collect', interaction => {});
 		collector.on('end', collected => console.log(`Collected ${collected.size} items`));

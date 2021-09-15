@@ -3,8 +3,6 @@ const GameInstance = require('./GameManager.js');
 const Canvas = require('../handlers/canvas_handler.js')
 
 let gameCount = 0;
-let master;
-let challenger;
 
 /** 
 * SECTION Create Game
@@ -13,20 +11,24 @@ let challenger;
 * @param {object} client - Static client passthrough.
 */
 exports.createGame = async function(interaction, client) {
+    interaction.deferReply();
+    const guild = await interaction?.guild.fetch();
+    if (guild?.features.includes('PRIVATE_THREADS')) {var threadType = 'GUILD_PRIVATE_THREAD'}
+    else {var threadType = 'GUILD_PUBLIC_THREAD'}
+
     gameCount++
     const { value: challengerID } = interaction.options.get('challenger');
-    challenger = await client.users.fetch(challengerID, true);
-    master = await interaction.user
+    const challenger = await client.users.fetch(challengerID, true);
+    const master = await interaction.user
     const gameName = `TicTacToe - ${gameCount}`;
     var game = new GameInstance(gameName, master, gameCount, 'ticTacToe', challenger)
     game.addPlayer(interaction.user.id)
     game.addPlayer(challengerID)
 
 
-    if (!interaction?.guild.features.includes('PRIVATE_THREADS')) var threadType = 'public_thread'
-    else var threadType = 'private_thread'
 
-    const ticTacThread = await interaction.channel.threads.create({
+    const channel = await guild.channels.fetch(interaction.channelId);
+    const ticTacThread = await channel.threads.create({
         name: `TicTacToe ${gameCount} - ${game.master.username} vs ${game.challenger.username}`, //we already use master and challenger here.
         //name: `TicTacToe ${gameCount} - ${master.username} vs ${challenger.username}`,
         autoArchiveDuration: 60,
@@ -55,8 +57,8 @@ async function rematch(oldGame, ticTacToeThread) {
     console.log(`${oldGame.name} has been rematched!`)
     gameCount++;
     const gameName = `TicTacToe - ${gameCount}`;
-    challenger = oldGame.master;
-    master = oldGame.challenger;
+    const challenger = oldGame.master;
+    const master = oldGame.challenger;
     let thread = ticTacToeThread;
     var rematch = new GameInstance(gameName, master, gameCount, 'ticTacToe', challenger, 'rematch')
     await rematch.addPlayer(master.id)
@@ -74,7 +76,7 @@ const row3Buttons = new Discord.MessageActionRow()
 for (let i = 1; i < 4; i++){
     row1Buttons.addComponents(
         new Discord.MessageButton()
-            .setCustomID(`${i}_button`)
+            .setCustomId(`${i}_button`)
             .setLabel(`-`)
             .setStyle('SECONDARY'),
     );
@@ -82,7 +84,7 @@ for (let i = 1; i < 4; i++){
 for (let i = 4; i < 7; i++){
     row2Buttons.addComponents(
         new Discord.MessageButton()
-            .setCustomID(`${i}_button`)
+            .setCustomId(`${i}_button`)
             .setLabel(`-`)
             .setStyle('SECONDARY'),
     );
@@ -90,7 +92,7 @@ for (let i = 4; i < 7; i++){
 for (let i = 7; i < 10; i++){
     row3Buttons.addComponents(
         new Discord.MessageButton()
-            .setCustomID(`${i}_button`)
+            .setCustomId(`${i}_button`)
             .setLabel(`-`)
             .setStyle('SECONDARY'),
     );
@@ -104,21 +106,24 @@ for (let i = 7; i < 10; i++){
 */
 async function generatePlayField(game, playThread) {
 
+    const master = game.master;
+    const challenger = game.challenger;
+
     const masterColl = await game.masters.get(master.id);
     const challengerColl = await game.players.get(challenger.id);
 
     const message = await playThread.send({ content: `Tic Tac Toe`,  components: [row1Buttons, row2Buttons, row3Buttons] })
-    const filter = i => i.customID !== null && i.user.id === interaction.user.id;
-    const collector = message.createMessageComponentInteractionCollector(filter);
+    const filter = i => i.customId !== null && i.user.id === interaction.user.id;
+    const collector = message.createMessageComponentCollector(filter);
 
-    if (!masterColl.has('moves') && !challengerColl.has('moves')) { 
+    if (!masterColl.has('moves') || !challengerColl.has('moves')) { 
         await masterColl.set('moves', [])
         var masterMoves = await masterColl.get('moves');
         await challengerColl.set('moves', [])
         var challengerMoves = await challengerColl.get('moves');
     } else {
-        masterMoves = await masterColl.get('moves');
-        challengerMoves = await challengerColl.get('moves');
+        var masterMoves = await masterColl.get('moves');
+        var challengerMoves = await challengerColl.get('moves');
     }
 
     let masterTurn = true;
@@ -131,7 +136,7 @@ async function generatePlayField(game, playThread) {
         }
         i.message.components.forEach(row => {
             row.components.forEach(button => {
-                if (button.customID === i.customID) {
+                if (button.customId === i.customId) {
                     if (i.user.id === game.master.id && masterTurn === true) {
                         button.setLabel(`❌`)
                         button.setStyle('DANGER')
@@ -185,14 +190,17 @@ async function evaluateBoard(game, playThread) {
 
     const winTypes = [sliceWins, horizonWins, vertaWins]
 
+    const master = game.master;
+    const challenger = game.challenger;
+
     const masterColl = await game.masters.get(master.id);
     const challengerColl = await game.players.get(challenger.id);
 
     const masterMovesRaw = await masterColl.get('moves');
     const challengerMovesRaw = await challengerColl.get('moves');
     
-    const masterMoves = await masterMovesRaw.map(i => i.customID.slice(0, 1));
-    const challengerMoves = await challengerMovesRaw.map(i => i.customID.slice(0, 1));
+    const masterMoves = await masterMovesRaw.map(i => i.customId.slice(0, 1));
+    const challengerMoves = await challengerMovesRaw.map(i => i.customId.slice(0, 1));
     let doBreak = false
 
     if (masterMoves.length > 2) {
@@ -271,12 +279,12 @@ async function generateResultsEmbed(game, thread, result) {
     // .addField('Draws', challengerStats.draws, true)
 
     const endGame = new Discord.MessageButton()
-        .setCustomID('end_game')
+        .setCustomId('end_game')
         .setLabel(`End Game`)
         .setStyle('SECONDARY');
 
     const replay = new Discord.MessageButton()
-        .setCustomID('re_match')
+        .setCustomId('re_match')
         .setLabel(`Rematch`)
         .setStyle('SUCCESS');
 
@@ -288,17 +296,17 @@ async function generateResultsEmbed(game, thread, result) {
     const message = await thread.send({ embeds: [embed], components: [embedButtons] });
     // await thread.send({ embeds: [embedStats]});
     // await thread.send({ embeds: [embedStats2]});
-    const filter = i => i.customID === 'end_game' || 're_match';
-    const collector = await message.channel.createMessageComponentInteractionCollector(filter);
+    const filter = i => i.customId === 'end_game' || 're_match';
+    const collector = await message.channel.createMessageComponentCollector(filter);
     //console.log(message)
     collector.on('collect', async i => {
         //console.log(i)
-        if (i.customID == 'end_game') {
+        if (i.customId == 'end_game') {
             await i.channel.send({embeds: [new Discord.MessageEmbed().setTitle(`${game.name}`).setDescription(`\`\`\`Game Ended! Channel will be deleted in 10 seconds.\`\`\``)]})
             game.endGame()
             collector.stop()
         }
-        else if (i.customID == 're_match') {
+        else if (i.customId == 're_match') {
             console.log('rematch was clicked')
             collector.stop();
             await rematch(game, thread);

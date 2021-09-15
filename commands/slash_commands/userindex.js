@@ -75,7 +75,7 @@ module.exports = {
 
         const cancelButtonPr = [
             new Discord.MessageButton()
-            .setCustomID('cancel')
+            .setCustomId('cancel')
             .setLabel(`${cancelEmoji} Cancel`)
             .setStyle('SECONDARY')
         ]
@@ -83,15 +83,15 @@ module.exports = {
         const row = new Discord.MessageActionRow()
             .addComponents(
                 new Discord.MessageButton()
-                    .setCustomID('banuser')
+                    .setCustomId('banuser')
                     .setLabel(`${banEmoji} Ban User`)
                     .setStyle('PRIMARY'),
                 new Discord.MessageButton()
-                    .setCustomID('warnuser')
+                    .setCustomId('warnuser')
                     .setLabel(`${warnEmoji} Warn User`)
                     .setStyle('PRIMARY'),
                 new Discord.MessageButton()
-                    .setCustomID('makenote')
+                    .setCustomId('makenote')
                     .setLabel(`${noteEmoji} Mod Note on User`)
                     .setStyle('PRIMARY'), 
                     cancelButtonPr,
@@ -101,7 +101,7 @@ module.exports = {
         const banSelect = new Discord.MessageActionRow()
             .addComponents(
                 new Discord.MessageButton()
-                    .setCustomID('redbanuser')
+                    .setCustomId('redbanuser')
                     .setLabel(`${banEmoji} Are You Sure?`)
                     .setStyle('DANGER'),
                     cancelButtonPr,
@@ -111,7 +111,7 @@ module.exports = {
         const warnSelect = new Discord.MessageActionRow()
             .addComponents(
                 new Discord.MessageButton()
-                    .setCustomID('redwarnuser')
+                    .setCustomId('redwarnuser')
                     .setLabel(`${warnEmoji} Are You Sure?`)
                     .setStyle('DANGER'),
                     cancelButtonPr,
@@ -152,14 +152,14 @@ module.exports = {
                 await interaction.editReply({embeds: [userInfo], components: [row] });
 
             const channel = interaction.channel;
-		    const filter = interaction => interaction.customID === 'banuser' || 'warnuser' || 'makenote' || 'cancel';
+		    const filter = interaction => interaction.customId === 'banuser' || 'warnuser' || 'makenote' || 'cancel';
 
-		    const collector = channel.createMessageComponentInteractionCollector(filter);
+		    const collector = channel.createMessageComponentCollector(filter);
 
             collector.on('collect', async interaction => {
                 if (!interaction.isButton()) return;
                 else await interaction.deferUpdate({ ephemeral: true });
-                switch (interaction.customID) {
+                switch (interaction.customId) {
 
                     case 'banuser':
                         await interaction.editReply({ embeds: [userInfo], components: [] });
@@ -205,7 +205,7 @@ module.exports = {
                     break;
 
                     case 'redwarnuser':
-                        console.log(`You clicked ${interaction.customID}`);
+                        console.log(`You clicked ${interaction.customId}`);
                     break;
 
                 }

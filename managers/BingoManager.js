@@ -49,12 +49,12 @@ exports.createGame = function(name, master, interaction, client) {
 } // !SECTION
 
 const bingoJoin = new Discord.MessageButton()
-    .setCustomID('joingame')
+    .setCustomId('joingame')
     .setLabel(`Join the game!`)
     .setStyle('PRIMARY')
 
 const bingoDraw = new Discord.MessageButton()
-    .setCustomID('drawball')
+    .setCustomId('drawball')
     .setLabel(`Draw a Bingo Ball!`)
     .setStyle('PRIMARY')
 
@@ -81,13 +81,13 @@ async function prepareMatch(game, interaction, client) {
         .addField(`Current Players:`, `${game.players.size}`)
 
     const message = await interaction.editReply({ embeds: [gamePrepEmbed], components: [bingoButtons] });
-    const filter = interaction => interaction.customID !== null;
+    const filter = interaction => interaction.customId !== null;
 
-    const collector = message.createMessageComponentInteractionCollector(filter);
+    const collector = message.createMessageComponentCollector(filter);
 
     collector.on('collect', async i => {
         if (game.gameState === 'Startup') {
-            if (i.customID === 'joingame'){
+            if (i.customId === 'joingame'){
                 //console.log(i.member.presence.clientStatus)
                 //TODO Save player's clientStatus for later
 
@@ -101,9 +101,9 @@ async function prepareMatch(game, interaction, client) {
                     createRoom(game, i, client);
                     i.message.embeds[0].fields[0].value = `${game.players.size}`
                 }
-            } else if (i.customID === 'drawball' && i.user.id === game.master.id) {
+            } else if (i.customId === 'drawball' && i.user.id === game.master.id) {
                 await callNumber(game, i)
-            } else if (i.customID === 'drawball' && i.user.id !== game.master.id) {
+            } else if (i.customId === 'drawball' && i.user.id !== game.master.id) {
                 console.log('non-master clicking draw')
             } else {
                 console.log('Button that wasn\'t join or draw was clicked somehow')
@@ -200,18 +200,18 @@ async function createRoom(game, interaction, client) {
 */
 async function sendBoardEmbed(playThread, game, interaction, client) {
     const buyBoards = new Discord.MessageButton()
-        .setCustomID('buy_board')
+        .setCustomId('buy_board')
         .setLabel(`Buy Board`)
         .setStyle('SECONDARY');
 
     const callBingo = new Discord.MessageButton()
-        .setCustomID('call_bingo')
+        .setCustomId('call_bingo')
         .setLabel(`Call BINGO`)
         .setStyle('SUCCESS');
         //.setDisabled(true);
 
     const leaveGame = new Discord.MessageButton()
-        .setCustomID('leave_game')
+        .setCustomId('leave_game')
         .setLabel(`Leave Game`)
         .setStyle('DANGER');
 
@@ -228,9 +228,9 @@ async function sendBoardEmbed(playThread, game, interaction, client) {
         .addField(`Number of Boards`, `1`, true)
    
     const message = await playThread.send({ embeds: [boardEmbed], components: [playerRoomButtons] });
-    const filter = interaction => interaction.customID === 'buy_board' || 'call_bingo' || 'leave_game';
+    const filter = interaction => interaction.customId === 'buy_board' || 'call_bingo' || 'leave_game';
     
-    const collector = message.createMessageComponentInteractionCollector(filter);
+    const collector = message.createMessageComponentCollector(filter);
 
     let buttonPresser;
 
@@ -238,7 +238,7 @@ async function sendBoardEmbed(playThread, game, interaction, client) {
         buttonPresser = i.user
         const player = game.getPlayer(i.user.id)
         if (game.gameState === 'Startup') {
-            if (i.customID === 'buy_board') {
+            if (i.customId === 'buy_board') {
                 if (!player.get('boards')) {
                     i.message.embeds[0].fields[0].value = `1`
                 } else {
@@ -247,7 +247,7 @@ async function sendBoardEmbed(playThread, game, interaction, client) {
                         //Too many boards, disable button
                         i.message.components.forEach(row => {
                             row.components.forEach(button => {
-                                if (button.customID === i.customID) {
+                                if (button.customId === i.customId) {
                                     button.setStyle('DANGER')
                                     button.setDisabled(true)
                                     //console.log(button.label)
@@ -265,22 +265,22 @@ async function sendBoardEmbed(playThread, game, interaction, client) {
                     i.message.embeds[0].fields[0].value = `${boards.size}`
                 }
                 i.update({ embed: i.message.embeds, components: [i.message.components[0]] });
-            }  else if (i.customID === 'call_bingo' ) { // Game in Startup, can't have a bingo
+            }  else if (i.customId === 'call_bingo' ) { // Game in Startup, can't have a bingo
                 i.update({ embed: i.message.embeds, components: [i.message.components[0]] });
                 console.log("clicked Call Bingo before bingo was active");
-            } else if (i.customID === 'leave_game') { // Confirm Leave
+            } else if (i.customId === 'leave_game') { // Confirm Leave
                 i.message.components.forEach(row => {
                     row.components.forEach(button => {
-                        if (button.customID === i.customID) {
+                        if (button.customId === i.customId) {
                             button.setStyle('PRIMARY')
                             button.setLabel('CONFIRM LEAVE')
-                            button.setCustomID('confirm_leave')
+                            button.setCustomId('confirm_leave')
                             //console.log(button.label)
                         }
                     })
                 })
                 i.update({ embed: i.message.embeds, components: [i.message.components[0]] });
-            } else if (i.customID === 'confirm_leave') {
+            } else if (i.customId === 'confirm_leave') {
                 if (game.players.get(buttonPresser.id)) {
                     //TODO Refund bought boards
                     if (!player.get('boards')) {
@@ -302,28 +302,28 @@ async function sendBoardEmbed(playThread, game, interaction, client) {
                 console.log('error button that doesn\'t exist was clicked')
             }
         } else if (game.gameState === 'Active') {
-            if (i.customID === 'buy_board') { // Game Active can't buy more boards..
+            if (i.customId === 'buy_board') { // Game Active can't buy more boards..
                 buyBoards.setStyle('DANGER')
                 buyBoards.setLabel(`Game Running`)
                 buyBoards.setDisabled(true)
                 i.update({ embed: i.message.embeds, components: [i.message.components[0]] });
-            } else if (i.customID === 'call_bingo' ) {
+            } else if (i.customId === 'call_bingo' ) {
                 //TODO Go to function for checking user's bingo boards...
                 checkBingo(game,i)
                 i.update({ embed: i.message.embeds, components: [i.message.components[0]] });
-            } else if (i.customID === 'leave_game') { // Confirm Leave
+            } else if (i.customId === 'leave_game') { // Confirm Leave
                 i.message.components.forEach(row => {
                     row.components.forEach(button => {
-                        if (button.customID === i.customID) {
+                        if (button.customId === i.customId) {
                             button.setStyle('PRIMARY')
                             button.setLabel('CONFIRM LEAVE')
-                            button.setCustomID('confirm_leave')
+                            button.setCustomId('confirm_leave')
                             //console.log(button.label)
                         }
                     })
                 })
                 i.update({ embed: i.message.embeds, components: [i.message.components[0]] });
-            } else if (i.customID === 'confirm_leave') {
+            } else if (i.customId === 'confirm_leave') {
                 if (game.players.get(buttonPresser.id)) {
                     collector.stop()
                     //Wait till you collect everything...
@@ -334,7 +334,7 @@ async function sendBoardEmbed(playThread, game, interaction, client) {
                 console.log("error button that doesn't exist was clicked")
             }
         } else if (game.gameState === 'Ended') {
-            if (i.customID === 'buy_board' || 'call_bingo' || 'leave_game') {
+            if (i.customId === 'buy_board' || 'call_bingo' || 'leave_game') {
                 //TODO ? Might just ignore "ended" state and jump to ending the collector on game end?
                 // Game has ended, Please wait for the next game to begin
                 // Stats will be recorded automatically, and channel will be removed.
@@ -447,7 +447,7 @@ async function createBoards(game, interaction) {
     const row1 = await allDrawn.slice(0, 5).forEach(number => {
         row1Buttons.addComponents(
             new Discord.MessageButton()
-                .setCustomID(`${number}_button`)
+                .setCustomId(`${number}_button`)
                 .setLabel(`${number} `)
                 .setStyle('PRIMARY'),
                 //.setDisabled(true),
@@ -457,7 +457,7 @@ async function createBoards(game, interaction) {
     const row2 = await allDrawn.slice(5, 10).forEach(number => {
         row2Buttons.addComponents(
             new Discord.MessageButton()
-                .setCustomID(`${number}_button`)
+                .setCustomId(`${number}_button`)
                 .setLabel(`${number} `)
                 .setStyle('PRIMARY'),
                 //.setDisabled(true),
@@ -466,7 +466,7 @@ async function createBoards(game, interaction) {
     const row3 = await allDrawn.slice(10, 15).forEach(number => {
         row3Buttons.addComponents(
             new Discord.MessageButton()
-                .setCustomID(`${number}_button`)
+                .setCustomId(`${number}_button`)
                 .setLabel(`${number} `)
                 .setStyle('PRIMARY'),
                 //.setDisabled(true),
@@ -475,7 +475,7 @@ async function createBoards(game, interaction) {
     const row4 = await allDrawn.slice(15, 20).forEach(number => {
         row4Buttons.addComponents(
             new Discord.MessageButton()
-                .setCustomID(`${number}_button`)
+                .setCustomId(`${number}_button`)
                 .setLabel(`${number} `)
                 .setStyle('PRIMARY'),
                 //.setDisabled(true),
@@ -484,7 +484,7 @@ async function createBoards(game, interaction) {
     const row5 = await allDrawn.slice(20, 25).forEach(number => {
         row5Buttons.addComponents(
             new Discord.MessageButton()
-                .setCustomID(`${number}_button`)
+                .setCustomId(`${number}_button`)
                 .setLabel(`${number} `)
                 .setStyle('PRIMARY'),
                 //.setDisabled(true),
@@ -495,19 +495,19 @@ async function createBoards(game, interaction) {
     // TODO if mobile remove spacing between Bingo letters?
     const message = await userChannel.send({ content: ` 🇧        🇮       🇳       🇬      🇴  `, components: [row1Buttons, row2Buttons, row3Buttons, row4Buttons, row5Buttons] })
 
-    const filter = i => i.customID !== null && i.user.id === interaction.user.id;
+    const filter = i => i.customId !== null && i.user.id === interaction.user.id;
 
-    const collector = message.createMessageComponentInteractionCollector(filter, { time: 10000 });
+    const collector = message.createMessageComponentCollector(filter, { time: 10000 });
 
     const pressedButtonsRaw = [];
 
     collector.on('collect', async i => {
         i.message.components.forEach(row => {
             row.components.forEach(button => {
-                if (button.customID === i.customID) {
+                if (button.customId === i.customId) {
                     button.setStyle('DANGER')
                     button.setDisabled(true)
-                    pressedButtonsRaw.push(button.customID.split('_')[0])
+                    pressedButtonsRaw.push(button.customId.split('_')[0])
                 }
             })
         })

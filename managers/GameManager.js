@@ -240,15 +240,15 @@ class GameInstance {
             
 
             const refresh = new Discord.MessageButton()
-                .setCustomID('refresh')
+                .setCustomId('refresh')
                 .setLabel(`Refresh`)
                 .setStyle('PRIMARY')
             const startGame = new Discord.MessageButton()
-                .setCustomID('startGame')
+                .setCustomId('startGame')
                 .setLabel(`Start Game`)
                 .setStyle('SUCCESS')
             const endGame = new Discord.MessageButton()
-                .setCustomID('endGame')
+                .setCustomId('endGame')
                 .setLabel(`End Game`)
                 .setStyle('DANGER')
 
@@ -259,15 +259,15 @@ class GameInstance {
 
             const dungeonPanel = await dungeonChannel.send({ embeds: [dungeonEmbed], components: [modButtons] })
 
-            const filter = interaction => interaction.customID !== null;
-            const collector = dungeonPanel.createMessageComponentInteractionCollector(filter);
+            const filter = interaction => interaction.customId !== null;
+            const collector = dungeonPanel.createMessageComponentCollector(filter);
 
             collector.on('collect', async i => {
-                if (i.customID === 'refresh'){
+                if (i.customId === 'refresh'){
                     //meh
-                } else if (i.customID === 'startGame'){
+                } else if (i.customId === 'startGame'){
                     game.startGame()
-                } else if (i.customID === 'endGame'){
+                } else if (i.customId === 'endGame'){
                     game.endGame();
                     collector.stop()
                 }
