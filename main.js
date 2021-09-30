@@ -1,5 +1,7 @@
 const Discord = require('discord.js');
 const { DiscordTogether } = require('discord-together');
+// const { REST } = require('@discordjs/rest');
+// const { Routes } = require('discord-api-types/v9');
 
 
 require("dotenv").config();
@@ -47,7 +49,5 @@ Reflect.defineProperty(client.currency, 'getBalance', {
 ['command_handler', 'slash_cmd_handler', 'event_handler'].forEach(handler => {
     require(`./handlers/${handler}`)(client, Discord);
 })
-
-
 
 client.login(token)

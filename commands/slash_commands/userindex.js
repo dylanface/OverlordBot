@@ -56,16 +56,16 @@ module.exports = {
     }],
     async execute(interaction, client) {
 
-        await interaction.defer({ ephemeral: true });
+        await interaction.deferReply({ ephemeral: true });
 
         // console.log(interaction.options);
         
-        const inputID = await interaction.options.get('userid').value;
-        if (interaction.options.has('purgetime')) {
-            var inputDays = await interaction.options.get('purgetime').value;
+        const { id:inputID } = interaction.options.getUser('userid');
+        if (interaction.options.getInteger('purgetime')) {
+            var inputDays = await interaction.options.getInteger('purgetime').value;
         }
-        if (interaction.options.has('reason')) {
-            var inputReason = await interaction.options.get('reason').value;
+        if (interaction.options.getString('reason')) {
+            var inputReason = await interaction.options.getString('reason').value;
         }
         
         const banEmoji = '🔨';
@@ -132,29 +132,30 @@ module.exports = {
         if (purge) registryEmbed.addField('Amount of days for message purge:', `\`\`\`${purge}\`\`\``);
         
         interaction.editReply({ embeds: [registryEmbed], components: [] });
-        const registryChannel = interaction.guild.channels.cache.find(ch => ch.name === 'guild-logs');
+        const registryChannel = await interaction.member.guild.channels.cache.find(ch => ch.data.name === 'guild-logs');
+        console.log(registryChannel);
         registryChannel.send({content: `Interaction log resulting in a ${action} user ${user.tag}`, embeds: [registryEmbed] });
 
     }
 
         try {
-                var user = await client.users.fetch(inputID, true)
-                const userInfo = new Discord.MessageEmbed()
-                    .setColor('#f6c5f8')
-                    .setAuthor(`${user.tag}`, user.displayAvatarURL({ dynamic: true }))
-                    .addFields(
-                        { name: 'Requested ID:', value: inputID },
-                        { name: 'Fetched ID:', value: user.id },
-                        { name: 'Account Creation Date:', value: user.createdAt.toString() },
-                        { name: 'Mod Notes:', value: 'placeholder'  }
-                    )
+            var user = await client.users.fetch(inputID, true)
+            const userInfo = new Discord.MessageEmbed()
+                .setColor('#f6c5f8')
+                .setAuthor(`${user.tag}`, user.displayAvatarURL({ dynamic: true }))
+                .addFields(
+                    { name: 'Requested ID:', value: inputID },
+                    { name: 'Fetched ID:', value: user.id },
+                    { name: 'Account Creation Date:', value: user.createdAt.toString() },
+                    { name: 'Mod Notes:', value: 'placeholder'  }
+                )
+        
+            await interaction.editReply({embeds: [userInfo], components: [row] });
+            const channelId = interaction.channelId;
+            const channel = await interaction.member.guild.channels.fetch(channelId);
 
-                await interaction.editReply({embeds: [userInfo], components: [row] });
-
-            const channel = interaction.channel;
 		    const filter = interaction => interaction.customId === 'banuser' || 'warnuser' || 'makenote' || 'cancel';
-
-		    const collector = channel.createMessageComponentCollector(filter);
+		    const collector = channel.createMessageComponentCollector({filter, componentType: 'BUTTON'});
 
             collector.on('collect', async interaction => {
                 if (!interaction.isButton()) return;
@@ -176,7 +177,7 @@ module.exports = {
                     break;
 
                     case 'cancel':
-                        await interaction.editReply(('All actions canceled, the user has been added to the cache.'), { components: [] });
+                        await interaction.editReply({ content:'All actions canceled, the user has been added to the cache.',  components: [], embeds: [] });
                         collector.stop()
                     break;
 

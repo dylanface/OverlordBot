@@ -2,7 +2,6 @@ module.exports = {
 	name: 'interactionCreate',
 	async execute(interaction, client) {
     if (!interaction.isCommand()) return;
-    console.log(interaction)
 
     const sCommandName = interaction.commandName;
     const sCommand = client.slashCommands.get(sCommandName);
