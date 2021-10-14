@@ -10,10 +10,11 @@ module.exports = async (client, Discord) => {
                 client.once(event.name, (...args) => event.execute(...args, client));
             } else {
                 client.on(event.name, (...args) => event.execute(...args, client));
+                console.log(`Loaded event: ${event.name}`);
             }
         }
     }
     
-    ['client', 'guild'].forEach(e => load_dir(e));
+    load_dir('client')
 
 }

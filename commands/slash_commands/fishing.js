@@ -5,7 +5,7 @@ module.exports = {
 
         if (interaction.member.voice.channel) {
 
-            await client.discordTogether.createTogetherCode(interaction.member.voice.channelID, 'fishing').then(async invite => {
+            await client.discordTogether.createTogetherCode(interaction.member.voice.channelId, 'fishing').then(async invite => {
                 return interaction.reply(`<${invite.code}> ← Click Me!`);
             });
         } else {

@@ -27,7 +27,7 @@ module.exports = {
             
             await cmd.forEach(async registeredCmd => {
                 const registeredSCommand = await client.slashCommands.get(registeredCmd.name);
-                registeredSCommand.registryID = registeredCmd.id;
+                registeredSCommand.registryId = registeredCmd.id;
                 if (registeredSCommand.permissions) {
                     
                     registeredCmd.permissions.set(registeredSCommand.permissions)

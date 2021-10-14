@@ -34,20 +34,20 @@ class GameInstance {
         this.masters = new Discord.Collection();
         this.rewards = new Discord.Collection();
         this.gameState = 'Startup';
-        this.gameID = Discord.SnowflakeUtil.generate();
+        this.gameId = Discord.SnowflakeUtil.generate();
         this.guild = guild;
         this.statsCache = new Discord.Collection();
 
-        this.gameUUID = uuidv4();
+        this.gameUUId = uuidv4();
 
         this.masters.set(this.master.id, new Discord.Collection());
-        gameRegistry.set(this.gameID, this);
+        gameRegistry.set(this.gameId, this);
         
     }
 
     async updateRegistry() {
-        gameRegistry.set(this.gameID, this);
-        // console.log(`Game Instance ${this.gameID} updated in registry.`);
+        gameRegistry.set(this.gameId, this);
+        // console.log(`Game Instance ${this.gameId} updated in registry.`);
     }
 
     // SECTION Players 
@@ -100,8 +100,8 @@ class GameInstance {
 
     softEnd() {
         this.gameState = 'Ended';
-        if (gameRegistry.has(this.gameID)) {
-            gameRegistry.delete(this.gameID);
+        if (gameRegistry.has(this.gameId)) {
+            gameRegistry.delete(this.gameId);
             return console.log(`There are currently ${gameRegistry.size} games in the registry.`);
         } else {
             return;
@@ -111,7 +111,7 @@ class GameInstance {
     startGame() {
         if (this.gameState === 'Startup') {
             this.gameState = 'Active';
-            console.log(`Game ${this.gameID} is now active!`);
+            console.log(`Game ${this.gameId} is now active!`);
             return this.updateRegistry()
         }
     }

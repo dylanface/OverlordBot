@@ -57,15 +57,16 @@ module.exports = {
     async execute(interaction, client) {
 
         await interaction.deferReply({ ephemeral: true });
-
-        // console.log(interaction.options);
+        await interaction.member.guild.channels.fetch(null, {cache:true});
         
-        const { id:inputID } = interaction.options.getUser('userid');
+        const { id:inputId } = interaction.options.getUser('userid');
         if (interaction.options.getInteger('purgetime')) {
-            var inputDays = await interaction.options.getInteger('purgetime').value;
+            var inputDays = await interaction.options.getInteger('purgetime');
+            console.log(inputDays)
         }
         if (interaction.options.getString('reason')) {
-            var inputReason = await interaction.options.getString('reason').value;
+            var inputReason = await interaction.options.getString('reason');
+            console.log(inputReason)
         }
         
         const banEmoji = '🔨';
@@ -131,21 +132,25 @@ module.exports = {
         if (reason) registryEmbed.addField('Reason:',`\`\`\`${reason}\`\`\``);
         if (purge) registryEmbed.addField('Amount of days for message purge:', `\`\`\`${purge}\`\`\``);
         
-        interaction.editReply({ embeds: [registryEmbed], components: [] });
-        const registryChannel = await interaction.member.guild.channels.cache.find(ch => ch.data.name === 'guild-logs');
-        console.log(registryChannel);
-        registryChannel.send({content: `Interaction log resulting in a ${action} user ${user.tag}`, embeds: [registryEmbed] });
+        try {
+            interaction.editReply({ embeds: [registryEmbed], components: [] });
+            const registryChannel = await interaction.member.guild.channels.cache.find(channel => channel.name === 'guild-logs');
+            registryChannel.send({ embeds: [registryEmbed] });
+
+        } catch {
+            console.log('Failed to send registry message');
+        }
 
     }
 
         try {
-            var user = await client.users.fetch(inputID, true)
+            var user = await client.users.fetch(inputId, true)
             const userInfo = new Discord.MessageEmbed()
                 .setColor('#f6c5f8')
                 .setAuthor(`${user.tag}`, user.displayAvatarURL({ dynamic: true }))
                 .addFields(
-                    { name: 'Requested ID:', value: inputID },
-                    { name: 'Fetched ID:', value: user.id },
+                    { name: 'Requested Id:', value: inputId },
+                    { name: 'Fetched Id:', value: user.id },
                     { name: 'Account Creation Date:', value: user.createdAt.toString() },
                     { name: 'Mod Notes:', value: 'placeholder'  }
                 )
@@ -183,19 +188,19 @@ module.exports = {
 
                     case 'redbanuser':
                         if (!inputReason && !inputDays) {
-                            await interaction.guild.members.ban(inputID)
+                            await interaction.guild.members.ban(inputId)
                             .then(console.log)
                             .catch(console.error)
                         } else if (inputReason && !inputDays) {
-                            await interaction.guild.members.ban(inputID, { reason: inputReason })
+                            await interaction.guild.members.ban(inputId, { reason: inputReason })
                             .then(console.log)
                             .catch(console.error)
                         } else if (!inputReason && inputDays) {
-                            await interaction.guild.members.ban(inputID, { days: inputDays })
+                            await interaction.guild.members.ban(inputId, { days: inputDays })
                             .then(console.log)
                             .catch(console.error)
                         } else if (inputReason && inputDays) {
-                            await interaction.guild.members.ban(inputID, { days: inputDays, reason: inputReason })
+                            await interaction.guild.members.ban(inputId, { days: inputDays, reason: inputReason })
                             .then(console.log)
                             .catch(console.error)
                         }

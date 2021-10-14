@@ -17,10 +17,10 @@ module.exports = {
     ],
     defaultPermission: true,
     async execute(interaction, client) {
-        const recipientID = interaction.options.get('recipient').value;
+        const recipientId = interaction.options.get('recipient').value;
         const payment = interaction.options.get('payment').value;
         
-        const recipient = await client.users.fetch(recipientID, true);
+        const recipient = await client.users.fetch(recipientId, true);
         const balance = await client.currency.getBalance(interaction.user.id);
 
         if (payment > balance) return interaction.reply(`Sorry ${interaction.user}, you only have ${balance} coins.`);

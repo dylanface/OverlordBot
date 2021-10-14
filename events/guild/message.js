@@ -39,10 +39,10 @@ module.exports = {
 		if (command.guildExclusive) {
 			const guildAvailable = message.guild.available;
 			if (guildAvailable) {
-				const guildID = message.guild.id;
-				const accessGuildID = command.guildExclusive;
+				const guildId = message.guild.id;
+				const accessGuildId = command.guildExclusive;
 
-				if (guildID != accessGuildID) {
+				if (guildId != accessGuildId) {
 					return message.channel.send(`Very sneaky, you typed a valid command but it is locked for this server: ${message.guild.name}`);
 				}
 			}

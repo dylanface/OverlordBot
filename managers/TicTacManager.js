@@ -17,13 +17,13 @@ exports.createGame = async function(interaction, client) {
     else {var threadType = 'GUILD_PUBLIC_THREAD'}
 
     gameCount++
-    const { value: challengerID } = interaction.options.get('challenger');
-    const challenger = await client.users.fetch(challengerID, true);
+    const { value: challengerId } = interaction.options.get('challenger');
+    const challenger = await client.users.fetch(challengerId, true);
     const master = await interaction.user
     const gameName = `TicTacToe - ${gameCount}`;
     var game = new GameInstance(gameName, master, gameCount, 'ticTacToe', challenger)
     game.addPlayer(interaction.user.id)
-    game.addPlayer(challengerID)
+    game.addPlayer(challengerId)
 
 
 

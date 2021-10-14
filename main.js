@@ -9,7 +9,7 @@ const Users = require('./database/dbObjects');
 const { Op } = require('sequelize');
 
 const myIntents = Discord.Intents.ALL;
-const client = new Discord.Client({ partials: ["MESSAGE", "CHANNEL", "REACTION" ], intents: 14 });
+const client = new Discord.Client({ partials: ["MESSAGE", "CHANNEL", "REACTION" ], intents: 32767 });
 
 const token = process.env.TEST_TOKEN
 

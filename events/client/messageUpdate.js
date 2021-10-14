@@ -3,17 +3,18 @@ const Discord = require('discord.js');
 module.exports = {
     name: 'messageUpdate',
     async execute(oldMessage, newMessage, client) {
-        if (oldMessage.hasThread) return;
-        if (!oldMessage.author) return;
-        if (oldMessage.author.bot) return;
+        if (oldMessage.hasThread) return console.log('Message update event fired for a thread message.');
+        if (!oldMessage.author) return console.log('MessageUpdate: No author');
+        if (oldMessage.author.bot) return console.log('Message update event fired by a bot');
         if (newMessage.embeds[0]) {
             // Check messages because of embed
             if (oldMessage.toString() === newMessage.toString()) return;
         }
 
-        const messageLog = await client.channels.cache.find(channel => channel.name ==='message-logs')
+        const messageGuild = await client.guilds.fetch(newMessage.guildId)
+        const messageLogsChannel = messageGuild.channels.cache.find(channel => channel.name === 'message-logs');
+        console.log(newMessage.author)
         
-        const logToGuild = messageLog.guild.id
         
         var registryEmbed = new Discord.MessageEmbed()
         .setAuthor(`${newMessage.author.tag} Edited a Message`, newMessage.author.displayAvatarURL({ dynamic: true }))
@@ -22,10 +23,9 @@ module.exports = {
         .addFields(
             { name: 'Original Message:', value: oldMessage.toString() },
             { name: 'New Message:', value: newMessage.toString() },    
-        );
-        
-          if (newMessage.channel.guild.id === logToGuild) {  
-        await messageLog.send({embeds: [registryEmbed]}).catch(error => 		messageLog.send({content: error.toString()}));
-          } else {console.log('This message was not edited in a selected guild.')  }
+            );
+            
+
+        await messageLogsChannel.send({embeds: [registryEmbed]}).catch(error => 		messageLogsChannel.send({content: error.toString()}));
     }
 }
