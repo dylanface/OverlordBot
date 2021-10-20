@@ -1,6 +1,7 @@
 const Discord = require('discord.js');
 
 module.exports = {
+    enabled: false,
     name: 'userindex',
     description: "Search all of Discord for a user",
     options: [{

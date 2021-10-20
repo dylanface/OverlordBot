@@ -1,5 +1,5 @@
 const Discord = require('discord.js');
-const { generateTicTacCanvas } = require('../../handlers/canvas_handler');
+const PinMeManager = require('../../managers/PinMeManager');
 
 module.exports = {
     name: 'ping',
@@ -12,31 +12,12 @@ module.exports = {
 		}
 	],
     async execute(interaction, client) {
+		interaction.reply('Pong!');
         
-        const row = new Discord.MessageSelectMenu()
-			.setCustomId('select')
-			.setPlaceholder('Nothing selected')
-			.addOptions([
-				{
-					label: 'Select me',
-					description: 'This is a description',
-					value: 'first_option',
-				},
-				{
-					label: 'You can select me too',
-					description: 'This is also a description',
-					value: 'second_option',
-				},
-			])
+		const pinMePost = new PinMeManager('1', interaction.member.id, interaction.member.id, interaction.fetchReply().id, interaction.channel.id, interaction.guildId, client);
 
-		const message = await interaction.reply({ content: 'Pong!', components: [[row]] });
-
-        
-        const filter = i => i.customId === 'select';
-
-		const collector = interaction.channel.createMessageComponentCollector(filter);
-
-		collector.on('collect', interaction => {});
-		collector.on('end', collected => console.log(`Collected ${collected.size} items`));
+		setTimeout(() => {
+			pinMePost.pinMe()
+		} , 10000);
     }
 }

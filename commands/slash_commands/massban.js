@@ -2,6 +2,7 @@ const Discord = require('discord.js');
 const { bold, italic, strikethrough, underscore, spoiler, quote, blockQuote, inlineCode, codeBlock  } = require('@discordjs/builders');
 
 module.exports = {
+    enabled: false,
     name: 'massban',
     description: "Begin the mass ban process for a list of Users",
     options: [{
