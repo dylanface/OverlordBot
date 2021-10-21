@@ -13,6 +13,7 @@ module.exports = async (client, Discord) => {
                 console.log(`Loaded event: ${event.name}`);
             }
         }
+        console.log(`↼ Begin Startup ⇀`)
     }
     
     load_dir('client')
