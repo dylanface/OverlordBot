@@ -1,5 +1,4 @@
 const Discord= require('discord.js');
-const Users = require('../../database/dbObjects.js')
 
 module.exports = {
 	name: 'ready',
@@ -117,9 +116,6 @@ module.exports = {
         await populatePinMeUsers();
         startupLog('final');
         
-
-        const storedBalances = await Users.findAll();
-        storedBalances.forEach(b => client.currency.set(b.user_id, b));
         
         client.user.setPresence({
             status: 'online',
