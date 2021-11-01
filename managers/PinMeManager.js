@@ -17,18 +17,20 @@ class PinMeManager {
         this.pinMeGuildId = pinMeGuildId;
         this.pinMeMessageId = pinMeMessageId;
         this.pinMeChannelId = pinMeChannelId;
-        this.manager = client.pinBoardManager;
+        this.boardManager = client.pinBoardManager;
 
         this.communityPins = new Discord.Collection();
         this.communityPins.set(this.nominatorId, 'Endorsed');
 
         this.fetchAsyncData();
-        this.updateRegistry();
+        this.tryPin();
     }
-    
-    updateRegistry() {
-        this.client.pinMeRegistry.set(this.pinMeMessageId, this);
-        console.log(`Registry Updated`)
+
+    async tryPin() {
+        setTimeout(() => {
+            this.pinMe()
+
+        }, 5000)
     }
 
     async fetchAsyncData() {
@@ -63,13 +65,18 @@ class PinMeManager {
         }
     }
 
-    async addPin(pinningUserId) {
-        const existingPin = await this.communityPins.get(pinningUserId);
+    async addPin(pinningUser) {
+        const existingPin = this.communityPins.has(pinningUser.id);
         if (existingPin) {
-            return console.log(`User already pinned or Endorsed this nominee`);
+            if (pinningUser.id === '265023187614433282') {
+                this.pinMe();
+                return console.log('Test Action by Dylan')
+            } else {
+                return console.log(`User already pinned or Endorsed this nominee`);
+            }
         } else {
-            this.communityPins.set(pinningUserId, 'Pinned');
-            return console.log(`${pinningUserId} has been added to this posts pins`);
+            this.communityPins.set(pinningUser.id, 'Pinned');
+            return console.log(`${pinningUser.id} has been added to this posts pins`);
         }
     }
 
@@ -84,30 +91,7 @@ class PinMeManager {
         const message = this.nominatedMessage;
         const guild = this.guild;
 
-        this.manager.updateBoardMessages(guild, message, request);
-
-        // if (this.onDisplay) return;
-
-        // const pinMeChannel = await this.guild.channels.cache.find(channel => channel.name.includes('pin-board'));
-
-        // const pinMeEmbed = new Discord.MessageEmbed()
-        //     .setColor(this.pinMeUser.hexAccentColor)
-        //     .setAuthor(this.pinMeUser.username, this.pinMeUser.displayAvatarURL({ dynamic: true }))
-        //     .setFooter(`${this.nominator.username} nominated this post and it now has ${this.communityPins.size} supporting Pins!`)
-        //     .setTimestamp()
-        // if (this.nominatedMessage.attachments.size == 1) {
-        //     pinMeEmbed.setImage(this.nominatedMessage.attachments.first().proxyURL);
-        // }
-        // if (this.nominatedMessage.content) {
-        //     pinMeEmbed.setDescription(this.nominatedMessage.content.toString());
-        // }
-
-        // await pinMeChannel.send({ embeds: [pinMeEmbed] })
-        // .then((pinMeMessage) => {
-        //     this.pinnedPost = pinMeMessage;
-        //     this.onDisplay = true;
-        //     this.updateRegistry();
-        // })
+        this.boardManager.updateBoardMessages(guild, message, request, this);
     }
 
 }

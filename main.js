@@ -16,7 +16,6 @@ client.discordTogether = new DiscordTogether(client);
 
 client.pinBoardManager = new PinBoardManager(client);
 client.pinMeGuildsCache = new Discord.Collection();
-client.pinMeRegistry = new Discord.Collection();
 
 client.slashCommands = new Discord.Collection();
 client.events = new Discord.Collection();
