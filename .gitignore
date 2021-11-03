@@ -4,3 +4,4 @@ codenotes.txt
 database.sqlite
 command_list.docx
 deprecated/
+node_modules/
