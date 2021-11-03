@@ -1,4 +1,4 @@
-const client = require('../main.js');
+const client = require('../../main.js');
 const { v4: uuidv4 } = require('uuid');
 const Discord = require('discord.js');
 const fs = require('fs');

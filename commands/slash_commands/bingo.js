@@ -1,4 +1,4 @@
-const BingoManager = require('../../managers/BingoManager.js');
+const BingoManager = require('../../managers/Games/BingoManager.js');
 
 module.exports = {
     name: 'bingo',

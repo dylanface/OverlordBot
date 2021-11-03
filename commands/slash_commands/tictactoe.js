@@ -1,5 +1,5 @@
 const Discord = require('discord.js');
-const TicTacManager = require('../../managers/TicTacManager.js');
+const TicTacManager = require('../../managers/Games/TicTacManager.js');
 
 module.exports = {
     name: 'tictactoe',
