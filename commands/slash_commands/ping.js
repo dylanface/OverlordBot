@@ -1,5 +1,6 @@
 const Discord = require('discord.js');
-const PinMeManager = require('../../managers/PinMeManager');
+const PinMeManager = require('../../managers/Admin/PinMeManager');
+const { GuildChatGameManager } = require('../../managers/Games/ChatGameManager');
 
 module.exports = {
     name: 'ping',
@@ -12,12 +13,10 @@ module.exports = {
 		}
 	],
     async execute(interaction, client) {
-		interaction.reply('Pong!');
-        
-		const pinMePost = new PinMeManager('1', interaction.member.id, interaction.member.id, interaction.fetchReply().id, interaction.channel.id, interaction.guildId, client);
-
+		const fakeManager = new GuildChatGameManager(interaction.guildId, client);
 		setTimeout(() => {
-			pinMePost.pinMe()
-		} , 10000);
+			fakeManager.beginChallenge()
+			
+		} , 5000);
     }
 }

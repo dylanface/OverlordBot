@@ -1,6 +1,6 @@
 const Discord = require('discord.js');
 const { DiscordTogether } = require('discord-together');
-const { PinBoardManager } = require('./managers/PinBoardManager');
+const { PinBoardManager } = require('./managers/Admin/PinBoardManager');
 // const { REST } = require('@discordjs/rest');
 // const { Routes } = require('discord-api-types/v9');
 

@@ -1,5 +1,5 @@
 const Discord = require("discord.js");
-const PinMeManager = require("../../managers/PinMeManager");
+const PinMeManager = require("../../managers/Admin/PinMeManager");
 
 module.exports = {
 	name: 'messageReactionAdd',
