@@ -5,18 +5,15 @@ const { GuildChatGameManager } = require('../../managers/Games/ChatGameManager')
 module.exports = {
     name: 'ping',
     description: "Perform test commands",
-	options: [
-		{
-				name: 'pinger',
-				type: 'STRING',
-				description: 'Specific ping parameters provided as a string',
-		}
-	],
     async execute(interaction, client) {
-		const fakeManager = new GuildChatGameManager(interaction.guildId, client);
+		await interaction.deferReply();
+		const fakeManager = await client.chatGameManager.getGuildChatGameManager(interaction.guildId);
 		setTimeout(() => {
 			fakeManager.beginChallenge()
 			
 		} , 5000);
+
+		interaction.editReply({ content: 'Pong! 🏓'});
+
     }
 }
