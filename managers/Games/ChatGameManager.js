@@ -1,5 +1,6 @@
 const Discord = require('discord.js');
-const { codeBlock, inlineCode } = require('@discordjs/builders')
+const { codeBlock } = require('@discordjs/builders')
+const GameManager = require('./GameManager');
 
 require("dotenv").config();
 const wordnikToken = process.env.WORDNIK_API_KEY;
@@ -54,20 +55,29 @@ class ChatGameManager {
         const gameManager = this.guildGameManagers.get(guildId);
         gameManager.beginChallenge();
     }
+
     
 }
+
+
+
+
+
+
+
+
 /**
-* Brief description of the class here
+* Manages chat games that take place inside the created Guild Manager.
 */
-class GuildChatGameManager {
+class GuildChatGameManager extends GameManager {
     constructor(
         manager,
         guildId,
         client
     ) {
+        super(null, manager, null, 'chat_based', null, null, guildId, client);
         this.guildId = guildId;
-        this.client = client;
-        this.manager = manager;
+        this.incorrectAnswers = new Discord.Collection();
 
         this.fetchGuild()
     }
@@ -81,6 +91,7 @@ class GuildChatGameManager {
         await this.guild.channels.fetch(null, true)
         return this.guild;
     }
+    
     
     /** 
     * Backend function to choose a random channel that all Guild Users can chat in.
@@ -170,26 +181,20 @@ class GuildChatGameManager {
         collector.on('collect', async (message) => {
             if (message.author.bot) return;
             const answer = message.content.toLowerCase().trim();
-            let length = `{${word.length - 1},${word.length + 2}}`.replace(' ', '')
-            let regex = new RegExp(`^[${word}][^ ]${length}$`, 'i');
+            let length = `{${word.length - 2},${word.length + 2}}`.replace(' ', '')
+            const noSlash = word.replace(/-/g, '\-')
+            let regex = new RegExp(`^[${noSlash}][^ ]${length}$`, 'i');
             if (answer !== word) {
                 if (!(regex.test(answer))) {
                     return;
                 } else {
-                    await this.incorrectAnswer(message);
+                    await this.incorrectAnswer(answer, word, message, embed);
                 }
             } else {
                 collector.stop();
                 await this.correctAnswer(word, message, embed);
             }
         });
-    }
-    
-    /** 
-    * Logic for an incorrect answer in the listened channel.
-    */
-    async incorrectAnswer(message) {
-        await message.react('❌');
     }
 
     /** 
@@ -201,18 +206,78 @@ class GuildChatGameManager {
         const correctAnswerEmbed = new Discord.MessageEmbed()
             .setColor('#0099ff')
             .setAuthor(`Overlord Chat Games`, this.client.user.displayAvatarURL())
-            .setFooter(`Solved by ${message.author.username}`, message.author.displayAvatarURL({ dynamic: true }))
-        console.log(message.author)
+            .setFooter(`Solved by ${message.author.username} ↠ Next prompt will appear in 1 minutes`, message.author.displayAvatarURL({ dynamic: true }))
             
-        if (definitions === null) {
-            var definitionList = `No definition found for ${word}`
+        if (definitions.status === 404) {
+            var definitionList = `No definitions found`
         } else {
             var definitionList = await definitions.map(d => {if(d.text) return `${d.partOfSpeech} - ${d.text?.replace(/<.+>/gi, '')}`}).join('\n')
         }
-        correctAnswerEmbed.setDescription(`Correct answer was **${word}**\n${codeBlock(definitionList)}`);
+        correctAnswerEmbed.setDescription(`Correct answer was **${word}**\n${codeBlock(definitionList)}\n`);
         
         await embed.edit({ embeds: [correctAnswerEmbed] })
-        //this.timedPrompt()
+        if (this.incorrectAnswers.has(embed.id)) this.clearIncorrectAnswers(embed.id)
+        await this.moduPlayerScore(message.author.id, 1)
+        this.timedPrompt(60000)
+        this.getLeaderboard('codeBlock', null, message.channel, null)
+
+    }
+
+    timedPrompt(delayMS) {
+        setTimeout(() => {
+            this.beginChallenge();
+        }, delayMS)
+    }
+    
+    /** 
+    * Logic for an incorrect answer in the listened channel.
+    */
+    async incorrectAnswer(answer, word, message, embed) {
+        const answerBreak = answer.split('')
+        const wordBreak = word.split('')
+        let lettersOff = 0;
+
+        for (let i = 0; i < wordBreak.length; i++) {
+            if (wordBreak[i] === answerBreak[i]) continue;
+            else lettersOff++;
+        }
+
+        const emoji = this.numberToEmoji(lettersOff)
+        await message.react(emoji);
+
+        if (this.incorrectAnswers.has(embed.id)) {
+            const answers = this.incorrectAnswers.get(embed.id);
+            answers.push(message);
+        } else {
+            const answers = [message];
+            this.incorrectAnswers.set(embed.id, answers);
+        }
+        await this.moduPlayerScore(message.author.id, -1);
+    }
+
+    numberToEmoji(number) {
+        if (number === 0) return '0️⃣';
+        if (number === 1) return '1️⃣';
+        if (number === 2) return '2️⃣';
+        if (number === 3) return '3️⃣';
+        if (number === 4) return '4️⃣';
+        if (number === 5) return '5️⃣';
+        if (number === 6) return '6️⃣';
+        if (number === 7) return '7️⃣';
+        if (number === 8) return '8️⃣';
+        if (number === 9) return '9️⃣';
+        if (number === 10) return '🔟';
+    }
+
+    clearIncorrectAnswers(embedId) {
+        const answers = this.incorrectAnswers.get(embedId);
+        if (answers.length >= 1) {
+            for (let ans of answers) {
+                ans.delete();
+            }
+            this.incorrectAnswers.delete(embedId);
+                
+        }
     }
 
     /** 
@@ -221,8 +286,7 @@ class GuildChatGameManager {
     async randomWord() {
         const axios = require("axios").default;
         
-        
-        const options = `https://api.wordnik.com/v4/words.json/randomWord?hasDictionaryDef=true&includePartOfSpeech=noun&excludePartOfSpeech=proper-noun%2C%20family-name%2C%20given-name&minCorpusCount=2&minDictionaryCount=4&minLength=4&maxLength=15&api_key=${wordnikToken}`
+        const options = `https://api.wordnik.com/v4/words.json/randomWord?hasDictionaryDef=true&includePartOfSpeech=noun&excludePartOfSpeech=proper-noun%20family-name%20given-name&minCorpusCount=1&minDictionaryCount=5&minLength=4&maxLength=15&api_key=${wordnikToken}`
         let word
         await axios.request(options).then((response) => {
                 word = response.data.word.toLowerCase();
@@ -240,13 +304,20 @@ class GuildChatGameManager {
     async getWordInfo(word) { 
         const axios = require("axios").default;
         const options = `https://api.wordnik.com/v4/word.json/${word}/definitions?limit=4&includeRelated=false&sourceDictionaries=all&useCanonical=false&includeTags=false&api_key=${wordnikToken}`
-        //
-        const request = await axios.request(options).catch(err => { return null })
-        const definitions = await request.data;
+        
+        let definitions
+        await axios.request(options)
+        .then((response) => {
+            definitions = response.data;
+            console.log(response.headers['x-ratelimit-remaining-minute'])
+        })
+        .catch((err) => {
+            definitions = err.response
+        })
+
         return definitions;
     }
+
 }
-
-
 module.exports.ChatGameManager = ChatGameManager;
 module.exports.GuildChatGameManager = GuildChatGameManager;

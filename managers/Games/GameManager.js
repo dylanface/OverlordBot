@@ -1,46 +1,50 @@
 const { v4: uuidv4 } = require('uuid');
 const Discord = require('discord.js');
+const { codeBlock } = require('@discordjs/builders')
+const { StatisticManager } = require('../../managers/Games/StatisticManager');
 
 const gameRegistry = new Discord.Collection();
 
 /**
 * Represents an instance of any game within Overlord
 * @param {string} name The name of this game instance
-* @param {object} master The User who started the game instance
+* @param {object} manager The User or instance that started the game instance
 * @param {integer} gameNumber The order number of the gameMode game instance list
 * @param {string} gameType The game type this instance represents
 * @param {collection} challenger The challenged User(s) if any
 * @param {collection} modifiers The game modifier(s) if any
-* @param {object} guild The guild in which this game was created
+* @param {object} guildId The guild Id for the guild in which this game was created
 */
 class GameInstance {
     constructor(
         name,
-        master,
+        manager,
         gameNumber,
         gameType,
         challenger,
         modifiers,
-        guild,
+        guildId,
+        client
     ) {
+        this.client = client;
         this.name = name;
-        this.master = master;
+        this.manager = manager;
         this.gameNumber = gameNumber;
         this.gameType = gameType;
         this.dateOfCreation = new Date();
         this.challenger = challenger;
         this.modifiers = modifiers;
         this.players = new Discord.Collection();
-        this.masters = new Discord.Collection();
+        this.managers = new Discord.Collection();
         this.rewards = new Discord.Collection();
         this.gameState = 'Startup';
         this.gameId = Discord.SnowflakeUtil.generate();
-        this.guild = guild;
-        this.statsCache = new Discord.Collection();
-
+        this.guildId = guildId;
+        
         this.gameUUId = uuidv4();
+        this.statsManager = new StatisticManager(this.gameUUId, 'json_local', client);
 
-        this.masters.set(this.master.id, new Discord.Collection());
+        this.managers.set(this.manager.id, new Discord.Collection());
         gameRegistry.set(this.gameId, this);
         
     }
@@ -66,24 +70,24 @@ class GameInstance {
 
     getPlayer(id) {
         if (this.players.has(id)) return this.players.get(id);
-        else if (this.masters.has(id)) return this.masters.get(id);
+        else if (this.managers.has(id)) return this.managers.get(id);
     }
 
     getPlayers() {
         return this.players;
     }
 
-    async addMaster(id) {
-        const gameMasters = await this.masters.get(id);
-        if (gameMasters) return this.updateRegistry()
+    async addManager(id) {
+        const gameManagers = await this.managers.get(id);
+        if (gameManagers) return this.updateRegistry()
         else {
-            this.masters.set(id, new Discord.Collection());
+            this.managers.set(id, new Discord.Collection());
             return this.updateRegistry()
         }
     }
 
-    getMaster(id) {
-        return this.masters.get(id);
+    getManager(id) {
+        return this.managers.get(id);
     }
     // !SECTION Players
 
@@ -95,7 +99,7 @@ class GameInstance {
 
     endGame() {
         this.softEnd()
-        this.delPlayerChannel(this.master.id)
+        this.delPlayerChannel(this.manager.id)
     }
 
     softEnd() {
@@ -166,18 +170,45 @@ class GameInstance {
     // !SECTION Coins/Rewards
 
     // SECTION Scores/Stats
-    async addPlayerScore(id, amount) {
-        let playerScore = await this.players.get(id);
-        if (playerScore) playerScore += amount;
-        else {
-            playerScore = this.addPlayer(id);
-            playerScore += amount;
+    async moduPlayerScore(id, amount) {
+        let playerScore = await this.statsManager.statsCache.get(id);
+        if (playerScore) {
+            if (amount >= 1) {
+                playerScore.score.correct += amount;
+            } else if (amount <= -1) {
+                playerScore.score.incorrect += amount;
+            }
+        } else {
+            if (amount >= 1) {
+                playerScore = this.statsManager.statsCache.set(id, {incorrect: 0, correct: amount});
+            } else if (amount <= -1) {
+                playerScore = this.statsManager.statsCache.set(id, {incorrect: amount, correct: 0});
+            }
         }
-        return this.updateRegistry()
+        return this.statsManager.saveStatsLocal()
+    }
+
+    async getPlayerStats(id) {
+        let playerStats = await this.statsManager.statsCache.get(id);
+        if (playerStats) return playerStats;
+        else {
+            playerStats = this.statsManager.statsCache.set(id, {incorrect: 0, correct: 0});
+            return playerStats;
+        }
     }
 
     // TODO: getLeaderboard(amount)? rank players scores in the game instance
     // if amount between numbers: display number of users on leaderboard
+    async getLeaderboard(style, userAmount, displayChannel, displayOptions) {
+        if (style === 'codeBlock') {
+            let leaderboard = this.statsManager.statsCache.sort((a, b) => b.score.correct - a.score.correct)
+            .map((value, key) => {
+                return `${(this.client.users.cache.get(key).tag)} - ${value.score.correct} correct, ${value.score.incorrect} incorrect`
+            })
+            displayChannel.send(codeBlock(leaderboard.join('\n')))
+        }
+    }
+
 
     // !SECTION Scores/Stats
 

@@ -32,6 +32,7 @@ module.exports = {
                         description: sCommand.description,
                         options: sCommand.options,
                         defaultPermission: sCommand.defaultPermission,
+                        permissions: sCommand.permissions,
                     });
                     
                 })
@@ -44,7 +45,7 @@ module.exports = {
                     registeredSCommand.registryId = registeredCmd.id;
                     if (registeredSCommand.permissions) {
                         
-                        registeredCmd.permissions.set(registeredSCommand.permissions)
+                        registeredCmd.permissions.set({permissions:registeredSCommand.permissions})
                         .then(console.log)
                         .catch(console.error);
                     } else {
