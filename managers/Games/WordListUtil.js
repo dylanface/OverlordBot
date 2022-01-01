@@ -3,20 +3,6 @@ require("dotenv").config();
 const wordnikToken = process.env.WORDNIK_API_KEY;
 
 const WordListUtil = {
-    buildWordList: function() {
-        const word = await this.getWordnikRandomWord(wordnikToken);
-        const defintions = await this.getWordnikDefinition(word, wordnikToken);
-        const wordObject = {
-            vulgar: false,
-            word: word,
-            defintions: defintions,
-            wordInfo: {
-                wordLength: word.length,
-            }
-        }
-
-        fs.write('Storage/word_list.json', JSON.stringify(wordObject), null, null, 2);
-    },
     getWordnikRandomWord: async function(wordnikToken) {
         const axios = require("axios").default;
         

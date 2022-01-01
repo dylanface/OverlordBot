@@ -22,10 +22,10 @@
     "ffmpeg-static": "^4.4.0",
     "fs": "0.0.1-security",
     "libsodium-wrappers": "^0.7.9",
-    "mongoose": "^6.1.1",
     "node-canvas": "^2.7.0",
     "node-fetch": "^2.6.1",
     "nodemon": "^2.0.8",
+    "phaser": "^3.55.2",
     "uuid": "^8.3.2",
     "ytdl-core": "^4.9.1"
   }

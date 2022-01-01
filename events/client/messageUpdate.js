@@ -6,6 +6,7 @@ module.exports = {
         if (oldMessage.hasThread) return console.log('Message update event fired for a thread message.');
         if (!oldMessage.author) return console.log('MessageUpdate: No author');
         if (oldMessage.author.bot) return console.log('Message update event fired by a bot');
+        if (oldMessage.content.length >= 256) return console.log('Message update event fired for a message with a length of 256 or more.');
         if (newMessage.embeds[0]) {
             // Check messages because of embed
             if (oldMessage.toString() === newMessage.toString()) return;
@@ -13,9 +14,10 @@ module.exports = {
 
         const messageGuild = await client.guilds.fetch(newMessage.guildId)
         const messageLogsChannel = messageGuild.channels.cache.find(channel => channel.name === 'message-logs');
-        console.log(newMessage.author)
-        
-        
+        if (!messageLogsChannel) return;
+
+        if (oldMessage.content.length == 0 || newMessage.content.length == 0 ) return console.log('Message update event fired for a message with a length of 0 or less.');
+
         var registryEmbed = new Discord.MessageEmbed()
         .setAuthor(`${newMessage.author.tag} Edited a Message`, newMessage.author.displayAvatarURL({ dynamic: true }))
         .setTimestamp()
