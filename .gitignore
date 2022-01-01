@@ -5,3 +5,4 @@ database.sqlite
 command_list.docx
 deprecated/
 node_modules/
+wordStart.js
