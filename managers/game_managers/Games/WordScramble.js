@@ -1,112 +1,22 @@
+const GameManager = require('../GameManager');
 const Discord = require('discord.js');
 const { codeBlock } = require('@discordjs/builders')
-const GameManager = require('./GameManager');
 
 require("dotenv").config();
 const wordnikToken = process.env.WORDNIK_API_KEY;
 
-/**
-* Manages instances of a chat game manager for each Guild.
-*/
-class ChatGameManager {
-    constructor(
-        client
-    ) {
-        this.client = client;
-        this.guildGameManagers = new Discord.Collection();
-    }
 
-    /** 
-    * Fetch an instance of a Guild Manager for a specified guild, if it does not exist create one.
-    */
-    async getGuildChatGameManager(guildId) {
-        const manager = this.guildGameManagers.get(guildId);
-        if (manager) return manager;
-        else return await this.addGuild(guildId);
-    }
-
-    /** 
-    * Backend function to create and register a Guild Chat Game Manager..
-    */
-    async addGuild(guildId) {
-        const gameManager = new GuildChatGameManager(this, guildId, this.client);
-        this.guildGameManagers.set(guildId, gameManager);
-        return gameManager;
-    }
-
-    /** 
-    * Backend function to remove the specified Guild Manager from the Head Manager cache.
-    */
-    async removeGuild(guildId) {
-        const gameManager = this.guildGameManagers.get(guildId);
-        if (gameManager) {
-            gameManager.destroy();
-            this.guildGameManagers.delete(guildId);
-            return true;
-        }
-
-    }
-    
-    async syncGuild(guildId, manager) {
-        this.guildGameManagers.set(guildId, manager);
-    }
-
-    async refreshGuild(guildId) {
-        const gameManager = this.guildGameManagers.get(guildId);
-        gameManager.beginChallenge();
-    }
-
-    
-}
-
-
-
-
-
-
-
-
-/**
-* Manages chat games that take place inside the created Guild Manager.
-*/
-class GuildChatGameManager extends GameManager {
-    constructor(
-        manager,
-        guildId,
-        client
-    ) {
-        super(null, manager, null, 'chat_based', null, null, guildId, client);
-        this.guildId = guildId;
+class WordScramble extends GameManager {
+    constructor(name, manager, channel) {
+        super(name, manager, null, 'word_scramble', 'everyone', null, manager.guildId, manager.client);
+        this.channel = channel;
         this.incorrectAnswers = new Discord.Collection();
+    }
 
-        this.fetchGuild()
-    }
-    
-    /** 
-    * Asynchronously fetch the Guild object and tie it to this Guild Chat Game Manager.
-    */
-    async fetchGuild() {
-        const guild = await this.client.guilds.fetch(this.guildId);
-        this.guild = guild;
-        await this.guild.channels.fetch(null, true)
-        return this.guild;
-    }
-    
-    
-    /** 
-    * Backend function to choose a random channel that all Guild Users can chat in.
-    */
-    async pickRandomChannel() {
-        const everyone = this.guild.roles.everyone;
-        const channels = await this.guild.channels.cache.filter(c => c.type === 'GUILD_TEXT' && c.permissionsFor(everyone).has('SEND_MESSAGES'));
-        const randomChannel = channels.random();
-        return randomChannel;
-    }
-    
     /** 
     * Shuffle the passed word and return the shuffled version.
     */
-    async shuffelWord(word) {
+     async shuffelWord(word) {
         word = word.split('');
       
         //Remove the first and the last letter
@@ -136,8 +46,6 @@ class GuildChatGameManager extends GameManager {
         const shuffled = await this.shuffelWord(word);
 
         
-
-        const randomChannel = await this.pickRandomChannel();
         const answerTime = 'none'
         
         const gamePrompt = new Discord.MessageEmbed()
@@ -146,7 +54,7 @@ class GuildChatGameManager extends GameManager {
             .addFields([
               {
                     name: 'Answer Channel',
-                    value: `<#${randomChannel.id}>`,
+                    value: `<#${this.channel.id}>`,
                 },
                 {
                     name: 'Prompt',
@@ -156,28 +64,28 @@ class GuildChatGameManager extends GameManager {
             .setDescription(`Unscramble the prompt and put your solution into the linked Answer Channel, first correct unscramble wins!`)
             .setTimestamp();
 
-        return { gamePrompt, randomChannel, word };
+        return { gamePrompt, word };
     }
     
     /** 
     * Begin a scramble game in a random public channel.
     */
     async beginChallenge() {
-        const { gamePrompt, randomChannel, word } = await this.setupGamePrompt()
+        const { gamePrompt, word } = await this.setupGamePrompt()
 
-        const channel = await this.guild.channels.cache.find(c => c.name === 'commands-here');
+        const channel = await this.manager.guild.channels.cache.find(c => c.name === 'commands-here');
         const gameEmbed = await channel.send({ embeds: [gamePrompt] });
-        this.openListener(randomChannel, word, gameEmbed);
+        this.openListener(word, gameEmbed);
     }
     
     /** 
     * Open a listener on the random channel in order to collect and respond to answers.
     */
-    async openListener(channel, word, embed) {
+    async openListener(word, embed) {
         const filter = m => m.content.length <= word.length + 2;
         const allotedTime = 30;
 
-        const collector = channel.createMessageCollector(filter);
+        const collector = this.channel.createMessageCollector(filter);
         collector.on('collect', async (message) => {
             if (message.author.bot) return;
             const answer = message.content.toLowerCase().trim();
@@ -319,5 +227,5 @@ class GuildChatGameManager extends GameManager {
     }
 
 }
-module.exports.ChatGameManager = ChatGameManager;
-module.exports.GuildChatGameManager = GuildChatGameManager;
+
+module.exports = WordScramble;

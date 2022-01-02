@@ -1,6 +1,6 @@
 const Discord = require('discord.js');
-const GameInstance = require('./GameManager.js');
-const Canvas = require('../../handlers/canvas_handler')
+const GameInstance = require('../GameManager.js');
+const Canvas = require('../../../handlers/canvas_handler')
 
 let gameCount = 0;
 let pressedButtons = [];

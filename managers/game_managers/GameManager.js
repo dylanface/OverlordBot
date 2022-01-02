@@ -1,7 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 const Discord = require('discord.js');
 const { codeBlock } = require('@discordjs/builders')
-const { StatisticManager } = require('../../managers/Games/StatisticManager');
+const { StatisticManager } = require('./StatisticManager');
 
 const gameRegistry = new Discord.Collection();
 

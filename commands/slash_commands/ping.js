@@ -1,7 +1,7 @@
 const Discord = require('discord.js');
 const PinMeManager = require('../../managers/Admin/PinMeManager');
-const { GuildChatGameManager } = require('../../managers/Games/ChatGameManager');
-const { StatisticManager } = require('../../managers/Games/StatisticManager');
+const { GuildChatGameManager } = require('../../managers/game_managers/ChatGameManager');
+const { StatisticManager } = require('../../managers/game_managers/StatisticManager');
 
 module.exports = {
     name: 'ping',
@@ -15,12 +15,9 @@ module.exports = {
     async execute(interaction, client) {
 		await interaction.deferReply();
 
-		const fakeManager = await client.chatGameManager.getGuildChatGameManager(interaction.guildId);
-		setTimeout(() => {
-			fakeManager.beginChallenge()
-			console.log(fakeManager)
-			
-		} , 3000);
+		const testManager = await client.chatGameManager.getGuildChatGameManager(interaction.guild.id);
+		await testManager.createMatch('word_scramble', interaction.channel);
+
 
 		interaction.editReply({ content: 'Pong! 🏓'});
 
