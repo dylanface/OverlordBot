@@ -1,5 +1,5 @@
 const Discord = require('discord.js');
-const TicTacManager = require('../../managers/Games/TicTacManager.js');
+const TicTacManager = require('../../managers/game_managers/games/TicTacManager');
 
 module.exports = {
     name: 'tictactoe',
@@ -12,7 +12,6 @@ module.exports = {
     }],
     defaultPermission: true,
     async execute(interaction, client) {
-        await interaction.defer()
         const match = TicTacManager.createGame(interaction, client)
 
 

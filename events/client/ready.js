@@ -1,4 +1,5 @@
-const Discord= require('discord.js');
+const Discord = require('discord.js');
+const TicketManager = require('../../managers/admin/TicketManager');
 
 module.exports = {
 	name: 'ready',
@@ -17,7 +18,9 @@ module.exports = {
 
         const clientGuilds = client.guilds.cache
 
-        // Function to set Guild commands for all guilds the bot is in
+        /**
+        Function to set Guild commands for all guilds the bot is in
+        */
         const setGuildCommands = async () => {
             const commandList = [];
 
@@ -58,7 +61,23 @@ module.exports = {
 
         }
 
-        // Function to populate pinMeUsers with the users who are part of the PinMe role.
+        /**
+        Function to register guild ticket managers.
+        */
+        const registerGuildTicketManagers = async () => {
+            for (let guild of clientGuilds.values()) {
+                if (guild.channels.cache.find(channel => channel.name.includes('tickets')) === undefined) return startupLog('newLogEntry', guild.id, `Suitable Ticket channel not found in ${guild.name}, no manager started.`);
+                else {
+                    const guildTicketManager = new TicketManager(guild, client);
+                    client.ticketManagerCache.set(guild.id, guildTicketManager);
+                    startupLog('newLogEntry', guild.id, `${guild.name} has been given a Ticket Manager.`)
+                }
+            }
+        }
+
+        /**
+        Function to populate pinMeUsers with the users who are part of the PinMe role. 
+        */
         const populatePinMeUsers = async () => {
             const pinMeGuilds = client.pinMeGuildsCache;
 
@@ -93,8 +112,10 @@ module.exports = {
             }
         }
 
-        // Function to log all of the startup actions to the console
         const startupLogs = new Discord.Collection();
+        /**
+        Function to log all of the startup actions to the console
+        */
         const startupLog = async (action, guildId, log) => {
             if (action === 'newLogSection' && guildId && !startupLogs.has(guildId)) {
                 startupLogs.set(guildId, []);
@@ -115,6 +136,7 @@ module.exports = {
 
         await setGuildCommands()
         await populatePinMeUsers();
+        await registerGuildTicketManagers();
         startupLog('final');
         
         

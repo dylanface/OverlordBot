@@ -43,7 +43,7 @@ let game;
 exports.createGame = function(name, master, interaction, client) {
     gameCount++
     
-    game = new GameInstance(name, master, gameCount, 'bingo')
+    game = new GameInstance(name, master, gameCount, 'bingo', null, null, null, null, client)
     prepareMatch(game, interaction, client) 
     game.drawnBallsCanvasList = [];
 } // !SECTION
@@ -101,9 +101,9 @@ async function prepareMatch(game, interaction, client) {
                     createRoom(game, i, client);
                     i.message.embeds[0].fields[0].value = `${game.players.size}`
                 }
-            } else if (i.customId === 'drawball' && i.user.id === game.master.id) {
+            } else if (i.customId === 'drawball' && i.user.id === game.manager.id) {
                 await callNumber(game, i)
-            } else if (i.customId === 'drawball' && i.user.id !== game.master.id) {
+            } else if (i.customId === 'drawball' && i.user.id !== game.manager.id) {
                 console.log('non-master clicking draw')
             } else {
                 console.log('Button that wasn\'t join or draw was clicked somehow')

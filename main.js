@@ -1,6 +1,6 @@
 const Discord = require('discord.js');
 const { DiscordTogether } = require('discord-together');
-const { PinBoardManager } = require('./managers/Admin/PinBoardManager');
+const { PinBoardManager } = require('./managers/admin/PinBoardManager');
 const { ChatGameManager } = require('./managers/game_managers/ChatGameManager');
 
 // const { REST } = require('@discordjs/rest');
@@ -17,8 +17,11 @@ const token = process.env.TEST_TOKEN
 client.discordTogether = new DiscordTogether(client);
 
 client.pinBoardManager = new PinBoardManager(client);
-client.chatGameManager = new ChatGameManager(client);
 client.pinMeGuildsCache = new Discord.Collection();
+
+client.ticketManagerCache = new Discord.Collection();
+
+client.chatGameManager = new ChatGameManager(client);
 
 client.slashCommands = new Discord.Collection();
 client.events = new Discord.Collection();

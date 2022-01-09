@@ -19,9 +19,9 @@ exports.createGame = async function(interaction, client) {
     gameCount++
     const { value: challengerId } = interaction.options.get('challenger');
     const challenger = await client.users.fetch(challengerId, true);
-    const master = await interaction.user
+    const manager = await interaction.user
     const gameName = `TicTacToe - ${gameCount}`;
-    var game = new GameInstance(gameName, master, gameCount, 'ticTacToe', challenger)
+    var game = new GameInstance(gameName, manager, gameCount, 'ticTacToe', challenger)
     game.addPlayer(interaction.user.id)
     game.addPlayer(challengerId)
 
@@ -29,7 +29,7 @@ exports.createGame = async function(interaction, client) {
 
     const channel = await guild.channels.fetch(interaction.channelId);
     const ticTacThread = await channel.threads.create({
-        name: `TicTacToe ${gameCount} - ${game.master.username} vs ${game.challenger.username}`, //we already use master and challenger here.
+        name: `TicTacToe ${gameCount} - ${game.manager.username} vs ${game.challenger.username}`, //we already use master and challenger here.
         //name: `TicTacToe ${gameCount} - ${master.username} vs ${challenger.username}`,
         autoArchiveDuration: 60,
         type: threadType,
@@ -37,12 +37,12 @@ exports.createGame = async function(interaction, client) {
     })
     .catch(console.error);
         
-        game.addPlayerChannel(game.master.id, ticTacThread)
+        game.addPlayerChannel(game.manager.id, ticTacThread)
         game.addPlayerChannel(game.challenger.id, ticTacThread)
-        await ticTacThread.members.add(game.master);
+        await ticTacThread.members.add(game.manager);
         await ticTacThread.members.add(game.challenger);
         
-    interaction.editReply({ content: `Tic Tac Toe ${master.username} vs ${challenger.username}` })
+    interaction.editReply({ content: `Tic Tac Toe ${manager.username} vs ${challenger.username}` })
     await Canvas.generateTicTacCanvas(game, ticTacThread)
     generatePlayField(game, ticTacThread)
 } // !SECTION Create Game
@@ -57,13 +57,13 @@ async function rematch(oldGame, ticTacToeThread) {
     console.log(`${oldGame.name} has been rematched!`)
     gameCount++;
     const gameName = `TicTacToe - ${gameCount}`;
-    const challenger = oldGame.master;
+    const challenger = oldGame.manager;
     const master = oldGame.challenger;
     let thread = ticTacToeThread;
     var rematch = new GameInstance(gameName, master, gameCount, 'ticTacToe', challenger, 'rematch')
     await rematch.addPlayer(master.id)
     await rematch.addPlayer(challenger.id)
-    rematch.addPlayerChannel(rematch.master.id, thread)
+    rematch.addPlayerChannel(rematch.manager.id, thread)
     rematch.addPlayerChannel(rematch.challenger.id, thread)
     await Canvas.generateTicTacCanvas(rematch, thread)
     generatePlayField(rematch, thread)
@@ -106,10 +106,10 @@ for (let i = 7; i < 10; i++){
 */
 async function generatePlayField(game, playThread) {
 
-    const master = game.master;
+    const master = game.manager;
     const challenger = game.challenger;
 
-    const masterColl = await game.masters.get(master.id);
+    const masterColl = await game.managers.get(master.id);
     const challengerColl = await game.players.get(challenger.id);
 
     const message = await playThread.send({ content: `Tic Tac Toe`,  components: [row1Buttons, row2Buttons, row3Buttons] })
@@ -137,7 +137,7 @@ async function generatePlayField(game, playThread) {
         i.message.components.forEach(row => {
             row.components.forEach(button => {
                 if (button.customId === i.customId) {
-                    if (i.user.id === game.master.id && masterTurn === true) {
+                    if (i.user.id === game.manager.id && masterTurn === true) {
                         button.setLabel(`❌`)
                         button.setStyle('DANGER')
                         button.setDisabled(true)
@@ -190,10 +190,10 @@ async function evaluateBoard(game, playThread) {
 
     const winTypes = [sliceWins, horizonWins, vertaWins]
 
-    const master = game.master;
+    const master = game.manager;
     const challenger = game.challenger;
 
-    const masterColl = await game.masters.get(master.id);
+    const masterColl = await game.managers.get(master.id);
     const challengerColl = await game.players.get(challenger.id);
 
     const masterMovesRaw = await masterColl.get('moves');
@@ -207,7 +207,7 @@ async function evaluateBoard(game, playThread) {
         for (type of winTypes) {
             for (winSet of type) {
                 if (masterMoves.includes(winSet[0]) && masterMoves.includes(winSet[1]) && masterMoves.includes(winSet[2])) {
-                    let winner = game.master;
+                    let winner = game.manager;
                     generateResultsEmbed(game, playThread, winner)
                     doBreak = true;
                     break;
@@ -252,7 +252,7 @@ async function generateResultsEmbed(game, thread, result) {
         embed.setColor('#888888')
     } else {
         embed.setFooter(`${result.username} won the game!`)
-        if (result === game.master) {
+        if (result === game.manager) {
             embed.setColor('#FF0000')
         } else {
             embed.setColor('#0000FF')
@@ -264,7 +264,7 @@ async function generateResultsEmbed(game, thread, result) {
 
     const embedStats = new Discord.MessageEmbed()
     .setTitle('Stats')
-    .setDescription(`Stats for ${game.master.username}`)
+    .setDescription(`Stats for ${game.manager.username}`)
     .setColor('#FF0000')
     // .addField('Wins', masterStats.wins, true)
     // .addField('Losses', masterStats.losses, true)

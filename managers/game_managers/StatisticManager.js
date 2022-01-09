@@ -13,8 +13,9 @@ class StatisticManager {
     }
 
     async fetchStats() {
+        if (this.storageMode === null) return
         if (this.storageMode === 'json_local') {
-            fs.readFile('Storage/word_scramble_score.json', (err, data) => {
+            fs.readFile('storage_files/word_scramble_score.json', (err, data) => {
                 if (err) throw err;
                 let scoreDataJSON = JSON.parse(data);
                 for (let userScore of scoreDataJSON) {

@@ -1,5 +1,5 @@
 const Discord = require("discord.js");
-const PinMeManager = require("../../managers/Admin/PinMeManager");
+const PinMe = require("../../managers/Admin/PinMeManager");
 
 module.exports = {
 	name: 'messageReactionAdd',
@@ -24,7 +24,7 @@ module.exports = {
                     pinMeUser.set('nominatedPosts', pinMeUser.get('nominatedPosts') + 1 || 1)
                     pinMeUser.set('availableNominations', availableNominations - 1)
         
-                    var manager = new PinMeManager(fetchedMessage.author.id, user.id, fetchedMessage.id, fetchedChannel.id, fetchedMessage.guild.id, client)
+                    var manager = new PinMe(fetchedMessage.author.id, user.id, fetchedMessage.id, fetchedChannel.id, fetchedMessage.guild.id, client)
                 } else {
                     console.log(`${user.username} reacted with ${messageReaction.emoji.name} to ${messageReaction.messageId} but has no nominations left`);
                     messageReaction.users.remove(user.id);

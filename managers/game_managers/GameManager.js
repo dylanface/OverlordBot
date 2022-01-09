@@ -24,6 +24,7 @@ class GameInstance {
         challenger,
         modifiers,
         guildId,
+        storageType,
         client
     ) {
         this.client = client;
@@ -40,9 +41,10 @@ class GameInstance {
         this.gameState = 'Startup';
         this.gameId = Discord.SnowflakeUtil.generate();
         this.guildId = guildId;
+        this.storageType = storageType;
         
         this.gameUUId = uuidv4();
-        this.statsManager = new StatisticManager(this.gameUUId, 'json_local', client);
+        this.statsManager = new StatisticManager(this.gameUUId, this.storageType, client);
 
         this.managers.set(this.manager.id, new Discord.Collection());
         gameRegistry.set(this.gameId, this);

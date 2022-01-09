@@ -2,7 +2,7 @@ const Discord = require('discord.js');
 const { codeBlock, inlineCodeBlock } = require('@discordjs/builders');
 
 
-class PinMeManager {
+class PinMe {
     constructor(
         pinMeUserId,
         nominatorId,
@@ -96,4 +96,4 @@ class PinMeManager {
 
 }
 
-module.exports = PinMeManager;
+module.exports = PinMe;

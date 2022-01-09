@@ -28,7 +28,7 @@ exports.generateTicTacCanvas = async function(game, ticTacThread) {
     context.fillText(`${game.name}`, 200, 40); //White
     context.font = '20px Sans';
     context.fillStyle = '#f42200' // Red
-    context.fillText(`${game.master.username}`, 200, 69)
+    context.fillText(`${game.manager.username}`, 200, 69)
     context.drawImage(swordImage, 182, 79, 36, 36)
     context.fillStyle = '#00aff4'; // Blue
     context.fillText(`${game.challenger.username}`, 200, 140)  

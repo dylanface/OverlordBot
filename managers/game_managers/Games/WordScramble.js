@@ -8,7 +8,7 @@ const wordnikToken = process.env.WORDNIK_API_KEY;
 
 class WordScramble extends GameManager {
     constructor(name, manager, channel) {
-        super(name, manager, null, 'word_scramble', 'everyone', null, manager.guildId, manager.client);
+        super(name, manager, null, 'word_scramble', 'everyone', null, manager.guildId, 'json_local', manager.client);
         this.channel = channel;
         this.incorrectAnswers = new Discord.Collection();
     }

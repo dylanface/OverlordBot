@@ -1,5 +1,5 @@
 const Discord = require('discord.js');
-const PinMeManager = require('../../managers/Admin/PinMeManager');
+const PinMeManager = require('../../managers/admin/PinMeManager');
 const { GuildChatGameManager } = require('../../managers/game_managers/ChatGameManager');
 const { StatisticManager } = require('../../managers/game_managers/StatisticManager');
 

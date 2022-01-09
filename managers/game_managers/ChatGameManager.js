@@ -1,5 +1,5 @@
 const Discord = require('discord.js');
-const WordScramble = require('./Games/WordScramble');
+const WordScramble = require('./games/WordScramble');
 
 
 /**
