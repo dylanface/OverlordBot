@@ -5,9 +5,9 @@ const builder = require('@discordjs/builders')
 class PinBoardManager {
     constructor(
         client
-    ) {
-        this.client = client;
-        this.guildBoards = new Discord.Collection();
+        ) {
+            this.client = client;
+            this.guildBoards = new Discord.Collection();
 }
 
     async getGuildBoard(guildId) {

@@ -4,6 +4,7 @@ const { GuildChatGameManager } = require('../../managers/game_managers/ChatGameM
 const { StatisticManager } = require('../../managers/game_managers/StatisticManager');
 
 module.exports = {
+	enabled: false,
     name: 'ping',
     description: "Perform test commands",
 	defaultPermission: false,

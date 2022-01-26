@@ -1,6 +1,7 @@
 const fs = require('fs');
-require("dotenv").config();
-const wordnikToken = process.env.WORDNIK_API_KEY;
+const { envUtil } = require('../../util/envUtil')
+
+const wordnikToken = envUtil.getEnviromentVariable('WORDNIK_API_KEY');
 
 const WordListUtil = {
     getWordnikRandomWord: async function(wordnikToken) {

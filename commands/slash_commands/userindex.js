@@ -1,7 +1,7 @@
 const Discord = require('discord.js');
 
 module.exports = {
-    enabled: false,
+    enabled: true,
     name: 'userindex',
     description: "Search all of Discord for a user",
     options: [{
@@ -55,6 +55,19 @@ module.exports = {
         required: false,
 
     }],
+    defaultPermission: false,
+	permissions: [
+        {
+			id: '146719098343129088',
+			type: 'ROLE',
+			permission: true,
+	    },
+        {
+            id: '265023187614433282',
+            type: 'USER',
+            permission: true,
+        }
+    ],
     async execute(interaction, client) {
 
         await interaction.deferReply({ ephemeral: true });
@@ -88,14 +101,14 @@ module.exports = {
                     .setCustomId('banuser')
                     .setLabel(`${banEmoji} Ban User`)
                     .setStyle('PRIMARY'),
-                new Discord.MessageButton()
-                    .setCustomId('warnuser')
-                    .setLabel(`${warnEmoji} Warn User`)
-                    .setStyle('PRIMARY'),
-                new Discord.MessageButton()
-                    .setCustomId('makenote')
-                    .setLabel(`${noteEmoji} Mod Note on User`)
-                    .setStyle('PRIMARY'), 
+                // new Discord.MessageButton()
+                //     .setCustomId('warnuser')
+                //     .setLabel(`${warnEmoji} Warn User`)
+                //     .setStyle('PRIMARY'),
+                // new Discord.MessageButton()
+                //     .setCustomId('makenote')
+                //     .setLabel(`${noteEmoji} Mod Note on User`)
+                //     .setStyle('PRIMARY'), 
                     cancelButtonPr,
                     
         );
@@ -152,8 +165,7 @@ module.exports = {
                 .addFields(
                     { name: 'Requested Id:', value: inputId },
                     { name: 'Fetched Id:', value: user.id },
-                    { name: 'Account Creation Date:', value: user.createdAt.toString() },
-                    { name: 'Mod Notes:', value: 'placeholder'  }
+                    { name: 'Account Creation Date:', value: user.createdAt.toString() }
                 )
         
             await interaction.editReply({embeds: [userInfo], components: [row] });
@@ -165,7 +177,8 @@ module.exports = {
 
             collector.on('collect', async interaction => {
                 if (!interaction.isButton()) return;
-                else await interaction.deferUpdate({ ephemeral: true });
+                // else await interaction.deferUpdate({ ephemeral: true });
+
                 switch (interaction.customId) {
 
                     case 'banuser':

@@ -139,7 +139,6 @@ module.exports = {
         await registerGuildTicketManagers();
         startupLog('final');
         
-        
         client.user.setPresence({
             status: 'online',
             activity: {

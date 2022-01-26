@@ -30,12 +30,14 @@ class Ticket {
     }
     interaction;
     author;
+    thread = null;
+    DM = null;
     messagesAtLarge = [];
     constructor(
         interaction
     ) {
         this.interaction = interaction;
-        this.author = interaction.member;
+        this.author = interaction.user;
     }
 }
 
