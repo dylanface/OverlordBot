@@ -238,7 +238,7 @@ module.exports = {
             });
                                    
             } catch(error) {
-                console.log(error)
+                console.log(`Something went wrong when fetching the user`);
             }
     }
     

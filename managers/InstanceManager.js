@@ -1,5 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const EventEmitter = require('events');
+const Discord = require('discord.js');
 
 
 /**
@@ -7,7 +8,25 @@ const EventEmitter = require('events');
  * @extends EventEmitter
  */
 class InstanceManager extends EventEmitter {
+
+    /**
+     * The Discord Client that the InstanceManager is attached to.
+     * @type { Discord.Client }
+     */
+    client;
+
+    /**
+     * A key-value map of all the instances that have been cached with this manager.
+     * @type { Map<String, Object> }
+     * @private 
+     */
     #instances;
+
+    /**
+     * 
+     * @constructor
+     * @param { Discord.Client } client - The current active bot client.
+     */
     constructor(client) {
         super();
         this.client = client;

@@ -1,7 +1,25 @@
 const InstanceManager = require("./InstanceManager");
+const Discord = require("discord.js");
 
+/**
+ * An Instance Manager that will latch to a Discord Guild.
+ * @extends InstanceManager
+ */
 class GuildInstanceManager extends InstanceManager {
+
+    /**
+     * 
+     * The Discord Guild that has been latched onto.
+     * @type {Discord.Guild}
+     */
     guild;
+
+    /**
+     *
+     * @constructor
+     * @param { Discord.Guild | String | Number } guild - The guild to be managed.
+     * @param { Discord.Client } client - The current active bot client.
+     */
     constructor(
         guild,
         client
@@ -19,6 +37,10 @@ class GuildInstanceManager extends InstanceManager {
         }
     }
 
+    /**
+     * Fetches the guild from the Discord Client and latches.
+     * @returns {Boolean} The guild that was latched onto.
+     */
     async fetchGuild() {
         const guild = await this.client.guilds.fetch(this.guildId);
         this.guildId = guild.id;
@@ -26,9 +48,12 @@ class GuildInstanceManager extends InstanceManager {
         await this.guild.channels.fetch(null, true)
         this.emit('guildFetched', guild);
         this.registerSelf();
-        return true;
+        return;
     }
 
+    /**
+     * Registers the GuildInstanceManager to the global Discord Client.
+     */
     registerSelf() {
         const instanceRegistry = global.DiscordClient.instanceRegistry
         
@@ -38,8 +63,12 @@ class GuildInstanceManager extends InstanceManager {
         } else {
             instanceRegistry.set(this.guildId, { guildId: this.guildId, instanceManager: this, createdAt: new Date() });
         }
-        console.log('registered self');
+        return;
     }
+
+
+
+
 }
 
 module.exports = GuildInstanceManager;

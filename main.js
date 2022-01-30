@@ -3,6 +3,8 @@ const { DiscordTogether } = require('discord-together');
 
 const { envUtil } = require('./util/envUtil');
 
+const { DatabaseWatcher } = require('./components/watchers/DatabaseWatcher');
+ 
 const { PinBoardManager } = require('./managers/admin/PinBoardManager');
 const { ChatGameManager } = require('./managers/game_managers/ChatGameManager');
 
@@ -20,15 +22,20 @@ client.ticketManagerCache = new Discord.Collection();
 client.slashCommands = new Discord.Collection();
 client.events = new Discord.Collection();
 
+
 global.DiscordClient = client;
 setInterval(() => {
     global.DiscordClient = client;
 }, 1000);
 
 
+global.MongoDiscordUserCache = new DatabaseWatcher();
 client.discordTogether = new DiscordTogether(client);
 client.pinBoardManager = new PinBoardManager(client);
 client.chatGameManager = new ChatGameManager(client);
+
+const db = require('./database/index');
+db.main().catch(console.error);
 
 
 
