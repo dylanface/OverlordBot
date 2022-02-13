@@ -14,9 +14,11 @@ class ModerationLogger {
 
     /**
      * Publishes a moderation event to the guild-logs channel in the provided guild.
+     * @param { Discord.Guild } guild The guild to publish the event to.
+     * @param { Object } event The event to publish.
      */
     async publish(guild, event) {
-        const channel = await this.#getLogChannel(guild);
+        const channel = this.#getLogChannel(guild);
         if (!channel) return console.error(`No channel found for guild ${guild.name}`);
 
         const { type, suspectId, suspect, moderator, reason } = event;
@@ -38,6 +40,7 @@ class ModerationLogger {
 
     /**
      * Get the log channel for the provided guild.
+     * @param {Discord.Guild} guild The guild to get the log channel for.
      */
     #getLogChannel = (guild) => {
         const guildLogChannel = guild.channels.cache.find(channel => channel.name === 'guild-logs');
@@ -47,6 +50,10 @@ class ModerationLogger {
 
     /**
      * Convert a moderation event to an log embed.
+     * @param { Discord.GuildMember } moderator The moderator who performed this action.
+     * @param { String } action The type (or action) of moderation event.
+     * @param { Discord.User } suspect The user who was affected by this action.
+     * @param { String | undefined } reason The reason for this action.
      */
     #moderationEventToEmbed = (moderator, action, suspect, reason) => {
         const registryEmbed = new Discord.MessageEmbed()

@@ -72,7 +72,7 @@ module.exports = {
     async execute(interaction, client) {
 
         await interaction.deferReply({ ephemeral: true });
-        await interaction.member.guild.channels.fetch(null, {cache:true});
+        // await interaction.member.guild.channels.fetch(null, {cache:true});
         
         const { id:inputId } = interaction.options.getUser('userid');
         if (interaction.options.getInteger('purgetime')) {

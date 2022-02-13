@@ -12,8 +12,8 @@ module.exports = {
     }],
     async execute(interaction, client) {
 
-        await interaction.deferReply();
-        await interaction.guild.channels.fetch(null, {cache:true});
+        await interaction.deferReply(/*{ ephemeral: true }*/);
+        // await interaction.guild.channels.fetch(null, {cache:true});
 
         const guild = interaction.guild
         const channel = await interaction.member.guild.channels.fetch(interaction.channelId);
@@ -48,6 +48,7 @@ module.exports = {
         }
 
         const { userListArray, userListLength } = await formatUserList(inputUserList);
+        if (userListLength <= 2) return await interaction.editReply(`Mass ban requires at least 3 suspected users.`);
 
         const establishDefaultReason = async (interaction) => {
 
@@ -77,8 +78,6 @@ module.exports = {
                         label: 'Reason Not Specified',
                         value: 'null',
                     }
-                    
-    
                 ])
             )
             
@@ -89,7 +88,7 @@ module.exports = {
                 
             interaction.editReply({ embeds: [massBanEmbed], components: [reasonSelector] });
     
-            const defaultReasonFilter = interaction => interaction.customId === 'massban_reason_selector';
+            const defaultReasonFilter = i => i.customId === 'massban_reason_selector' && i.user.id === interaction.member.user.id;
             const defaultReasonCollector = channel.createMessageComponentCollector({filter: defaultReasonFilter, componentType: 'SELECT_MENU'});
     
                 defaultReasonCollector.on('collect', async interaction => {
@@ -151,7 +150,7 @@ module.exports = {
 
         const listenForConfirmation = async (operations) => {
 
-            const confirmationFilter = interaction => interaction.customId === 'confirm_button' || 'cancel_button';
+            const confirmationFilter = i => i.customId === 'confirm_button' || 'cancel_button' && i.user.id === interaction.member.user.id;
             const userActionButtonCollector = channel.createMessageComponentCollector({filter: confirmationFilter, componentType: 'BUTTON'});
             
                 userActionButtonCollector.on('collect', async (interaction) => {
@@ -258,7 +257,7 @@ module.exports = {
             
             let iterator = 0;
     
-            const userActionButtonFilter = interaction => interaction.customId === 'back' || 'next' || 'pardon' || 'edit_reason';
+            const userActionButtonFilter = i => i.customId === 'back' || 'next' || 'pardon' || 'edit_reason' && i.user.id === interaction.member.user.id;
             const userActionButtonCollector = channel.createMessageComponentCollector({filter: userActionButtonFilter, componentType: 'BUTTON'});
             
                 userActionButtonCollector.on('collect', async (interaction) => {

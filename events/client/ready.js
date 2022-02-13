@@ -49,7 +49,6 @@ module.exports = {
                     if (registeredSCommand.permissions) {
                         
                         registeredCmd.permissions.set({permissions:registeredSCommand.permissions})
-                        .then(console.log)
                         .catch(console.error);
                     } else {
         
@@ -60,6 +59,21 @@ module.exports = {
             })
 
         }
+
+        /**
+         * Function to fetch information about all guilds the bot is in.
+         */
+        const fetchGuildInfo = async () => {
+
+            for (const guild of clientGuilds.values()) {
+                if (!guild.available) return;
+                const availableChannels = await guild.channels.fetch(null, {cache:true});
+
+                startupLog('newLogEntry', guild.id, `${guild.name} has ${availableChannels.size} channels that have been cached`)
+            }
+
+        }
+
 
         /**
         Function to register guild ticket managers.
@@ -135,6 +149,7 @@ module.exports = {
         }
 
         await setGuildCommands()
+        await fetchGuildInfo()
         await populatePinMeUsers();
         await registerGuildTicketManagers();
         startupLog('final');

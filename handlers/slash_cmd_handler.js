@@ -5,7 +5,7 @@ module.exports = async (client, Discord) => {
 
     for(const file of slash_cmd_files){
         const sCommand = require(`../commands/slash_commands/${file}`);
-        if(sCommand.name && sCommand.enabled !== false){
+        if(sCommand.name && sCommand.enabled != false){
             client.slashCommands.set(sCommand.name, sCommand);
         } else {
             continue;

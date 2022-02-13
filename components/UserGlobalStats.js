@@ -2,7 +2,11 @@
  * Cache with a user's global stats.
  */
 class UserGlobalStats {
-    cache = new Map();
+    cache = {
+        games: {},
+        community: {},
+        totalPoints: 0,
+    };
     constructor() {}
 
 }
