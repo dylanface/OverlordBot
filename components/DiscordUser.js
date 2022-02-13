@@ -1,122 +1,78 @@
-const Discord = require('discord.js');
-const UserGlobalStats = require('./UserGlobalStats');
-const ModerationManager = require('./ModerationManager');
-const DataRecord = require('./DataRecord');
+const DiscordUserModeration = require('../components/DiscordUserModeration');
+const DiscordUserStats = require('../components/DiscordUserStats');
 
-const DiscordUserModel = require('../database/models/DiscordUserModel');
 
 /**
- * Base class to interact with and log discord users.
+ * The interaction class for a DiscordUser within Overlord.
  */
-class DiscordUser extends DataRecord {
+class DiscordUser {
+
     /**
-     * Discord Id.
+     * The Discord id of the DiscordUser.
      * @type {String}
      */
     id;
 
     /**
-     * Discord username.
+     * The Discord username of the DiscordUser.
      * @type {String}
      */
     username;
 
     /**
-     * Discord discriminator value.
+     * The Discord discriminator for the DiscordUser.
      * @type {String}
      */
     discriminator;
 
     /**
-     * Global stats.
-     * @type {UserGlobalStats}
+     * The stats object for this DiscordUser.
      */
-    userStats;
+    stats;
 
     /**
-     * Moderation manager.
-     * @type {ModerationManager}
+     * The ModerationManager for this DiscordUser.
+     * @type {DiscordUserModeration}
      */
     moderation;
 
     /**
-     * Timestamps for actions on this user.
-     * @type {DiscordUserTimestamps}
-     */
-    timestamps;
-
-    /**
-     * Signifies if this user was from a database sync.
-     * @type {Boolean}
-     */
-    fromDatabase = false;
-
-    /**
      * 
-     * @param {Discord.User | DatabaseEntry} user The discord user to create a DiscordUser object for.
      */
     constructor(user) {
-        super();
         this.id = user.id;
         this.username = user.username;
         this.discriminator = user.discriminator;
-        this.fromDatabase = user.fromDatabase ? true : false;
 
-        this.populateDiscordUser(user);
+        this.stats = new DiscordUserStats();
+        this.moderation = new DiscordUserModeration();
+
+        this.load();
     }
 
-    /**
-     * Populate this user with data from the database.
-     * @param {DiscordUserModel} user The user to populate.
-     */
-    populateDiscordUser(user) {
-        if (user.fromDatabase) {
-            this.setTimestamps(user.timestamps);
-            this.userStats = user.userStats;
-            this.moderation = user.moderation;
-            this.post(true)
-        } else {
-            this.userStats = new UserGlobalStats();
-            this.moderation = new ModerationManager();
-            this.timestamps = {
-                createdAt: this.createdAt,
-                updatedAt: this.updatedAt,
-                databaseHitAt: this.databaseHitAt
-            }
+    load() {
+        if (global.DiscordClient.DiscordUserCache.getDiscordUser(this.id)) {
+            const dbUser = global.DiscordClient.DiscordUserCache.getDiscordUser(this.id)
+            this.id = dbUser.id;
+            this.username = dbUser.username;
+            this.discriminator = dbUser.discriminator;
+            this.stats = dbUser.stats;
+            this.moderation = dbUser.moderation;
+
+            console.log(this)
+            return console.log('DiscordUser overwritten successfully.');
         }
-        this.emit('populated', this);
-        return true;
+        console.log(this) 
+        return console.log('DiscordUser loaded successfully.'); 
     }
 
-    /**
-     * Post this user to the MongoDB.
-     * @param {Boolean} timestampUpdate Whether this DB hit is to update the timestamps only.
-     */
-    async post(timeStampUpdate = false) {
-        this.registerDatabaseHit();
-
-        const formattedPost = {
-            id: this.id,
-            username: this.username,
-            discriminator: this.discriminator,
-            userStats: this.userStats,
-            moderation: this.moderation,
-            timestamps: {
-                createdAt: this.createdAt,
-                updatedAt: this.updatedAt,
-                databaseHitAt: this.databaseHitAt
-            }
-        }
-
-        await DiscordUserModel.findOneAndUpdate({"id": this.id}, formattedPost, {upsert: true}).catch(err => {
-            console.log('Error while posting user to database: ' + err);
-            this.revokeDatabaseHit();
-        })
-
-        this.emit('posted', this);
-        if (timeStampUpdate) return;
-        global.MongoDiscordUserCache.state = 'UNSYNCED';
+    save() {
+        global.DiscordClient.DiscordUserCache.registerDiscordUser(this);
+        global.DiscordClient.DiscordUserCache.syncDatabase();
+        return console.log('DiscordUser saved successfully.');
     }
+
+
 }
 
 module.exports = DiscordUser;

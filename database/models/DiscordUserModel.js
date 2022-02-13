@@ -16,29 +16,12 @@ const DiscordUserSchema = new Schema({
     },
     stats: {
         type: Object,
-        required: true,
+        required: true
     },
     moderation: {
         type: Object,
-        required: true,
-    },
-    timestamps: {
-        createdAt: {
-            type: Date,
-            required: true,
-        },
-        updatedAt: {
-            type: Date,
-            default: new Date(),
-            required: true,
-        },
-        databaseHitAt: {
-            type: Date,
-            required: false,
-        }
-
-    },
-    
+        required: true
+    }
 })
 
 /**

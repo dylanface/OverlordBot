@@ -1,8 +1,7 @@
 const Discord = require('discord.js');
-const { bold, italic, strikethrough, underscore, spoiler, quote, blockQuote, inlineCode, codeBlock  } = require('@discordjs/builders');
+const { codeBlock  } = require('@discordjs/builders');
 
 module.exports = {
-    enabled: false,
     name: 'massban',
     description: "Begin the mass ban process for a list of Users",
     options: [{
@@ -14,14 +13,18 @@ module.exports = {
     async execute(interaction, client) {
 
         await interaction.deferReply();
-        await interaction.member.guild.channels.fetch(null, {cache:true});
+        await interaction.guild.channels.fetch(null, {cache:true});
+
+        const guild = interaction.guild
+        const channel = await interaction.member.guild.channels.fetch(interaction.channelId);
+        const guildLogChannel = await guild.channels.cache.find(channel => channel.name === 'guild-logs');
 
         const inputUserList = await interaction.options.getString('userlist');
         
         const formatUserList = async (userList) => {
             let replaceOp = userList.replace(/[^0-9,]/g,'');
             let userListArray = replaceOp.split(',');
-            const filteredArray = userListArray.filter(user => { return user.length >= 17 && user.length <= 19 });
+            const filteredArray = userListArray.filter(user => { return user.length >= 17 && user.length <= 20 });
 
             let i=0
             for (let userId of filteredArray) {
@@ -86,9 +89,6 @@ module.exports = {
                 
             interaction.editReply({ embeds: [massBanEmbed], components: [reasonSelector] });
     
-            const channelId = interaction.channelId;
-            const channel = await interaction.member.guild.channels.fetch(channelId);
-    
             const defaultReasonFilter = interaction => interaction.customId === 'massban_reason_selector';
             const defaultReasonCollector = channel.createMessageComponentCollector({filter: defaultReasonFilter, componentType: 'SELECT_MENU'});
     
@@ -119,7 +119,7 @@ module.exports = {
                 .setAuthor(`${user.tag}`, user.displayAvatarURL({ dynamic: true }))
                 .addFields(
                     { name: 'User Id', value: `${user.id}`, inline: true },
-                    { name: 'Discord Bot', value: `${user.bot ? 'This user is not a registered bot' : 'This user is registered as a bot'}`, inline: true },
+                    { name: 'Discord Bot', value: `${user.bot ? 'This user is registered as a bot' : 'This user is not a registered bot' }`, inline: true },
                     { name: 'Reason', value: `${reason}`, inline: false },
                     { name: 'Account Created', value: `${user.createdAt}`, inline: true },
                     { name: 'Account Age', value: `${Math.floor((Date.now() - user.createdAt) / (1000 * 60 * 60 * 24))} days`, inline: true },
@@ -131,6 +131,84 @@ module.exports = {
             
         }
 
+        const confirmActionRow = () => {
+
+            const confirmationButtons = new Discord.MessageActionRow()
+            .addComponents(
+                new Discord.MessageButton()
+                .setCustomId('confirm_button')
+                .setLabel('Confirm')
+                .setStyle('SUCCESS'),
+                new Discord.MessageButton()
+                .setCustomId('cancel_button')
+                .setLabel('Cancel')
+                .setStyle('DANGER')
+
+            )
+
+            return confirmationButtons
+        }
+
+        const listenForConfirmation = async (operations) => {
+
+            const confirmationFilter = interaction => interaction.customId === 'confirm_button' || 'cancel_button';
+            const userActionButtonCollector = channel.createMessageComponentCollector({filter: confirmationFilter, componentType: 'BUTTON'});
+            
+                userActionButtonCollector.on('collect', async (interaction) => {
+                    if (!interaction.isButton()) return;
+                    else await interaction.deferUpdate();
+
+                    if (interaction.customId === 'confirm_button') {
+                        await executeBanList(operations);
+                        userActionButtonCollector.stop();
+                        
+                        const confirmationEmbed = new Discord.MessageEmbed()
+                        .setColor('#0099ff')
+                        .setDescription(`Actions are being executed... Check <#${guildLogChannel.id}> for logs.`)
+
+                        await interaction.editReply({ embeds: [confirmationEmbed], components: [] });
+                    }
+                    if (interaction.customId === 'cancel_button') {
+                        userActionButtonCollector.stop();
+
+                        const cancelEmbed = new Discord.MessageEmbed()
+                        .setColor('#ff0000')
+                        .setDescription('Cancelled mass ban operation, no action(s) will be executed.')
+
+                        await interaction.editReply({ embeds: [cancelEmbed], components: [] });
+
+                    }
+
+                });
+
+        }
+
+        const executeBanList = async (operations) => {
+            const bannedUsers = [];
+            for (let [key, value] of operations) {
+                if (value != 'pardon') {
+                    if (value === 'null') value = `Banned by ${interaction.member.user.tag} with mass ban`;
+
+                    await guild.members.ban(key, { reason: value })
+                    .then(console.log)
+                    .catch(console.error)
+
+                    bannedUsers.push(key);
+
+                    const event = {
+                        type: 'banned',
+                        suspectId: key,
+                        moderator: interaction.member,
+                        reason: value,
+                    }
+
+                    await client.ModerationLogger.publish(guild, event)
+                }
+            }
+
+            return bannedUsers;
+
+        }
         
         const createActionRow = (backDisabled, nextDisabled) => {
             
@@ -179,8 +257,6 @@ module.exports = {
             interaction.editReply({ embeds: [userListEmbed], components: [createActionRow(true, false)] });
             
             let iterator = 0;
-            const channelId = interaction.channelId;
-            const channel = await interaction.member.guild.channels.fetch(channelId);
     
             const userActionButtonFilter = interaction => interaction.customId === 'back' || 'next' || 'pardon' || 'edit_reason';
             const userActionButtonCollector = channel.createMessageComponentCollector({filter: userActionButtonFilter, componentType: 'BUTTON'});
@@ -256,8 +332,9 @@ module.exports = {
                                     userListOperations.set(userId, reason);
                                 }
                             }
-                            interaction.editReply({ embeds: [createOperationSummary(userListOperations)], components: [] })
+                            interaction.editReply({ embeds: [createOperationSummary(userListOperations)], components: [confirmActionRow()] })
                             userActionButtonCollector.stop();
+                            listenForConfirmation(userListOperations);
                         break;
                     }
                 });

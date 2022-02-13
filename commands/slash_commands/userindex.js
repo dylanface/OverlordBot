@@ -54,7 +54,8 @@ module.exports = {
         description: 'Reason for banning the user, if any',
         required: false,
 
-    }],
+    }
+],
     defaultPermission: false,
 	permissions: [
         {
@@ -82,7 +83,7 @@ module.exports = {
             var inputReason = await interaction.options.getString('reason');
             console.log(inputReason)
         }
-        
+
         const banEmoji = '🔨';
         const warnEmoji = '⚠️';
         const noteEmoji = '📒';
@@ -133,27 +134,8 @@ module.exports = {
                         
             );
                         
-    async function registerInteraction(executor, user, action, reason, purge) {
-        const registryEmbed = new Discord.MessageEmbed()
-            .setColor('#00ff00')
-            .setAuthor(`${user.tag}`, user.displayAvatarURL({ dynamic: true }))
-            .addFields(
-                { name: 'Action:', value: `\`\`\`The user has been ${action}\`\`\`` },
-            )
-            .setFooter(executor.tag, executor.displayAvatarURL({ dynamic: true }))
-            .setTimestamp()
-
-        if (reason) registryEmbed.addField('Reason:',`\`\`\`${reason}\`\`\``);
-        if (purge) registryEmbed.addField('Amount of days for message purge:', `\`\`\`${purge}\`\`\``);
-        
-        try {
-            interaction.editReply({ embeds: [registryEmbed], components: [] });
-            const registryChannel = await interaction.member.guild.channels.cache.find(channel => channel.name === 'guild-logs');
-            registryChannel.send({ embeds: [registryEmbed] });
-
-        } catch {
-            console.log('Failed to send registry message');
-        }
+    async function registerInteraction(event) {
+        await client.ModerationLogger.publish(interaction.guild, event)
 
     }
 
@@ -177,7 +159,7 @@ module.exports = {
 
             collector.on('collect', async interaction => {
                 if (!interaction.isButton()) return;
-                // else await interaction.deferUpdate({ ephemeral: true });
+                else await interaction.deferUpdate({ ephemeral: true });
 
                 switch (interaction.customId) {
 
@@ -220,7 +202,7 @@ module.exports = {
                         }
 
                         // Then create a log
-                        registerInteraction(interaction.user, user, 'banned', inputReason, inputDays)
+                        registerInteraction({moderator:interaction.member, suspect:user, type:'banned', reason:inputReason})
                         collector.stop()
                     break;
 

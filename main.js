@@ -3,7 +3,9 @@ const { DiscordTogether } = require('discord-together');
 
 const { envUtil } = require('./util/envUtil');
 
-const { DatabaseWatcher } = require('./components/watchers/DatabaseWatcher');
+const DiscordUserCache = require('./components/DiscordUserCache');
+const ModerationLogger = require('./components/ModerationLogger');
+
  
 const { PinBoardManager } = require('./managers/admin/PinBoardManager');
 const { ChatGameManager } = require('./managers/game_managers/ChatGameManager');
@@ -28,8 +30,9 @@ setInterval(() => {
     global.DiscordClient = client;
 }, 1000);
 
+client.DiscordUserCache = new DiscordUserCache(client);
+client.ModerationLogger = new ModerationLogger(client);
 
-global.MongoDiscordUserCache = new DatabaseWatcher();
 client.discordTogether = new DiscordTogether(client);
 client.pinBoardManager = new PinBoardManager(client);
 client.chatGameManager = new ChatGameManager(client);

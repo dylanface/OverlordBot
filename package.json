@@ -23,7 +23,6 @@
     "fs": "0.0.1-security",
     "libsodium-wrappers": "^0.7.9",
     "mongoose": "^6.1.8",
-    "node-canvas": "^2.7.0",
     "node-fetch": "^2.6.1",
     "nodemon": "^2.0.8",
     "uuid": "^8.3.2",

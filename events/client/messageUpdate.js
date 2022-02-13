@@ -19,7 +19,11 @@ module.exports = {
         if (oldMessage.content.length == 0 || newMessage.content.length == 0 ) return console.log('Message update event fired for a message with a length of 0 or less.');
 
         var registryEmbed = new Discord.MessageEmbed()
-        .setAuthor(`${newMessage.author.tag} Edited a Message`, newMessage.author.displayAvatarURL({ dynamic: true }))
+        .setAuthor(
+            `${newMessage.author.tag} edited a message in #${newMessage.channel.name}`,
+            newMessage.author.displayAvatarURL({ dynamic: true }),
+            `https://discord.com/channels/${newMessage.guildId}/${newMessage.channelId}/${newMessage.id}`
+        )
         .setTimestamp()
         .setColor('#887d91')
         .addFields(
