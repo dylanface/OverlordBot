@@ -6,24 +6,16 @@ const { joinVoiceChannel, getVoiceConnection, VoiceConnectionStatus, NoSubscribe
 module.exports = {
     name: 'play',
     description: "Play music",
-    options: [
-        {
-            name: 'end',
-            description: 'True or False',
-            type: 'BOOLEAN',
-            required: true
-        }
-    ],
     async execute(interaction, client) {
-        await interaction.deferReply({ content: '...Loading Music', ephemeral: true });
+        await interaction.deferReply({ ephemeral: true });
 
         const voiceChannel = interaction.member.voice.channel;
         if (!voiceChannel) return interaction.editReply({ content:'You need to be in a voice channel to play music!', ephemeral: true });
-        
-        const endInput = interaction.options.getBoolean('end')
-        if (endInput) {
+
+        if (client.activePlayer) {
             const connection = getVoiceConnection(voiceChannel.guild.id);
             connection.destroy();
+            client.activePlayer = false;
             return interaction.editReply({ content: 'Music stopped', ephemeral: true });
         } else {
 
@@ -50,6 +42,8 @@ module.exports = {
 
             connection.subscribe(player)
 
+            client.activePlayer = true;
+
             player.on('unsubscribe', () => {
                 player.stop();
                 console.log('Player stopped');
@@ -63,10 +57,16 @@ module.exports = {
                 try {
                     player.stop();
                     connection.destroy();
+                    client.activePlayer = false;
                 } catch (error) {}
             })
 
             client.on('voiceStateUpdate', (oldState, newState) => {
+                if (!newState.channel) {
+                    player.stop();
+                    client.activePlayer = false;
+                    return
+                }
                 if (newState.channelId && newState.channel.type === 'GUILD_STAGE_VOICE' && newState.guild.me.voice.suppress) {
                     try {
                         newState.guild.me.voice.setSuppressed(false);

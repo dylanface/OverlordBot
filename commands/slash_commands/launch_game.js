@@ -78,30 +78,26 @@ module.exports = {
                     new Discord.MessageButton()
                     .setLabel(`Join The Game!`)
                     .setStyle(`LINK`)
-                    .setURL(`${invite.code}`),
-                    new Discord.MessageButton()
-                    .setCustomId('cancel')
-                    .setLabel(`Cancel`)
-                    .setStyle('DANGER')
+                    .setURL(`${invite.code}`)
                 )
 
             await interaction.editReply({ embeds: [inviteEmbed], components: [inviteButtonRow] });
 
-            const filter = i => i.customId === 'cancel' && i.user.id === interaction.member.user.id;
-            const cancelCollector = channel.createMessageComponentCollector({filter: filter, componentType: 'BUTTON'});
+            // const filter = i => i.customId === 'cancel' && i.user.id === interaction.member.user.id;
+            // const cancelCollector = channel.createMessageComponentCollector({filter: filter, componentType: 'BUTTON'});
             
-            cancelCollector.on('collect', async (interaction) => {
-                if (!interaction.isButton()) return;
-                else await interaction.deferUpdate();
+            // cancelCollector.on('collect', async (interaction) => {
+            //     if (!interaction.isButton()) return;
+            //     else await interaction.deferUpdate();
 
-                const cancelledEmbed = new Discord.MessageEmbed()
-                    .setColor('#0099ff')
-                    .setDescription(`This game has been closed.`)
+            //     const cancelledEmbed = new Discord.MessageEmbed()
+            //         .setColor('#0099ff')
+            //         .setDescription(`This game has been closed.`)
 
-                await interaction.editReply({ embeds: [cancelledEmbed], components: [] });
-                cancelCollector.stop();
+            //     await interaction.editReply({ embeds: [cancelledEmbed], components: [] });
+            //     cancelCollector.stop();
 
-            });
+            // });
 
         } else {
             await interaction.editReply('You must be in a voice channel to use this command!');
