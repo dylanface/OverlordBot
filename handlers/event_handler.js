@@ -1,4 +1,8 @@
 const fs = require('fs');
+const ascii = require('ascii-table')
+let table = new ascii("Events");
+
+table.setHeading('Event', 'Status', 'Once');
 
 module.exports = async (client, Discord) => {
     const load_dir = (dirs) =>{
@@ -10,10 +14,11 @@ module.exports = async (client, Discord) => {
                 client.once(event.name, (...args) => event.execute(...args, client));
             } else {
                 client.on(event.name, (...args) => event.execute(...args, client));
-                console.log(`Loaded event: ${event.name}`);
             }
+            table.addRow(file, '✓', event.once ? '✓' : '✕');
         }
-        console.log(`↼ Begin Startup ⇀`)
+
+        console.log(table.toString());
     }
     
     load_dir('client')
