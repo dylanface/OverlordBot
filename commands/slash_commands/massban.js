@@ -1,8 +1,7 @@
 const Discord = require('discord.js');
-const { bold, italic, strikethrough, underscore, spoiler, quote, blockQuote, inlineCode, codeBlock  } = require('@discordjs/builders');
+const { codeBlock  } = require('@discordjs/builders');
 
 module.exports = {
-    enabled: false,
     name: 'massban',
     description: "Begin the mass ban process for a list of Users",
     options: [{
@@ -11,41 +10,91 @@ module.exports = {
         description: 'Comma separated user id list',
         required: true,
     }],
+    defaultPermission: false,
+	permissions: [
+        {
+			id: '146719098343129088',
+			type: 'ROLE',
+			permission: true,
+	    },
+        {
+            id: '265023187614433282',
+            type: 'USER',
+            permission: true,
+        },
+        {
+			id: '956794393598238791',
+			type: 'ROLE',
+			permission: true,
+	    }
+    ],
     async execute(interaction, client) {
 
-        await interaction.deferReply();
-        await interaction.member.guild.channels.fetch(null, {cache:true});
+        await interaction.deferReply(/*{ ephemeral: true }*/);
+        // if (client.openMassBan) return interaction.editReply(
+        //     'A mass ban is already in progress, please wait for it to be completed. If you believe this is an error contact Overlord devs'
+        // );
+        // client.openMassBan = true;
+        // await interaction.guild.channels.fetch(null, {cache:true});
+
+        const guild = interaction.guild
+        const channel = await interaction.member.guild.channels.fetch(interaction.channelId);
+        const guildLogChannel = await guild.channels.cache.find(channel => channel.name === 'guild-logs');
 
         const inputUserList = await interaction.options.getString('userlist');
         
+
+        /**
+         * Format the raw user list into an array of userObjects.
+         * @param { String } userList Comma separated list of user ids to be parsed.
+         */
         const formatUserList = async (userList) => {
             let replaceOp = userList.replace(/[^0-9,]/g,'');
             let userListArray = replaceOp.split(',');
-            const filteredArray = userListArray.filter(user => { return user.length >= 17 && user.length <= 19 });
+            const filteredArray = userListArray.filter(user => { return user.length >= 17 && user.length <= 20 });
 
             let i=0
             for (let userId of filteredArray) {
-                try {
-                    await client.users.fetch(userId, true)
-                } catch (error) {
+                const user = await client.users.fetch(userId, true).catch(console.error)
+
+                if (user) {
+                    filteredArray[i] = {id: user.id, user: user}
+                    i++
+                    continue
+                } else {
                     filteredArray.splice(i, 1);
-                    console.log(filteredArray);
+                    continue
                 }
-                i++
+                
             }
 
             let formattedUserList = {
+                /**
+                 * @type { Array<{id: String, user: Discord.User}> }
+                 */
                 userListArray: filteredArray,
                 userListLength: filteredArray.length,
             }
-            console.log(formattedUserList)
 
             
             return formattedUserList;
         }
 
+        /**
+         * Generate the formatted user list array globally.
+        */
         const { userListArray, userListLength } = await formatUserList(inputUserList);
 
+        /**
+         * End the mass ban process if the user list includes less than 3 userObjects.
+         */
+        if (userListLength <= 2) return await interaction.editReply(`Mass ban requires at least 3 suspected users.`);
+
+
+        /**
+         * Send and watch the default reason selector to begin the mass ban process.
+         * @param {Discord.CommandInteraction} interaction The command interaction that began this mass ban.
+         */
         const establishDefaultReason = async (interaction) => {
 
             const reasonSelector = new Discord.MessageActionRow()
@@ -74,8 +123,6 @@ module.exports = {
                         label: 'Reason Not Specified',
                         value: 'null',
                     }
-                    
-    
                 ])
             )
             
@@ -86,17 +133,12 @@ module.exports = {
                 
             interaction.editReply({ embeds: [massBanEmbed], components: [reasonSelector] });
     
-            const channelId = interaction.channelId;
-            const channel = await interaction.member.guild.channels.fetch(channelId);
-    
-            const defaultReasonFilter = interaction => interaction.customId === 'massban_reason_selector';
-            const defaultReasonCollector = channel.createMessageComponentCollector({filter: defaultReasonFilter, componentType: 'SELECT_MENU'});
+            const defaultReasonFilter = i => i.customId === 'massban_reason_selector' && i.user.id === interaction.member.user.id && i.message.interaction.id === interaction.id;
+            const defaultReasonCollector = channel.createMessageComponentCollector({filter: defaultReasonFilter, componentType: 'SELECT_MENU', idle: 45 * 1000});
     
                 defaultReasonCollector.on('collect', async interaction => {
                     if (!interaction.isSelectMenu()) return;
                     else await interaction.deferUpdate({ ephemeral: true });
-    
-                    console.log(interaction.values)
 
                     createUserList(interaction, interaction.values);
                     defaultReasonCollector.stop();
@@ -104,34 +146,142 @@ module.exports = {
         }
 
 
+        /**
+         * A collection of embeds generated for the user list.
+         */
         const userListGeneratedEmbeds = new Discord.Collection();
-        const createUserEmbed = async (userId, reason) => {
-            const user = await client.users.fetch(userId, true)
+
+        /**
+         * Turn an object from the user list and a reason into an embed.
+         * @param { Object } userObject The object passed from the user list.
+         * @param { String } reason The reason for the ban.
+         */
+        const createUserEmbed = async (userObject, reason) => {
+            const user = userObject.user;
             if (reason === 'pardon') {
                 const userPardonEmbed = new Discord.MessageEmbed()
                     .setColor(user.hexAccentColor)
-                    .setAuthor(`${user.tag}`, user.displayAvatarURL({ dynamic: true }))
+                    .setAuthor({name: `${user.tag}`, iconURL: user.displayAvatarURL({ dynamic: true })})
                     .setDescription(`${user.tag} is currently pardoned from this ban list. Edit reason, or click Pardon User again to re-add.`)
-                userListGeneratedEmbeds.set(userId, userPardonEmbed);
+                userListGeneratedEmbeds.set(userObject.id, userPardonEmbed);
             } else {
                 const userEmbed = new Discord.MessageEmbed()
                 .setColor(user.hexAccentColor)
-                .setAuthor(`${user.tag}`, user.displayAvatarURL({ dynamic: true }))
+                .setAuthor({name: `${user.tag}`, iconURL: user.displayAvatarURL({ dynamic: true })})
                 .addFields(
                     { name: 'User Id', value: `${user.id}`, inline: true },
-                    { name: 'Discord Bot', value: `${user.bot ? 'This user is not a registered bot' : 'This user is registered as a bot'}`, inline: true },
+                    { name: 'Discord Bot', value: `${user.bot ? 'This user is registered as a bot' : 'This user is not a registered bot' }`, inline: true },
                     { name: 'Reason', value: `${reason}`, inline: false },
                     { name: 'Account Created', value: `${user.createdAt}`, inline: true },
                     { name: 'Account Age', value: `${Math.floor((Date.now() - user.createdAt) / (1000 * 60 * 60 * 24))} days`, inline: true },
                 )
 
-                userListGeneratedEmbeds.set(user.id, userEmbed);
+                userListGeneratedEmbeds.set(userObject.id, userEmbed);
             }
 
             
         }
 
+        /**
+         * Create action row for operation summary confirmation.
+         */
+        const confirmActionRow = () => {
+
+            const confirmationButtons = new Discord.MessageActionRow()
+            .addComponents(
+                new Discord.MessageButton()
+                .setCustomId('confirm_button')
+                .setLabel('Confirm')
+                .setStyle('SUCCESS'),
+                new Discord.MessageButton()
+                .setCustomId('cancel_button')
+                .setLabel('Cancel')
+                .setStyle('DANGER')
+
+            )
+
+            return confirmationButtons
+        }
+
+
+        /**
+         * Listener for operation summary confirmation.
+         * @param {Discord.Collection} operations The operations of interest.
+         */
+        const listenForConfirmation = async (operations) => {
+
+            const confirmationFilter = i => i.user.id === interaction.user.id && i.message.interaction.id === interaction.id;
+            const userActionButtonCollector = channel.createMessageComponentCollector({filter: confirmationFilter, componentType: 'BUTTON', idle: 45 * 1000});
+            
+                userActionButtonCollector.on('collect', async (interaction) => {
+                    if (!interaction.isButton()) return;
+                    else await interaction.deferUpdate();
+
+                    if (interaction.customId === 'confirm_button') {
+                        await executeBanList(operations);
+                        userActionButtonCollector.stop();
+                        
+                        const confirmationEmbed = new Discord.MessageEmbed()
+                        .setColor('#0099ff')
+                        .setDescription(`Actions are being executed... Check <#${guildLogChannel.id}> for logs.`)
+
+                        await interaction.editReply({ embeds: [confirmationEmbed], components: [] });
+                    }
+                    if (interaction.customId === 'cancel_button') {
+                        userActionButtonCollector.stop();
+
+                        const cancelEmbed = new Discord.MessageEmbed()
+                        .setColor('#ff0000')
+                        .setDescription('Cancelled mass ban operation, no action(s) will be executed.')
+
+                        await interaction.editReply({ embeds: [cancelEmbed], components: [] });
+
+                        // client.openMassBan = false;
+
+                    }
+
+                });
+
+        }
+
+
+        /**
+         * Execute the bans as detailed in the operations collection.
+         * @param {Discord.Collection} operations The operations collection to execute.
+         */
+        const executeBanList = async (operations) => {
+            const bannedUsers = [];
+            for (let [key, value] of operations) {
+                if (value != 'pardon') {
+                    if (value === 'null') value = `Banned by ${interaction.member.user.tag} with mass ban`;
+
+                    await guild.members.ban(key, { reason: value })
+                    .then(console.log)
+                    .catch(console.error)
+
+                    bannedUsers.push(key);
+
+                    const event = {
+                        type: 'banned',
+                        suspectId: key,
+                        moderator: interaction.member,
+                        reason: value,
+                    }
+
+                    await client.ModerationLogger.publish(guild, event)
+                }
+            }
+
+            // client.openMassBan = false;
+            return bannedUsers;
+
+        }
         
+        /**
+         * Create the action row for the user list.
+         * @param {Boolean} backDisabled True if the back button should be disabled.
+         * @param {Boolean} nextDisabled True if the next button should be disabled.
+         */
         const createActionRow = (backDisabled, nextDisabled) => {
             
             const backButton = new Discord.MessageButton()
@@ -167,6 +317,12 @@ module.exports = {
             return userListActionButtons;
         }
 
+
+        /**
+         * Create and watch the embeds for the user list.
+         * @param { Discord.SelectMenuInteraction } interaction The select menu interaction that called this function.
+         * @param { String | null } reason The default reason to apply to this user list.
+         */
         const createUserList = async (interaction, reason) => {
             const userListOperations = new Discord.Collection();
 
@@ -174,16 +330,14 @@ module.exports = {
                 await createUserEmbed(user, reason)
             }
 
-            const userListEmbed = userListGeneratedEmbeds.get(userListArray[0]);
+            const userListEmbed = userListGeneratedEmbeds.get(userListArray[0].id);
             
             interaction.editReply({ embeds: [userListEmbed], components: [createActionRow(true, false)] });
             
             let iterator = 0;
-            const channelId = interaction.channelId;
-            const channel = await interaction.member.guild.channels.fetch(channelId);
     
-            const userActionButtonFilter = interaction => interaction.customId === 'back' || 'next' || 'pardon' || 'edit_reason';
-            const userActionButtonCollector = channel.createMessageComponentCollector({filter: userActionButtonFilter, componentType: 'BUTTON'});
+            const userActionButtonFilter = i => i.user.id === interaction.user.id && i.message.interaction.id === interaction.message.interaction.id;   
+            const userActionButtonCollector = channel.createMessageComponentCollector({filter: userActionButtonFilter, componentType: 'BUTTON', idle: 60 * 1000});
             
                 userActionButtonCollector.on('collect', async (interaction) => {
                     if (!interaction.isButton()) return;
@@ -192,38 +346,38 @@ module.exports = {
                     switch (interaction.customId) {
                         case 'back':
                             if (iterator > 1) {
-                                const embed = userListGeneratedEmbeds.get(userListArray[--iterator]);
+                                const embed = userListGeneratedEmbeds.get(userListArray[--iterator].id);
                                 interaction.editReply({ embeds: [embed], components: [createActionRow(false, false)] });
                             } else {
-                                const embed = userListGeneratedEmbeds.get(userListArray[--iterator]);
+                                const embed = userListGeneratedEmbeds.get(userListArray[--iterator].id);
                                 interaction.editReply({ embeds: [embed], components: [createActionRow(true, false)] });
                             } 
                         break;
 
                         case 'next':
                             if (iterator < (userListArray.length - 1) - 1) {
-                                const embed = userListGeneratedEmbeds.get(userListArray[++iterator]);
+                                const embed = userListGeneratedEmbeds.get(userListArray[++iterator].id);
                                 interaction.editReply({ embeds: [embed], components: [createActionRow(false, false)] });
                             } else {
-                                const embed = userListGeneratedEmbeds.get(userListArray[++iterator]);
+                                const embed = userListGeneratedEmbeds.get(userListArray[++iterator].id);
                                 interaction.editReply({ embeds: [embed], components: [createActionRow(false, true)] });
                             } 
                         break;
 
                         case 'pardon':
-                            if (userListOperations.get(userListArray[iterator]) === 'pardon') {
+                            if (userListOperations.get(userListArray[iterator].id) === 'pardon') {
                                 await createUserEmbed(userListArray[iterator], reason)
                                 .then(() => {
-                                    const embed = userListGeneratedEmbeds.get(userListArray[iterator]);
+                                    const embed = userListGeneratedEmbeds.get(userListArray[iterator].id);
                                     interaction.editReply({ embeds: [embed] });
-                                    userListOperations.set(userListArray[iterator], reason);
+                                    userListOperations.set(userListArray[iterator].id, reason);
                                 })
                             } else {
                                 await createUserEmbed(userListArray[iterator], 'pardon')
                                 .then(() => {
-                                    const embed = userListGeneratedEmbeds.get(userListArray[iterator]);
+                                    const embed = userListGeneratedEmbeds.get(userListArray[iterator].id);
                                     interaction.editReply({ embeds: [embed] });
-                                    userListOperations.set(userListArray[iterator], 'pardon');
+                                    userListOperations.set(userListArray[iterator].id, 'pardon');
                                 })
                             }
                         break;
@@ -235,9 +389,9 @@ module.exports = {
                                 .then(async (collected) => {
                                     await createUserEmbed(userListArray[iterator], collected.first().content)
                                     .then(() => {
-                                        const embed = userListGeneratedEmbeds.get(userListArray[iterator]);
+                                        const embed = userListGeneratedEmbeds.get(userListArray[iterator].id);
                                         interaction.editReply({ embeds: [embed] });
-                                        userListOperations.set(userListArray[iterator], collected.first().content);
+                                        userListOperations.set(userListArray[iterator].id, collected.first().content);
                                         prompt.delete();
                                         collected.first().delete();
                                     })
@@ -249,25 +403,30 @@ module.exports = {
                         break;
 
                         case 'continue':
-                            for (let userId of userListArray) {
-                                if (userListOperations.has(userId)) {
+                            for (let user of userListArray) {
+                                if (userListOperations.has(user.id)) {
                                     continue;
                                 } else {
-                                    userListOperations.set(userId, reason);
+                                    userListOperations.set(user.id, reason);
                                 }
                             }
-                            interaction.editReply({ embeds: [createOperationSummary(userListOperations)], components: [] })
+                            interaction.editReply({ embeds: [createOperationSummary(userListOperations)], components: [confirmActionRow()] })
                             userActionButtonCollector.stop();
+                            listenForConfirmation(userListOperations);
                         break;
                     }
                 });
 
         }
 
+        /**
+         * Turn the operation collection into an summary embed
+         * @param {Discord.Collection} operations The operation collection to transform 
+         */
         const createOperationSummary = (operations) => {
 
             const operationSummaryEmbed = new Discord.MessageEmbed()
-                .setAuthor(`Operation Summary`, client.user.displayAvatarURL({ dynamic: true }))
+                .setAuthor({name: `Operation Summary`, iconURL: client.user.displayAvatarURL({ dynamic: true })})
                 .setDescription(codeBlock('diff', `${operations.map((value, key) => {
                     if (value === 'pardon') return `+ ${key} will be pardoned`;
                     else return `- ${key} will be banned for ${value}`;
@@ -280,4 +439,4 @@ module.exports = {
         establishDefaultReason(interaction);
 
     }
-} //FIXME I want more Anchors
+}

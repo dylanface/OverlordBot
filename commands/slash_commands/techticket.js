@@ -1,4 +1,5 @@
 module.exports = {
+enabled: false,
 name: 'techticket',
 description: 'Open a tech ticket',
 options: [
@@ -13,14 +14,14 @@ async execute(interaction, client) {
 
     const TicketManager = await client.ticketManagerCache.get(interaction.guild.id);
     if (!TicketManager) return interaction.editReply({ content: 'There was an error opening the ticket. Please try again later.'});
-    const ticket = await TicketManager.startTicket(interaction);
-    console.log(ticket)
+    const ticketObject = await TicketManager.startTicket(interaction);
+    const ticket = ticketObject.cachedInstance;
 
     const ticketChannel = await interaction.guild.channels.cache.filter(c => c.name === 'tech-tickets').first();
     
     const attachmentInquiry = interaction.options.getBoolean('attachment');
 
-    const openTicket = () => {
+    const processTicket = () => {
         if (ticketChannel && attachmentInquiry) ticketReachout(0);
         else if (ticketChannel && !attachmentInquiry) ticketReachout(1);
         else if (!ticketChannel) ticketReachout(404);
@@ -37,13 +38,32 @@ async execute(interaction, client) {
         }
         if (questionSet === 1) {
             interaction.reply({ content: `Please begin the ticket process in ${/*reachoutMethod*/ null}`, ephemeral: true });
+            createThread()
             return;
         }
     }
 
-    const reachoutMethod = () => {}
+    const reachoutMethod = async () => {
+        const userOfInterest = ticket.author;
+
+        try {
+            const dmChannel = await userOfInterest.createDM();
+            dmChannel.send({ content: `Hello`, ephemeral: true });
+        } catch (e) {console.log(e)}
+
+
+    }
     
-    const createThread = async () => {}
+    const createThread = async () => {
+        const threads = ticketChannel.threads
+        
+        const ticketThread = await threads.create({
+            name: `Tech Ticket #${ticket.id}`,
+            autoArchiveDuration: 60,
+            reason: `Tech Ticket thread created for ${ticket.author.username}`,
+          })
+         .catch(console.error);
+    }
     const threadListener = async () => {}
     
     const createDM = async () => {}
@@ -54,6 +74,7 @@ async execute(interaction, client) {
     const closeTicket = () => {}
 
 
-    openTicket()
+    processTicket()
+    reachoutMethod()
 }
 }

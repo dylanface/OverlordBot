@@ -3,10 +3,11 @@ const Discord = require('discord.js');
 module.exports = {
     name: 'messageUpdate',
     async execute(oldMessage, newMessage, client) {
-        if (oldMessage.hasThread) return console.log('Message update event fired for a thread message.');
+        if (oldMessage.hasThread) return console.log('MessageUpdate: Message has thread');
         if (!oldMessage.author) return console.log('MessageUpdate: No author');
-        if (oldMessage.author.bot) return console.log('Message update event fired by a bot');
-        if (oldMessage.content.length >= 256) return console.log('Message update event fired for a message with a length of 256 or more.');
+        if (oldMessage.author.bot) return console.log('MessageUpdate: Author is bot');
+        if (oldMessage.content.length >= 1024) return console.log('MessageUpdate: Message exceeds 1024 characters');
+        if (oldMessage.content.length == 0 || newMessage.content.length == 0 ) return console.log('MessageUpdate: Message has no content');
         if (newMessage.embeds[0]) {
             // Check messages because of embed
             if (oldMessage.toString() === newMessage.toString()) return;
@@ -16,10 +17,21 @@ module.exports = {
         const messageLogsChannel = messageGuild.channels.cache.find(channel => channel.name === 'message-logs');
         if (!messageLogsChannel) return;
 
-        if (oldMessage.content.length == 0 || newMessage.content.length == 0 ) return console.log('Message update event fired for a message with a length of 0 or less.');
 
-        var registryEmbed = new Discord.MessageEmbed()
-        .setAuthor(`${newMessage.author.tag} Edited a Message`, newMessage.author.displayAvatarURL({ dynamic: true }))
+        const mobileLink = new Discord.MessageActionRow()
+            .addComponents(
+                new Discord.MessageButton()
+                    .setLabel('Go To Message')
+                    .setStyle('LINK')
+                    .setURL(`https://discord.com/channels/${newMessage.guildId}/${newMessage.channelId}/${newMessage.id}`)
+            )
+
+        const registryEmbed = new Discord.MessageEmbed()
+        .setAuthor({
+            name: `${newMessage.author.tag} edited a message in #${newMessage.channel.name}`,
+            iconURL: newMessage.author.displayAvatarURL({ dynamic: true }),
+            url: `https://discord.com/channels/${newMessage.guildId}/${newMessage.channelId}/${newMessage.id}`
+        })
         .setTimestamp()
         .setColor('#887d91')
         .addFields(
@@ -28,6 +40,6 @@ module.exports = {
             );
             
 
-        await messageLogsChannel.send({embeds: [registryEmbed]}).catch(error => 		messageLogsChannel.send({content: error.toString()}));
+        await messageLogsChannel.send({ embeds: [registryEmbed], components:[mobileLink] }).catch(error => messageLogsChannel.send({content: error.toString()}));
     }
 }

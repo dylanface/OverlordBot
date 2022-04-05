@@ -1,5 +1,5 @@
 const Discord = require('discord.js');
-const TicketManager = require('../../managers/admin/TicketManager');
+const TicketManager = require('../../components/admin/TicketManager');
 
 module.exports = {
 	name: 'ready',
@@ -49,7 +49,6 @@ module.exports = {
                     if (registeredSCommand.permissions) {
                         
                         registeredCmd.permissions.set({permissions:registeredSCommand.permissions})
-                        .then(console.log)
                         .catch(console.error);
                     } else {
         
@@ -60,6 +59,22 @@ module.exports = {
             })
 
         }
+
+        /**
+         * Function to fetch information about all guilds the bot is in.
+         */
+        const fetchGuildInfo = async () => {
+
+            for (const guild of clientGuilds.values()) {
+                if (!guild.available) return;
+                const availableChannels = await guild.channels.fetch(null, {cache:true});
+                client.totalMembers += guild.memberCount;
+
+                startupLog('newLogEntry', guild.id, `${guild.name} has ${availableChannels.size} channels that have been cached`)
+            }
+
+        }
+
 
         /**
         Function to register guild ticket managers.
@@ -79,6 +94,7 @@ module.exports = {
         Function to populate pinMeUsers with the users who are part of the PinMe role. 
         */
         const populatePinMeUsers = async () => {
+            if (!client.pinBoardManager) return;
             const pinMeGuilds = client.pinMeGuildsCache;
 
             for (let guild of clientGuilds.values()) {
@@ -135,10 +151,10 @@ module.exports = {
         }
 
         await setGuildCommands()
+        await fetchGuildInfo()
         await populatePinMeUsers();
-        await registerGuildTicketManagers();
+        // await registerGuildTicketManagers();
         startupLog('final');
-        
         
         client.user.setPresence({
             status: 'online',
