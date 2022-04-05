@@ -9,6 +9,24 @@ options: [
         required: true
     }
 ],
+defaultPermission: false,
+permissions: [
+    {
+        id: '146719098343129088',
+        type: 'ROLE',
+        permission: true,
+    },
+    {
+        id: '265023187614433282',
+        type: 'USER',
+        permission: true,
+    },
+    {
+        id: '956794393598238791',
+        type: 'ROLE',
+        permission: true,
+    }
+],
 async execute(interaction, client) {
 
     await interaction.deferReply({ ephemeral: true });
