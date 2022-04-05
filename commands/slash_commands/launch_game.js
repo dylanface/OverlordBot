@@ -1,6 +1,7 @@
 const Discord = require('discord.js');
 
 module.exports = {
+    enabled: false,
     name: 'launch_game',
     description: 'Launch the selected Discord Embedded Game using discord-together',
     options: [
@@ -71,7 +72,7 @@ module.exports = {
 
             const inviteEmbed = new Discord.MessageEmbed()
                 .setColor('#0099ff')
-                .setDescription(`Click the link button below to join the game!`)
+                .setDescription(`Click the link button below to join ${selectedGame}!`)
 
             const inviteButtonRow = new Discord.MessageActionRow()
                 .addComponents(

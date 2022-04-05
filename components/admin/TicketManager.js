@@ -1,5 +1,5 @@
 const Discord = require('discord.js');
-const GuildInstanceManager = require('../GuildInstanceManager');
+const GuildInstanceManager = require('../../managers/GuildInstanceManager');
 
 
 class TicketManager extends GuildInstanceManager {

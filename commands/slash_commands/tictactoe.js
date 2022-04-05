@@ -2,6 +2,7 @@ const Discord = require('discord.js');
 const TicTacManager = require('../../managers/game_managers/games/TicTacManager');
 
 module.exports = {
+    enabled: false,
     name: 'tictactoe',
     description: "Challenge another user to tic tac toe",
     options: [{

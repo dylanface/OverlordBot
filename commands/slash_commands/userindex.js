@@ -67,17 +67,21 @@ module.exports = {
             id: '265023187614433282',
             type: 'USER',
             permission: true,
-        }
+        },
+        {
+			id: '956794393598238791',
+			type: 'ROLE',
+			permission: true,
+	    }
     ],
     async execute(interaction, client) {
 
         await interaction.deferReply({ ephemeral: true });
-        // await interaction.member.guild.channels.fetch(null, {cache:true});
         
         const { id:inputId } = interaction.options.getUser('userid');
         if (interaction.options.getInteger('purgetime')) {
             var inputDays = await interaction.options.getInteger('purgetime');
-            console.log(inputDays)
+            // console.log(inputDays)
         }
         if (interaction.options.getString('reason')) {
             var inputReason = await interaction.options.getString('reason');
@@ -139,89 +143,89 @@ module.exports = {
 
     }
 
-        try {
-            var user = await client.users.fetch(inputId, true)
-            const userInfo = new Discord.MessageEmbed()
-                .setColor('#f6c5f8')
-                .setAuthor(`${user.tag}`, user.displayAvatarURL({ dynamic: true }))
-                .addFields(
-                    { name: 'Requested Id:', value: inputId },
-                    { name: 'Fetched Id:', value: user.id },
-                    { name: 'Account Creation Date:', value: user.createdAt.toString() }
-                )
-        
-            await interaction.editReply({embeds: [userInfo], components: [row] });
-            const channelId = interaction.channelId;
-            const channel = await interaction.member.guild.channels.fetch(channelId);
+    try {
+        var user = await client.users.fetch(inputId, true)
+        const userInfo = new Discord.MessageEmbed()
+            .setColor('#f6c5f8')
+            .setAuthor({name: `${user.tag}`, iconURL: user.displayAvatarURL({ dynamic: true })})
+            .addFields(
+                { name: 'Requested Id:', value: inputId },
+                { name: 'Fetched Id:', value: user.id },
+                { name: 'Account Creation Date:', value: user.createdAt.toString() }
+            )
+    
+        await interaction.editReply({embeds: [userInfo], components: [row] });
+        const channelId = interaction.channelId;
+        const channel = await interaction.member.guild.channels.fetch(channelId);
 
-		    const filter = interaction => interaction.customId === 'banuser' || 'warnuser' || 'makenote' || 'cancel';
-		    const collector = channel.createMessageComponentCollector({filter, componentType: 'BUTTON'});
+        const filter = i => i.user.id === interaction.user.id && i.message.interaction.id === interaction.id;
+        const collector = channel.createMessageComponentCollector({filter, componentType: 'BUTTON', idle: 45 * 1000});
 
-            collector.on('collect', async interaction => {
-                if (!interaction.isButton()) return;
-                else await interaction.deferUpdate({ ephemeral: true });
+        collector.on('collect', async interaction => {
+            if (!interaction.isButton()) return;
+            else await interaction.deferUpdate({ ephemeral: true });
 
-                switch (interaction.customId) {
+            switch (interaction.customId) {
 
-                    case 'banuser':
-                        await interaction.editReply({ embeds: [userInfo], components: [] });
-                        await interaction.editReply({ embeds: [userInfo], components: [banSelect] });
-                    break;
+                case 'banuser':
+                    await interaction.editReply({ embeds: [userInfo], components: [] });
+                    await interaction.editReply({ embeds: [userInfo], components: [banSelect] });
+                break;
 
-                    case 'warnuser':
-                        await interaction.editReply({ embeds: [userInfo], components: [] });
-                        await interaction.editReply({ embeds: [userInfo], components: [warnSelect] });
-                    break;
+                case 'warnuser':
+                    await interaction.editReply({ embeds: [userInfo], components: [] });
+                    await interaction.editReply({ embeds: [userInfo], components: [warnSelect] });
+                break;
 
-                    case 'makenote':
-                        await interaction.editReply({ embeds: [userInfo], components: [] });
-                    break;
+                case 'makenote':
+                    await interaction.editReply({ embeds: [userInfo], components: [] });
+                break;
 
-                    case 'cancel':
-                        await interaction.editReply({ content:'All actions canceled, the user has been added to the cache.',  components: [], embeds: [] });
-                        collector.stop()
-                    break;
+                case 'cancel':
+                    await interaction.editReply({ content:'All actions canceled, the user has been added to the cache.',  components: [], embeds: [] });
+                    collector.stop()
 
-                    case 'redbanuser':
-                        if (!inputReason && !inputDays) {
-                            await interaction.guild.members.ban(inputId)
-                            .then(console.log)
-                            .catch(console.error)
-                        } else if (inputReason && !inputDays) {
-                            await interaction.guild.members.ban(inputId, { reason: inputReason })
-                            .then(console.log)
-                            .catch(console.error)
-                        } else if (!inputReason && inputDays) {
-                            await interaction.guild.members.ban(inputId, { days: inputDays })
-                            .then(console.log)
-                            .catch(console.error)
-                        } else if (inputReason && inputDays) {
-                            await interaction.guild.members.ban(inputId, { days: inputDays, reason: inputReason })
-                            .then(console.log)
-                            .catch(console.error)
-                        }
+                break;
 
-                        // Then create a log
-                        registerInteraction({moderator:interaction.member, suspect:user, type:'banned', reason:inputReason})
-                        collector.stop()
-                    break;
+                case 'redbanuser':
+                    if (!inputReason && !inputDays) {
+                        await interaction.guild.members.ban(inputId)
+                        .then(console.log)
+                        .catch(console.error)
+                    } else if (inputReason && !inputDays) {
+                        await interaction.guild.members.ban(inputId, { reason: inputReason })
+                        .then(console.log)
+                        .catch(console.error)
+                    } else if (!inputReason && inputDays) {
+                        await interaction.guild.members.ban(inputId, { days: inputDays })
+                        .then(console.log)
+                        .catch(console.error)
+                    } else if (inputReason && inputDays) {
+                        await interaction.guild.members.ban(inputId, { days: inputDays, reason: inputReason })
+                        .then(console.log)
+                        .catch(console.error)
+                    }
 
-                    case 'redwarnuser':
-                        console.log(`You clicked ${interaction.customId}`);
-                    break;
+                    // Then create a log
+                    registerInteraction({moderator:interaction.member, suspect:user, type:'banned', reason:inputReason})
+                    collector.stop()
 
-                }
-			});
+                break;
 
-		    collector.on('end', collected => {
-                
-                console.log(`The collecter has ended its collection round, and collected ${collected.size} items`)
+                case 'redwarnuser':
+                    console.log(`You clicked ${interaction.customId}`);
+                break;
 
-            });
-                                   
-            } catch(error) {
-                console.log(`Something went wrong when fetching the user`);
             }
+        });
+
+        collector.on('end', collected => {
+            console.log(`The collecter has ended its collection round, and collected ${collected.size} items`);
+        });
+                                
+        } catch(error) {
+            console.log(`Something went wrong when fetching the user`);
+        }
     }
     
 }

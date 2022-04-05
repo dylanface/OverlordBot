@@ -3,12 +3,15 @@ const { DiscordTogether } = require('discord-together');
 
 const { envUtil } = require('./util/envUtil');
 
-const DiscordUserCache = require('./components/DiscordUserCache');
+const { StartStatusRequestHandler } = require('./components/admin/StatusRequestHandler');
+
+// const DiscordUserCache = require('./components/DiscordUserCache');
 const ModerationLogger = require('./components/ModerationLogger');
+const ErrorHandler = require('./components/admin/ErrorHandler');
 
  
-const { PinBoardManager } = require('./managers/admin/PinBoardManager');
-const { ChatGameManager } = require('./managers/game_managers/ChatGameManager');
+// const { PinBoardManager } = require('./components/admin/PinBoardManager');
+// const { ChatGameManager } = require('./managers/game_managers/ChatGameManager');
 
 // const { REST } = require('@discordjs/rest');
 // const { Routes } = require('discord-api-types/v9');
@@ -20,7 +23,7 @@ const token = envUtil.getEnviromentVariable('TEST_TOKEN');
 
 client.instanceRegistry = new Discord.Collection();
 client.pinMeGuildsCache = new Discord.Collection();
-client.ticketManagerCache = new Discord.Collection();
+// client.ticketManagerCache = new Discord.Collection();
 client.slashCommands = new Discord.Collection();
 client.events = new Discord.Collection();
 
@@ -30,23 +33,31 @@ setInterval(() => {
     global.DiscordClient = client;
 }, 1000);
 
-client.DiscordUserCache = new DiscordUserCache(client);
+client.totalMembers = 0;
+StartStatusRequestHandler(client);
+
+// client.DiscordUserCache = new DiscordUserCache(client);
 client.ModerationLogger = new ModerationLogger(client);
 
 client.discordTogether = new DiscordTogether(client);
-client.pinBoardManager = new PinBoardManager(client);
-client.chatGameManager = new ChatGameManager(client);
+// client.pinBoardManager = new PinBoardManager(client);
+// client.chatGameManager = new ChatGameManager(client);
 
-const db = require('./database/index');
-db.main().catch(console.error);
+const errors = new ErrorHandler(client);
+client.ErrorHandler = errors;
 
-
+if (envUtil.getEnviromentVariable('DB_ENABLED') === 'true') {
+    const db = require('./database/index');
+    db.main().catch(console.error);
+}
 
 ['slash_cmd_handler', 'event_handler'].forEach(handler => {
     require(`./handlers/${handler}`)(client, Discord);
 })
 
-
-
-
 client.login(token)
+
+client.on("ready", () => {
+
+    process.on("uncaughtException", err => errors.recoverable(err));
+})

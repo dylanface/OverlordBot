@@ -1,6 +1,7 @@
 const BingoManager = require('../../managers/game_managers/games/BingoManager');
 
 module.exports = {
+    enabled: false,
     name: 'bingo',
     description: "The main bingo command",
     options: [

@@ -1,5 +1,5 @@
 const Discord = require('discord.js');
-const TicketManager = require('../../managers/admin/TicketManager');
+const TicketManager = require('../../components/admin/TicketManager');
 
 module.exports = {
 	name: 'ready',
@@ -68,6 +68,7 @@ module.exports = {
             for (const guild of clientGuilds.values()) {
                 if (!guild.available) return;
                 const availableChannels = await guild.channels.fetch(null, {cache:true});
+                client.totalMembers += guild.memberCount;
 
                 startupLog('newLogEntry', guild.id, `${guild.name} has ${availableChannels.size} channels that have been cached`)
             }
@@ -93,6 +94,7 @@ module.exports = {
         Function to populate pinMeUsers with the users who are part of the PinMe role. 
         */
         const populatePinMeUsers = async () => {
+            if (!client.pinBoardManager) return;
             const pinMeGuilds = client.pinMeGuildsCache;
 
             for (let guild of clientGuilds.values()) {
@@ -151,7 +153,7 @@ module.exports = {
         await setGuildCommands()
         await fetchGuildInfo()
         await populatePinMeUsers();
-        await registerGuildTicketManagers();
+        // await registerGuildTicketManagers();
         startupLog('final');
         
         client.user.setPresence({

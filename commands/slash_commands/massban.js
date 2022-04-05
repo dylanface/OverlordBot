@@ -10,9 +10,31 @@ module.exports = {
         description: 'Comma separated user id list',
         required: true,
     }],
+    defaultPermission: false,
+	permissions: [
+        {
+			id: '146719098343129088',
+			type: 'ROLE',
+			permission: true,
+	    },
+        {
+            id: '265023187614433282',
+            type: 'USER',
+            permission: true,
+        },
+        {
+			id: '956794393598238791',
+			type: 'ROLE',
+			permission: true,
+	    }
+    ],
     async execute(interaction, client) {
 
         await interaction.deferReply(/*{ ephemeral: true }*/);
+        // if (client.openMassBan) return interaction.editReply(
+        //     'A mass ban is already in progress, please wait for it to be completed. If you believe this is an error contact Overlord devs'
+        // );
+        // client.openMassBan = true;
         // await interaction.guild.channels.fetch(null, {cache:true});
 
         const guild = interaction.guild
@@ -41,7 +63,6 @@ module.exports = {
                     continue
                 } else {
                     filteredArray.splice(i, 1);
-                    console.log(filteredArray);
                     continue
                 }
                 
@@ -54,7 +75,6 @@ module.exports = {
                 userListArray: filteredArray,
                 userListLength: filteredArray.length,
             }
-            console.log(formattedUserList)
 
             
             return formattedUserList;
@@ -113,14 +133,12 @@ module.exports = {
                 
             interaction.editReply({ embeds: [massBanEmbed], components: [reasonSelector] });
     
-            const defaultReasonFilter = i => i.customId === 'massban_reason_selector' && i.user.id === interaction.member.user.id;
-            const defaultReasonCollector = channel.createMessageComponentCollector({filter: defaultReasonFilter, componentType: 'SELECT_MENU'});
+            const defaultReasonFilter = i => i.customId === 'massban_reason_selector' && i.user.id === interaction.member.user.id && i.message.interaction.id === interaction.id;
+            const defaultReasonCollector = channel.createMessageComponentCollector({filter: defaultReasonFilter, componentType: 'SELECT_MENU', idle: 45 * 1000});
     
                 defaultReasonCollector.on('collect', async interaction => {
                     if (!interaction.isSelectMenu()) return;
                     else await interaction.deferUpdate({ ephemeral: true });
-    
-                    console.log(interaction.values)
 
                     createUserList(interaction, interaction.values);
                     defaultReasonCollector.stop();
@@ -143,13 +161,13 @@ module.exports = {
             if (reason === 'pardon') {
                 const userPardonEmbed = new Discord.MessageEmbed()
                     .setColor(user.hexAccentColor)
-                    .setAuthor(`${user.tag}`, user.displayAvatarURL({ dynamic: true }))
+                    .setAuthor({name: `${user.tag}`, iconURL: user.displayAvatarURL({ dynamic: true })})
                     .setDescription(`${user.tag} is currently pardoned from this ban list. Edit reason, or click Pardon User again to re-add.`)
                 userListGeneratedEmbeds.set(userObject.id, userPardonEmbed);
             } else {
                 const userEmbed = new Discord.MessageEmbed()
                 .setColor(user.hexAccentColor)
-                .setAuthor(`${user.tag}`, user.displayAvatarURL({ dynamic: true }))
+                .setAuthor({name: `${user.tag}`, iconURL: user.displayAvatarURL({ dynamic: true })})
                 .addFields(
                     { name: 'User Id', value: `${user.id}`, inline: true },
                     { name: 'Discord Bot', value: `${user.bot ? 'This user is registered as a bot' : 'This user is not a registered bot' }`, inline: true },
@@ -192,8 +210,8 @@ module.exports = {
          */
         const listenForConfirmation = async (operations) => {
 
-            const confirmationFilter = i => i.customId === 'confirm_button' || 'cancel_button' && i.user.id === interaction.member.user.id;
-            const userActionButtonCollector = channel.createMessageComponentCollector({filter: confirmationFilter, componentType: 'BUTTON'});
+            const confirmationFilter = i => i.user.id === interaction.user.id && i.message.interaction.id === interaction.id;
+            const userActionButtonCollector = channel.createMessageComponentCollector({filter: confirmationFilter, componentType: 'BUTTON', idle: 45 * 1000});
             
                 userActionButtonCollector.on('collect', async (interaction) => {
                     if (!interaction.isButton()) return;
@@ -217,6 +235,8 @@ module.exports = {
                         .setDescription('Cancelled mass ban operation, no action(s) will be executed.')
 
                         await interaction.editReply({ embeds: [cancelEmbed], components: [] });
+
+                        // client.openMassBan = false;
 
                     }
 
@@ -252,6 +272,7 @@ module.exports = {
                 }
             }
 
+            // client.openMassBan = false;
             return bannedUsers;
 
         }
@@ -315,8 +336,8 @@ module.exports = {
             
             let iterator = 0;
     
-            const userActionButtonFilter = i => i.customId === 'back' || 'next' || 'pardon' || 'edit_reason' || 'continue' && i.user.id === interaction.member.user.id;
-            const userActionButtonCollector = channel.createMessageComponentCollector({filter: userActionButtonFilter, componentType: 'BUTTON'});
+            const userActionButtonFilter = i => i.user.id === interaction.user.id && i.message.interaction.id === interaction.message.interaction.id;   
+            const userActionButtonCollector = channel.createMessageComponentCollector({filter: userActionButtonFilter, componentType: 'BUTTON', idle: 60 * 1000});
             
                 userActionButtonCollector.on('collect', async (interaction) => {
                     if (!interaction.isButton()) return;
@@ -405,7 +426,7 @@ module.exports = {
         const createOperationSummary = (operations) => {
 
             const operationSummaryEmbed = new Discord.MessageEmbed()
-                .setAuthor(`Operation Summary`, client.user.displayAvatarURL({ dynamic: true }))
+                .setAuthor({name: `Operation Summary`, iconURL: client.user.displayAvatarURL({ dynamic: true })})
                 .setDescription(codeBlock('diff', `${operations.map((value, key) => {
                     if (value === 'pardon') return `+ ${key} will be pardoned`;
                     else return `- ${key} will be banned for ${value}`;
@@ -418,4 +439,4 @@ module.exports = {
         establishDefaultReason(interaction);
 
     }
-} //FIXME I want more Anchors
+}

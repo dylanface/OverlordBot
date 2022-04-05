@@ -1,4 +1,5 @@
 module.exports = {
+enabled: false,
 name: 'techticket',
 description: 'Open a tech ticket',
 options: [

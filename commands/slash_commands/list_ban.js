@@ -51,7 +51,7 @@ async execute(interaction, client) {
         .setColor('#0099ff')
         .setDescription(`Banned ${bannedUsers.length} users`)
         .addField('Banned Users', `\`\`\`${bannedUsers.map(user => user.tag).join('\n')}\`\`\``)
-        .setFooter(interaction.member.user.tag, interaction.member.user.avatarURL())
+        .setFooter({text: interaction.member.user.tag, iconURL: interaction.member.user.avatarURL()})
         .setTimestamp();
 
     await logChannel.send({ embeds: [embed] });

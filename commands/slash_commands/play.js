@@ -30,17 +30,18 @@ module.exports = {
                     noSubscriber: NoSubscriberBehavior.Pause,
                 },
             });
+
             const liveStream = ytdl('https://www.youtube.com/watch?v=5qap5aO4i9A', {
                 filter: 'audio',
                 quality: 'highestaudio',
                 liveBuffer: 1000,
             })
+
             const resource = createAudioResource(liveStream, { inlineVolume: true });
             resource.volume.setVolume(0.05);
 
             player.play(resource);
-
-            connection.subscribe(player)
+            connection.subscribe(player);
 
             client.activePlayer = true;
 
@@ -50,7 +51,7 @@ module.exports = {
             })
 
             player.on(AudioPlayerStatus.Playing, () => {
-                interaction.editReply({ content: `Playing some chill music in ${interaction.member.voice.channel.name}!`, ephemeral: true });
+                interaction.editReply({ content: `Playing some chill music in ${voiceChannel ? voiceChannel.name : 'Unknown'}!`, ephemeral: true });
             })
 
             player.on('idle', () => {
@@ -62,7 +63,7 @@ module.exports = {
             })
 
             client.on('voiceStateUpdate', (oldState, newState) => {
-                if (!newState.channel) {
+                if (!newState.channelId && newState.member.id === client.user.id) {
                     player.stop();
                     client.activePlayer = false;
                     return

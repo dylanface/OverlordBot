@@ -58,11 +58,11 @@ class ModerationLogger {
     #moderationEventToEmbed = (moderator, action, suspect, reason) => {
         const registryEmbed = new Discord.MessageEmbed()
             .setColor('#00ff00')
-            .setAuthor(`${suspect.tag}`, suspect.displayAvatarURL({ dynamic: true }))
+            .setAuthor({name: `${suspect.tag}`, iconURL: suspect.displayAvatarURL({ dynamic: true })})
             .addFields(
                 { name: 'Action:', value: `\`\`\`The user has been ${action}.\`\`\`` },
             )
-            .setFooter(moderator.user.tag, moderator.user.displayAvatarURL({ dynamic: true }))
+            .setFooter({text: moderator.user.tag, iconURL: moderator.user.displayAvatarURL({ dynamic: true })})
             .setTimestamp()
 
         if (reason) registryEmbed.addField('Reason:',`\`\`\`${reason}\`\`\``);
