@@ -1,20 +1,9 @@
 const Discord = require('discord.js');
-const TicketManager = require('../../components/admin/TicketManager');
 
 module.exports = {
 	name: 'ready',
 	once: true,
 	async execute(client) {
-
-        // const roleTesting = await client.guilds.cache.get('869137600282259466').roles
-        
-        // console.log("---------")
-        
-        // for (let role of roleTesting.cache.values()) {
-        //     console.log(`${role.name} is ${role.rawPosition} - permissions`)
-        //     console.log(role.permissions.bitfield)
-        // }
-        // console.log("---------")
 
         const clientGuilds = client.guilds.cache
 
@@ -76,58 +65,6 @@ module.exports = {
         }
 
 
-        /**
-        Function to register guild ticket managers.
-        */
-        const registerGuildTicketManagers = async () => {
-            for (let guild of clientGuilds.values()) {
-                if (guild.channels.cache.find(channel => channel.name.includes('tickets')) === undefined) return startupLog('newLogEntry', guild.id, `Suitable Ticket channel not found in ${guild.name}, no manager started.`);
-                else {
-                    const guildTicketManager = new TicketManager(guild, client);
-                    client.ticketManagerCache.set(guild.id, guildTicketManager);
-                    startupLog('newLogEntry', guild.id, `${guild.name} has been given a Ticket Manager.`)
-                }
-            }
-        }
-
-        /**
-        Function to populate pinMeUsers with the users who are part of the PinMe role. 
-        */
-        const populatePinMeUsers = async () => {
-            if (!client.pinBoardManager) return;
-            const pinMeGuilds = client.pinMeGuildsCache;
-
-            for (let guild of clientGuilds.values()) {
-                pinMeGuilds.set(guild.id, new Discord.Collection());
-                const pinGuild = await pinMeGuilds.get(guild.id)
-                const pinMeRole = await guild.roles.cache.find(role => role.name === 'Pin Me');
-                
-                if (pinMeRole) {
-                    client.pinBoardManager.registerGuildBoard(guild).catch(console.error);
-                    const pinMeMembers = await pinMeRole.members;
-                    await pinMeMembers.forEach(member => {
-                        pinGuild.set(member.id, new Discord.Collection([['PinMe', true], ['availableNominations', 2 ]]));
-                    })
-                    startupLog('newLogEntry', guild.id, `${guild.name} has been added to the PinMe guilds cache with ${pinMeMembers.size} pinnable users.`)
-                    
-                    await guild.members.fetch()
-                    .then(async members => {
-                        members.forEach(member => {
-                            if (!member.roles.cache.has(pinMeRole.id)) {
-                                pinGuild.set(member.id, new Discord.Collection([[ 'availableNominations', 1 ]]));
-                            }
-                        })
-                        startupLog('newLogEntry', guild.id, `${guild.name} has been fully loaded to the PinMe guilds cache with ${members.size} non pinnable users.`)
-                    })
-
-                } else {
-
-                    pinMeGuilds.delete(guild.id);
-                    startupLog('newLogEntry', guild.id, `PinMe role not found in ${guild.name} it will not be touched`)
-                }
-            }
-        }
-
         const startupLogs = new Discord.Collection();
         /**
         Function to log all of the startup actions to the console
@@ -152,8 +89,6 @@ module.exports = {
 
         await setGuildCommands()
         await fetchGuildInfo()
-        await populatePinMeUsers();
-        // await registerGuildTicketManagers();
         startupLog('final');
         
         client.user.setPresence({

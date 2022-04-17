@@ -1,4 +1,3 @@
-const DiscordUser = require('../../components/DiscordUser')
 
 module.exports = {
 enabled: false,
@@ -16,24 +15,6 @@ async execute(interaction, client) {
     await interaction.deferReply();
 
     await interaction.editReply(interaction.locale)
-
-    // if (interaction.options.getUser('as') != null) {
-    //     var user = interaction.options.getUser('as');
-    //     var reply = `Executed as ${user.username}`;
-    // } else {
-    //     var user = interaction.member.user;
-    //     var reply = `Executed as ${user.username}`;
-    // }
-
-
-    // const testPost = new DiscordUser(user)
-
-    // await interaction.editReply(reply);
-
-    // setTimeout(async () => {
-    //     testPost.save()
-    //     await interaction.deleteReply()
-    // }, 5000);
 
 }
 }
