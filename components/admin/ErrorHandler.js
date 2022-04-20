@@ -12,15 +12,13 @@ class ErrorHandler {
         // this.RestartHandler = new RestartHandler(this.client);
     }
 
-    async fatal(error) {
+    async recoverable(error) {
         console.error(error);
         const adminDM = await this.client.users.createDM('265023187614433282');
         await adminDM.send(`An error occured: \`\`\`${error}\`\`\``);
-        // this.client.destroy();
-        // console.log('Client has been destroyed');
     }
 
-    async recoverable(error) {
+    async fatal(error) {
 
     }
 

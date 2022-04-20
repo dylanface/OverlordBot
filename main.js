@@ -1,7 +1,7 @@
 const Discord = require('discord.js');
 const { DiscordTogether } = require('discord-together');
 const { envUtil } = require('./util/envUtil');
-const { StartStatusRequestHandler } = require('./components/admin/StatusRequestHandler');
+const { StartRequestHandler } = require('./components/admin/StatusRequestHandler');
 
 const ModerationLogger = require('./components/ModerationLogger');
 const ErrorHandler = require('./components/admin/ErrorHandler');
@@ -21,7 +21,7 @@ setInterval(() => {
 }, 1000);
 
 client.totalMembers = 0;
-StartStatusRequestHandler(client);
+StartRequestHandler(client);
 
 client.ModerationLogger = new ModerationLogger(client);
 client.discordTogether = new DiscordTogether(client);

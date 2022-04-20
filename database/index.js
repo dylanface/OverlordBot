@@ -1,15 +1,32 @@
-const mongoose = require('mongoose');
-const { envUtil } = require('../util/envUtil');
+// This approach is taken from https://github.com/vercel/next.js/tree/canary/examples/with-mongodb
 
-const dbInit = {
-    
-    async main() {
-        const mongooseVariables = envUtil.getEnviromentVariable(['MONGO_USER', 'MONGO_PASS', 'MONGO_URI', 'MONGO_AUTH_SOURCE']);
-        await mongoose.connect(`mongodb://${mongooseVariables[0]}:${mongooseVariables[1]}@${mongooseVariables[2]}?authSource=${mongooseVariables[3]}`);
-        console.log('Connected to MongoDB');
-    }
+const { MongoClient } = require("mongodb")
+const { envUtil } = require("../util/envUtil")
 
+const variables = envUtil.getEnviromentVariable()
+
+const uri = process.env.MONGODB_URI
+const options = {
+  useUnifiedTopology: true,
+  useNewUrlParser: true,
 }
-    
-module.exports = dbInit
 
+let client
+let clientPromise
+
+if (!process.env.MONGODB_URI) {
+  throw new Error("Please add your Mongo URI to .env")
+}
+
+if (process.env.NODE_ENV === "development") {
+  if (!global._mongoClientPromise) {
+    client = new MongoClient(uri, options)
+    global._mongoClientPromise = client.connect()
+  }
+  clientPromise = global._mongoClientPromise
+} else {
+  client = new MongoClient(uri, options)
+  clientPromise = client.connect()
+}
+
+module.exports = clientPromise

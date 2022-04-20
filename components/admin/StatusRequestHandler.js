@@ -67,4 +67,4 @@ async function overlordInGuilds(data, client) {
     return result;
 }
 
-module.exports.StartStatusRequestHandler = Init;
+module.exports.StartRequestHandler = Init;

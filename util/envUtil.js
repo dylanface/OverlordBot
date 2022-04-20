@@ -28,13 +28,7 @@ const enviromentUtil = {
             throw new Error(`An invalid variable name was passed to the envUtil`);
         }
     },
-    /**
-     * Get a list of all enviroment variables
-     * @returns {Object} - An object containing all enviroment variables
-    */
-    listEnviromentVariables: () => {
-        return process.env;
-    }
+    
 }
 
 module.exports = { envUtil:enviromentUtil };
