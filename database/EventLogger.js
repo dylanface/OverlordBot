@@ -51,8 +51,12 @@ class EventLogger {
     }
 
     async #parse(event) {
-        const { message, options } = event;
+        const { message, options, name } = event;
 
+        const event = new OverlordEvent()
+        .setType('error')
+        .setDescription(message)
+        .attachContext({ id: 'errorType', item: name });
 
     }
 
@@ -72,18 +76,18 @@ class OverlordEvent {
      * The event type.
      * @type {String}
      */
-    type;
+    type = undefined;
 
     /**
      * A description of the event.
      * @type {String}
      */
-    description;
+    description = undefined;
 
     /**
      * Results caused by the event if applicable.
      */
-    results;
+    results = null;
 
     /**
      * Context for the event if applicable.
@@ -99,6 +103,7 @@ class OverlordEvent {
         this.timestamps = {
             createdAt: new Date()
         };
+        return this
     }
     
     /**
@@ -108,6 +113,7 @@ class OverlordEvent {
     setType(type) {
         if (typeof type !== "string") return new Error("Type must be a string.");
         this.type = type;
+        this.#addTimestamp('setType');
         return this;
     }
 
@@ -118,6 +124,7 @@ class OverlordEvent {
     setDescription(description) {
         if (typeof description !== "string") return new Error("Description must be a string.");
         this.description = description;
+        this.#addTimestamp('setDescription');
         return this;
     }
 
@@ -133,6 +140,7 @@ class OverlordEvent {
         if (!context.id || this.context.has(context?.id)) return new Error("Context must have a unique identifer as id.");
 
         this.context.set(context.id, context);
+        this.#addTimestamp(`attachContext:${context.id}`);
         return this;
     }
 
@@ -143,6 +151,7 @@ class OverlordEvent {
     removeContext(id) {
         if (!this.context.has(id)) return new Error(`Context with unique identifier ${id} does not exist.`);
         this.context.delete(id);
+        this.#addTimestamp(`removeContext:${context.id}`);
         return this;
     }
 
@@ -167,6 +176,11 @@ class OverlordEvent {
      * Logs the event to the database.
      */
     submit(options = null) {
+
+        if (this.type === undefined && this.description === undefined) return new Error("Event must have a type and description.");
+        if (this.type == undefined) return new Error("Event type must be defined.");
+        if (this.description == undefined) return new Error("Event description must be defined.");
+
         const logger = botClient.EventLogger;
         logger.log(this, options);
 
