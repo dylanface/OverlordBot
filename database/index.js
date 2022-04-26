@@ -1,11 +1,8 @@
 // This approach is taken from https://github.com/vercel/next.js/tree/canary/examples/with-mongodb
 
 const { MongoClient } = require("mongodb")
-const { envUtil } = require("../util/envUtil")
 
-const variables = envUtil.getEnviromentVariable()
-
-const uri = process.env.MONGODB_URI
+const uri = process.env.MONGODB_URI;
 const options = {
   useUnifiedTopology: true,
   useNewUrlParser: true,
