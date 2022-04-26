@@ -1,4 +1,5 @@
 const Discord = require('discord.js');
+const { OverlordEvent } = require('../database/EventLogger');
 
 /**
  * Main point of contact to publish moderation events to guild-logs.
@@ -27,15 +28,18 @@ class ModerationLogger {
             var fetchedSuspect = suspect
         } else {
             var fetchedSuspect = await this.client.users.fetch(suspectId, true)
+            event.suspect = fetchedSuspect;
         }
 
         const embed = this.#moderationEventToEmbed(moderator, type, fetchedSuspect, reason);
-
+        
         try {
             channel.send({ embeds: [embed] });
+            this.#publishToEventLogger(guild, event);
         } catch {
             console.log('Failed to send registry message');
         }
+
     }
 
     /**
@@ -66,9 +70,24 @@ class ModerationLogger {
             .setTimestamp()
 
         if (reason) registryEmbed.addField('Reason:',`\`\`\`${reason}\`\`\``);
-        else registryEmbed.addField('Reason:',`\`\`\`The user was banned by ${moderator.user.tag} using mass ban.\`\`\``);
         
         return registryEmbed;
+    }
+
+    #publishToEventLogger = (guild, event) => {
+        const formattedEvent = new OverlordEvent(this.client)
+            .setType(event.type)
+            .setAssociatedGuild(guild.id)
+            
+        if (event['reason']) formattedEvent.setDescription(event.reason);
+        else formattedEvent.setDescription(`No reason provided.`);
+
+        if (event['suspect']) formattedEvent.attachContext({ id: 'suspect', item: event.suspect });
+        if (event['suspectId'] && !event['suspect']) formattedEvent.attachContext({ id: 'suspectId', item: event.suspectId });
+        if (event['moderator']) formattedEvent.attachContext({ id: 'moderator', item: event.moderator });
+        if (event['moderatorId'] && !event['moderator']) formattedEvent.attachContext({ id: 'moderatorId', item: event.moderatorId });
+
+        formattedEvent.submit();
     }
 
 }

@@ -1,13 +1,17 @@
 const Discord = require('discord.js');
 const { DiscordTogether } = require('discord-together');
-const { envUtil } = require('./util/envUtil');
 const { StartRequestHandler } = require('./components/admin/StatusRequestHandler');
+
+const dotenv = require('dotenv');
+dotenv.config()
 
 const ModerationLogger = require('./components/ModerationLogger');
 const ErrorHandler = require('./components/admin/ErrorHandler');
+const { EventLogger } = require('./database/EventLogger');
+
 
 const client = new Discord.Client({ partials: ["MESSAGE", "CHANNEL", "REACTION" ], intents: 32767 });
-const token = envUtil.getEnviromentVariable('TEST_TOKEN');
+const token = process.env.TEST_TOKEN;
 
 
 client.instanceRegistry = new Discord.Collection();
@@ -26,11 +30,7 @@ StartRequestHandler(client);
 client.ModerationLogger = new ModerationLogger(client);
 client.discordTogether = new DiscordTogether(client);
 client.ErrorHandler = new ErrorHandler(client);
-
-if (envUtil.getEnviromentVariable('DB_ENABLED') === 'true') {
-    const db = require('./database/index');
-    db.main().catch(console.error);
-}
+client.EventLogger = new EventLogger(client);
 
 ['slash_cmd_handler', 'event_handler'].forEach(handler => {
     require(`./handlers/${handler}`)(client, Discord);

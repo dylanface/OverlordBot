@@ -1,8 +1,8 @@
 const clientPromise = require("./index");
-const botClient = global.DiscordClient;
+const Discord = require("discord.js");
 
 /**
- * 
+ * Log events to the overlord-on-next database.
  */
 class EventLogger {
 
@@ -15,19 +15,20 @@ class EventLogger {
     /**
      * A prepared instance of the MongoDB client.
      */
-    mongoClient;
+    #mongoClient;
 
-    constructor() {
+    constructor(client) {
 
         this.status = "initializing";
+        this.client = client;
 
-        this.init();
+        this.#init();
     }
 
-    init() {
+    #init() {
 
         clientPromise.then(client => {
-            this.mongoClient = client;
+            this.#mongoClient = client;
             this.status = "ready";
         })
         .catch(error => {
@@ -37,27 +38,26 @@ class EventLogger {
 
     }
 
+    /**
+     * Publishes an event to the overlord-on-next database.
+     * @param { String } event The event to publish as a JSON string.
+     */
     log(event, options = null) {
+
+        if (this.status !== "ready") throw new Error("EventLogger is not ready.");
+
+        const jsonEvent = JSON.parse(event).catch(err => {throw err});
+
+        const dbLogs = this.#mongoClient.db().collection('logs')
+        dbLogs.insertOne(jsonEvent, (err, result) => {
+            if (err) {
+                console.error(err);
+            }
+            else {
+                console.log(result);
+            }
+        })
         
-        if (options) var { upsert } = options;
-
-        if (this.status !== "ready") return new Error("EventLogger is not ready.");
-        
-        if (!event.guild) {
-            this.#parse(event);
-        }
-
-
-    }
-
-    async #parse(event) {
-        const { message, options, name } = event;
-
-        const event = new OverlordEvent()
-        .setType('error')
-        .setDescription(message)
-        .attachContext({ id: 'errorType', item: name });
-
     }
 
     checkStatus() {
@@ -76,30 +76,36 @@ class OverlordEvent {
      * The event type.
      * @type {String}
      */
-    type = undefined;
+    type;
 
     /**
      * A description of the event.
      * @type {String}
      */
-    description = undefined;
+    description;
+
+    /**
+     * The guild id of the guild this event is associated with.
+     */
+    associatedGuildId;
 
     /**
      * Results caused by the event if applicable.
      */
-    results = null;
+    results;
 
     /**
      * Context for the event if applicable.
      */
-    context = new Map();
+    context = {};
 
     /**
      * Timestamps that pertain to the event.
      */
-    timestamps;
+    timestamps = {};
 
-    constructor() {
+    constructor(client) {
+        this.client = client;
         this.timestamps = {
             createdAt: new Date()
         };
@@ -111,7 +117,7 @@ class OverlordEvent {
      * @param {String} type The type of event.
      */
     setType(type) {
-        if (typeof type !== "string") return new Error("Type must be a string.");
+        if (typeof type !== "string") throw new Error("Type must be a string.");
         this.type = type;
         this.#addTimestamp('setType');
         return this;
@@ -122,9 +128,18 @@ class OverlordEvent {
      * @param {String} description The description of the event.
      */
     setDescription(description) {
-        if (typeof description !== "string") return new Error("Description must be a string.");
+        if (typeof description !== "string") throw new Error("Description must be a string.");
         this.description = description;
         this.#addTimestamp('setDescription');
+        return this;
+    }
+
+    /**
+     * Associate this event with a specific guild.
+     * @param { String | Discord.Guild } guild The guild to associate the event with.
+     */
+    setAssociatedGuild(id) {
+        this.associatedGuildId = id;
         return this;
     }
 
@@ -136,10 +151,10 @@ class OverlordEvent {
      * 
      */
     attachContext(context) {
-        if (typeof context !== "object") return new Error("Context must be an object.");
-        if (!context.id || this.context.has(context?.id)) return new Error("Context must have a unique identifer as id.");
+        if (typeof context !== "object") throw new Error("Context must be an object.");
+        if (!context.id || this.context[context.id]) throw new Error("Context must have a unique identifer as id.");
 
-        this.context.set(context.id, context);
+        this.context[context.id] = context.item;
         this.#addTimestamp(`attachContext:${context.id}`);
         return this;
     }
@@ -149,8 +164,8 @@ class OverlordEvent {
      * @param {String} id The unique identifier of the context to remove.
      */
     removeContext(id) {
-        if (!this.context.has(id)) return new Error(`Context with unique identifier ${id} does not exist.`);
-        this.context.delete(id);
+        if (!this.context.has(id)) throw new Error(`Context with unique identifier ${id} does not exist.`);
+        delete this.context[id];
         this.#addTimestamp(`removeContext:${context.id}`);
         return this;
     }
@@ -177,14 +192,29 @@ class OverlordEvent {
      */
     submit(options = null) {
 
-        if (this.type === undefined && this.description === undefined) return new Error("Event must have a type and description.");
-        if (this.type == undefined) return new Error("Event type must be defined.");
-        if (this.description == undefined) return new Error("Event description must be defined.");
+        if (this.type === undefined && this.description === undefined) throw new Error("Event must have a type and description.");
+        if (this.type == undefined) throw new Error("Event type must be defined.");
+        if (this.description == undefined) throw new Error("Event description must be defined.");
 
-        const logger = botClient.EventLogger;
-        logger.log(this, options);
+        const logger = this.client.EventLogger;
+        logger.log(this.toJSON(), options);
 
         return this;
+    }
+
+    /**
+     * Convert the OverlordEvent to a mongo friendly JSON object.
+     */
+    toJSON() {
+        
+        return JSON.stringify({
+            type: this.type,
+            description: this.description,
+            associatedGuildId: this.associatedGuildId,
+            results: this.results,
+            context: this.context,
+            timestamps: this.timestamps
+        });
     }
 }
 
