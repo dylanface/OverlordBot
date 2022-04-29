@@ -11,7 +11,7 @@ module.exports = {
         Function to set Guild commands for all guilds the bot is in
         */
         const setGuildCommands = async () => {
-            const commandList = [];
+            // const commandList = [];
 
             await clientGuilds.forEach(async guild => {
                 startupLog('newLogSection', guild.id)
@@ -22,28 +22,12 @@ module.exports = {
                     data.push({
                         name: sCommand.name,
                         description: sCommand.description,
-                        options: sCommand.options,
-                        defaultPermission: sCommand.defaultPermission,
-                        permissions: sCommand.permissions,
+                        options: sCommand.options
                     });
                     
                 })
                 
                 const cmd = await guild.commands.set(data);
-                
-                await cmd.forEach(async registeredCmd => {
-                    if (!commandList.includes(registeredCmd.name, 0)) commandList.push(registeredCmd.name);
-                    const registeredSCommand = await client.slashCommands.get(registeredCmd.name);
-                    registeredSCommand.registryId = registeredCmd.id;
-                    if (registeredSCommand.permissions) {
-                        
-                        registeredCmd.permissions.set({permissions:registeredSCommand.permissions})
-                        .catch(console.error);
-                    } else {
-        
-                        // registeredCmd.permissions.set([])
-                    }
-                })
                 
             })
 

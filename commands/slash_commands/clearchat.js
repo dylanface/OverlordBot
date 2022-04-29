@@ -19,26 +19,7 @@ module.exports = {
         type: 'BOOLEAN',
         description: 'You wanna fucken delete the fucken threads or not ?',
         required: false,
-    },
-    ],
-    defaultPermission: false,
-	permissions: [
-        {
-			id: '146719098343129088',
-			type: 'ROLE',
-			permission: true,
-	    },
-        {
-            id: '265023187614433282',
-            type: 'USER',
-            permission: true,
-        },
-        {
-			id: '956794393598238791',
-			type: 'ROLE',
-			permission: true,
-	    }
-    ],
+    }],
     async execute(interaction, client) {
         
         
