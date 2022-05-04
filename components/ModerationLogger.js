@@ -35,9 +35,14 @@ class ModerationLogger {
         
         try {
             channel.send({ embeds: [embed] });
-            this.#publishToEventLogger(guild, event);
         } catch {
             console.log('Failed to send registry message');
+        }
+
+        try {
+            this.#publishToEventLogger(guild, event);
+        } catch {
+            console.log("Failed to publish to event log.")
         }
 
     }

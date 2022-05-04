@@ -34,19 +34,15 @@ module.exports = {
             let replaceOp = userList.replace(/[^0-9,]/g,'');
             let userListArray = replaceOp.split(',');
             const filteredArray = userListArray.filter(user => { return user.length >= 17 && user.length <= 20 });
+            const returnArray = [];
 
-            let i=0
             for (let userId of filteredArray) {
                 const user = await client.users.fetch(userId, true).catch(console.error)
-
+                
                 if (user) {
-                    filteredArray[i] = {id: user.id, user: user}
-                    i++
-                    continue
-                } else {
-                    filteredArray.splice(i, 1);
-                    continue
-                }
+                    returnArray.push({id: user.id, user: user}) 
+                    continue;
+                } else continue;
                 
             }
 
@@ -54,10 +50,9 @@ module.exports = {
                 /**
                  * @type { Array<{id: String, user: Discord.User}> }
                  */
-                userListArray: filteredArray,
-                userListLength: filteredArray.length,
+                userListArray: returnArray,
+                userListLength: returnArray.length,
             }
-
             
             return formattedUserList;
         }
@@ -116,7 +111,7 @@ module.exports = {
             interaction.editReply({ embeds: [massBanEmbed], components: [reasonSelector] });
     
             const defaultReasonFilter = i => i.customId === 'massban_reason_selector' && i.user.id === interaction.member.user.id && i.message.interaction.id === interaction.id;
-            const defaultReasonCollector = channel.createMessageComponentCollector({filter: defaultReasonFilter, componentType: 'SELECT_MENU', idle: 45 * 1000});
+            const defaultReasonCollector = channel.createMessageComponentCollector({filter: defaultReasonFilter, componentType: 'SELECT_MENU', idle: 120 * 1000});
     
                 defaultReasonCollector.on('collect', async interaction => {
                     if (!interaction.isSelectMenu()) return;
@@ -411,8 +406,8 @@ module.exports = {
                 .setAuthor({name: `Operation Summary`, iconURL: client.user.displayAvatarURL({ dynamic: true })})
                 .setDescription(codeBlock('diff', `${operations.map((value, key) => {
                     if (value === 'pardon') return `+ ${key} will be pardoned`;
-                    else return `- ${key} will be banned for ${value}`;
-                }).join(`\n\n`)}`))
+                    else return `- ${key} will be banned`;
+                }).join(`\n`)}`))
 
             return operationSummaryEmbed;
         }
