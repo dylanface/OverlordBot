@@ -15,10 +15,10 @@ module.exports = {
         if (client.activePlayer) {
             const connection = getVoiceConnection(voiceChannel.guild.id);
             connection.destroy();
+            client.removeAllListeners('voiceStateUpdate');
             client.activePlayer = false;
             return interaction.editReply({ content: 'Music stopped', ephemeral: true });
         } else {
-
             const connection = joinVoiceChannel({
                 channelId: voiceChannel.id,
                 guildId: voiceChannel.guild.id,
