@@ -1,14 +1,14 @@
 const Discord = require('discord.js');
 const { DiscordTogether } = require('discord-together');
-const { StartRequestHandler } = require('./components/admin/StatusRequestHandler');
+const { StartRequestHandler } = require('./handlers/status_request_handler');
 
 const dotenv = require('dotenv');
 dotenv.config()
 
-const ModerationLogger = require('./components/ModerationLogger');
-const ErrorHandler = require('./components/admin/ErrorHandler');
+const ModerationLogger = require('./components/admin/ModerationLogger');
+const ErrorHandler = require('./handlers/error_handler');
 const { EventLogger } = require('./database/EventLogger');
-const { TrackerController } = require('./database/UserTracker');
+const { TrackerController } = require('./components/admin/UserTracker');
 
 
 const client = new Discord.Client({ partials: ["MESSAGE", "CHANNEL", "REACTION" ], intents: 32767 });

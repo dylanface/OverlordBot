@@ -1,5 +1,5 @@
 const Discord = require('discord.js');
-const { OverlordEvent } = require('../database/EventLogger');
+const { OverlordEvent } = require('../../database/EventLogger');
 
 /**
  * Main point of contact to publish moderation events to guild-logs.
@@ -20,18 +20,24 @@ class ModerationLogger {
      */
     async publish(guild, event) {
         const channel = this.#getLogChannel(guild);
-        if (!channel) return console.error(`No channel found for guild ${guild.name}`);
+        if (!channel) throw new Error(`No log channel found for guild: ${guild.name}`);
 
-        const { type, suspectId, suspect, moderator, reason } = event;
+        var { type, suspectId, suspect, moderator, reason } = event;
 
-        if (suspect != undefined && suspectId === undefined) {
-            var fetchedSuspect = suspect
-        } else {
+        
+        if (type === 'ban' && suspect != undefined && suspectId === undefined) {
+            var fetchedSuspect = suspect;
+        } else if (type === 'ban') {
             var fetchedSuspect = await this.client.users.fetch(suspectId, true)
             event.suspect = fetchedSuspect;
         }
-
-        const embed = this.#moderationEventToEmbed(moderator, type, fetchedSuspect, reason);
+        
+        if (type === 'mass-ban') {
+            var suspects = event.suspects;
+            var embed = this.#massModerationEventToEmbed({moderator, type, suspects, reason});
+        } else {
+            var embed = this.#singularModerationEventToEmbed({moderator, type, fetchedSuspect, reason});
+        }
         
         try {
             channel.send({ embeds: [embed] });
@@ -40,7 +46,7 @@ class ModerationLogger {
         }
 
         try {
-            this.#publishToEventLogger(guild, event);
+            this.#publishToEventLogger(guild, JSON.stringify(event));
         } catch {
             console.log("Failed to publish to event log.")
         }
@@ -64,7 +70,7 @@ class ModerationLogger {
      * @param { Discord.User } suspect The user who was affected by this action.
      * @param { String | undefined } reason The reason for this action.
      */
-    #moderationEventToEmbed = (moderator, action, suspect, reason) => {
+    #singularModerationEventToEmbed = ({moderator, action, suspect, reason}) => {
         const registryEmbed = new Discord.MessageEmbed()
             .setColor('#00ff00')
             .setAuthor({name: `${suspect.tag}`, iconURL: suspect.displayAvatarURL({ dynamic: true })})
@@ -76,6 +82,22 @@ class ModerationLogger {
 
         if (reason) registryEmbed.addField('Reason:',`\`\`\`${reason}\`\`\``);
         
+        return registryEmbed;
+    }
+
+    #massModerationEventToEmbed = ({moderator, action, suspects, reason}) => {
+
+        const registryEmbed = new Discord.MessageEmbed()
+            .setColor('#00ff00')
+            .setAuthor({name: `${moderator.user.tag}`, iconURL: moderator.user.displayAvatarURL({ dynamic: true })})
+            .addFields(
+                { name: 'Action:', value: `\`\`\`The affected users have been banned in a mass ban.\`\`\`` },
+                { name: 'Users affected:', value: `\`\`\`${suspects.length}\`\`\`` },
+            )
+            .setTimestamp()
+
+        if (reason) registryEmbed.addField('Default Reason:',`\`\`\`${reason}\`\`\``);
+
         return registryEmbed;
     }
 

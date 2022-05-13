@@ -238,18 +238,20 @@ module.exports = {
 
                     bannedUsers.push(key);
 
-                    const event = {
-                        type: 'banned',
-                        suspectId: key,
-                        moderator: interaction.member,
-                        reason: value,
-                    }
-
-                    await client.ModerationLogger.publish(guild, event)
+                    
                 }
             }
+            
+            const event = {
+                type: 'mass-ban',
+                suspectId: null,
+                moderator: interaction.member,
+                suspects: bannedUsers,
+                reason: `Banned by ${interaction.member.user.tag} with mass ban`,
+            }
 
-            // client.openMassBan = false;
+            await client.ModerationLogger.publish(guild, event)
+            
             return bannedUsers;
 
         }
@@ -387,7 +389,7 @@ module.exports = {
                                     userListOperations.set(user.id, reason);
                                 }
                             }
-                            interaction.editReply({ embeds: [createOperationSummary(userListOperations)], components: [confirmActionRow()] })
+                            interaction.editReply({ embeds: [createOperationSummary(userListOperations, reason)], components: [confirmActionRow()] })
                             userActionButtonCollector.stop();
                             listenForConfirmation(userListOperations);
                         break;
@@ -398,16 +400,14 @@ module.exports = {
 
         /**
          * Turn the operation collection into an summary embed
-         * @param {Discord.Collection} operations The operation collection to transform 
+         * @param {Discord.Collection} operations The operation collection to transform
+         * @param {String} reason The default reason to apply to this user list. 
          */
-        const createOperationSummary = (operations) => {
+        const createOperationSummary = (operations, reason) => {
 
             const operationSummaryEmbed = new Discord.MessageEmbed()
                 .setAuthor({name: `Operation Summary`, iconURL: client.user.displayAvatarURL({ dynamic: true })})
-                .setDescription(codeBlock('diff', `${operations.map((value, key) => {
-                    if (value === 'pardon') return `+ ${key} will be pardoned`;
-                    else return `- ${key} will be banned`;
-                }).join(`\n`)}`))
+                .setDescription(codeBlock('', `Default Reason Selected: ${reason}\nUsers to be banned: ${operations.filter(i => i != 'pardon').size}\nUsers to be pardoned: ${operations.filter(i => i === 'pardon').size}`))
 
             return operationSummaryEmbed;
         }

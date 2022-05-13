@@ -20,7 +20,7 @@ function Init(client) {
 
     app.get(`${api_route}/status-report`, (req, res) => {
         getStats(client).then(stats => {
-            res.status(200).json(stats);
+            res.status(200).json({stats});
         })
         .catch(err => {
             res.status(404).send(err);
@@ -36,7 +36,24 @@ function Init(client) {
         .catch(err => res.status(404).send(err)); 
     })
 
+    app.get(`${api_route}/users`, (req, res) => {
+        if (req.headers.authorization = process.env.AUTH_TOKEN) {
+            res.status(200).json(client.users.cache.toJSON());
+        } else {
+            res.status(403).send("Unauthorized");
+        }
+    })
+
 }
+
+
+
+
+
+
+
+
+// Worker function for express server data requests.
 
 async function getStats(client) {
 
@@ -64,7 +81,7 @@ async function overlordInGuilds(data, client) {
 
     const result = query.filter(guild_id => guilds.includes(guild_id));
 
-    return result;
+    return JSON.stringify(result);
 }
 
 module.exports.StartRequestHandler = Init;
