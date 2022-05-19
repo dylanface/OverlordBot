@@ -1,6 +1,12 @@
+const { CommandInteraction, Client } = require('discord.js');
+
 module.exports = {
     name: 'youtube',
     description: "Watch youtube videos with the help of Discord-Together!",
+    /**
+     * @param { CommandInteraction } interaction The command interaction object.
+     * @param { Client } client The discord client that called this command.
+     */
     async execute(interaction, client) {
 
         if (interaction.member.voice.channel) {

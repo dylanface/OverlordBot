@@ -5,7 +5,9 @@ module.exports = {
 	once: true,
 	async execute(client) {
 
-        const clientGuilds = client.guilds.cache
+        const clientGuilds = client.guilds.cache;
+        const startupLogs = new Discord.Collection();
+
 
         /**
         Function to set Guild commands for all guilds the bot is in
@@ -48,8 +50,6 @@ module.exports = {
 
         }
 
-
-        const startupLogs = new Discord.Collection();
         /**
         Function to log all of the startup actions to the console
         */
@@ -82,5 +82,7 @@ module.exports = {
                 type: 'LISTENING'
             }
         });
-    },
+        
+    }
+    
 }

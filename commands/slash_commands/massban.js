@@ -1,5 +1,5 @@
-const Discord = require('discord.js');
-const { codeBlock  } = require('@discordjs/builders');
+const { User, Client, Modal, TextInputComponent, MessageActionRow, MessageSelectMenu, MessageEmbed, MessageButton, Collection, CommandInteraction, SelectMenuInteraction } = require('discord.js');
+const { codeBlock } = require('@discordjs/builders');
 
 module.exports = {
     name: 'massban',
@@ -10,14 +10,13 @@ module.exports = {
         description: 'Comma separated user id list',
         required: true,
     }],
+    /**
+     * @param { CommandInteraction } interaction The command interaction object.
+     * @param { Client } client The discord client that called this command.
+     */
     async execute(interaction, client) {
 
-        await interaction.deferReply(/*{ ephemeral: true }*/);
-        // if (client.openMassBan) return interaction.editReply(
-        //     'A mass ban is already in progress, please wait for it to be completed. If you believe this is an error contact Overlord devs'
-        // );
-        // client.openMassBan = true;
-        // await interaction.guild.channels.fetch(null, {cache:true});
+        // await interaction.deferReply(/*{ ephemeral: true }*/);
 
         const guild = interaction.guild
         const channel = await interaction.member.guild.channels.fetch(interaction.channelId);
@@ -48,7 +47,7 @@ module.exports = {
 
             let formattedUserList = {
                 /**
-                 * @type { Array<{id: String, user: Discord.User}> }
+                 * @type { Array<{id: String, user: User}> }
                  */
                 userListArray: returnArray,
                 userListLength: returnArray.length,
@@ -57,26 +56,57 @@ module.exports = {
             return formattedUserList;
         }
 
-        /**
-         * Generate the formatted user list array globally.
-        */
+        // Generate the formatted user list array globally.
         const { userListArray, userListLength } = await formatUserList(inputUserList);
 
-        /**
-         * End the mass ban process if the user list includes less than 3 userObjects.
-         */
+        // End the mass ban process if the user list includes less than 3 userObjects.
         if (userListLength <= 2) return await interaction.editReply(`Mass ban requires at least 3 suspected users.`);
 
+        /**
+         * Initiate the mass ban process using a modal.
+         */
+        const modalMassBan = async () => {
+            const modal = new Modal()
+			.setCustomId('massBanModal')
+			.setTitle('Mass Ban Input');
+
+            const idList = new TextInputComponent()
+                .setCustomId('idList')
+                .setLabel("Copy and paste user list below.")
+                .setStyle('PARAGRAPH');
+
+            const reasoning = new TextInputComponent()
+                .setCustomId('reasoning')
+                .setLabel("What is your reasoning for this ban?")
+                .setStyle('PARAGRAPH');
+
+            const firstActionRow = new MessageActionRow().addComponents(idList, reasoning);
+            // const secondActionRow = new MessageActionRow().addComponents(reasoning);
+        
+            modal.addComponents(firstActionRow);
+
+            await interaction.showModal(modal);
+
+            const filter = (i) => i.customId === 'massBanModal';
+            interaction.awaitModalSubmit({ filter, time: 15000 })
+            .then(async (interaction) => {
+                const idList = interaction.fields.getTextInputValue('idList');
+                const reasoning = interaction.fields.getTextInputValue('reasoning');
+
+                await interaction.reply('You have submitted the following values: \n' + idList + '\n' + reasoning);
+            })
+            .catch(console.error);
+        }
 
         /**
          * Send and watch the default reason selector to begin the mass ban process.
-         * @param {Discord.CommandInteraction} interaction The command interaction that began this mass ban.
+         * @param {CommandInteraction} interaction The command interaction that began this mass ban.
          */
         const establishDefaultReason = async (interaction) => {
 
-            const reasonSelector = new Discord.MessageActionRow()
+            const reasonSelector = new MessageActionRow()
             .addComponents(
-                new Discord.MessageSelectMenu()
+                new MessageSelectMenu()
                 .setCustomId('massban_reason_selector')
                 .setPlaceholder('Select a default reason for this operation')
                 .addOptions([
@@ -103,7 +133,7 @@ module.exports = {
                 ])
             )
             
-            const massBanEmbed = new Discord.MessageEmbed()
+            const massBanEmbed = new MessageEmbed()
             .setColor('#0099ff')
             .setTitle('Mass Ban')
             .setDescription(`Select default reason for banning (${userListLength}) users:`)
@@ -126,7 +156,7 @@ module.exports = {
         /**
          * A collection of embeds generated for the user list.
          */
-        const userListGeneratedEmbeds = new Discord.Collection();
+        const userListGeneratedEmbeds = new Collection();
 
         /**
          * Turn an object from the user list and a reason into an embed.
@@ -136,13 +166,13 @@ module.exports = {
         const createUserEmbed = async (userObject, reason) => {
             const user = userObject.user;
             if (reason === 'pardon') {
-                const userPardonEmbed = new Discord.MessageEmbed()
+                const userPardonEmbed = new MessageEmbed()
                     .setColor(user.hexAccentColor)
                     .setAuthor({name: `${user.tag}`, iconURL: user.displayAvatarURL({ dynamic: true })})
                     .setDescription(`${user.tag} is currently pardoned from this ban list. Edit reason, or click Pardon User again to re-add.`)
                 userListGeneratedEmbeds.set(userObject.id, userPardonEmbed);
             } else {
-                const userEmbed = new Discord.MessageEmbed()
+                const userEmbed = new MessageEmbed()
                 .setColor(user.hexAccentColor)
                 .setAuthor({name: `${user.tag}`, iconURL: user.displayAvatarURL({ dynamic: true })})
                 .addFields(
@@ -164,13 +194,13 @@ module.exports = {
          */
         const confirmActionRow = () => {
 
-            const confirmationButtons = new Discord.MessageActionRow()
+            const confirmationButtons = new MessageActionRow()
             .addComponents(
-                new Discord.MessageButton()
+                new MessageButton()
                 .setCustomId('confirm_button')
                 .setLabel('Confirm')
                 .setStyle('SUCCESS'),
-                new Discord.MessageButton()
+                new MessageButton()
                 .setCustomId('cancel_button')
                 .setLabel('Cancel')
                 .setStyle('DANGER')
@@ -183,7 +213,7 @@ module.exports = {
 
         /**
          * Listener for operation summary confirmation.
-         * @param {Discord.Collection} operations The operations of interest.
+         * @param {Collection} operations The operations of interest.
          */
         const listenForConfirmation = async (operations) => {
 
@@ -198,7 +228,7 @@ module.exports = {
                         await executeBanList(operations);
                         userActionButtonCollector.stop();
                         
-                        const confirmationEmbed = new Discord.MessageEmbed()
+                        const confirmationEmbed = new MessageEmbed()
                         .setColor('#0099ff')
                         .setDescription(`Actions are being executed... Check <#${guildLogChannel.id}> for logs.`)
 
@@ -207,7 +237,7 @@ module.exports = {
                     if (interaction.customId === 'cancel_button') {
                         userActionButtonCollector.stop();
 
-                        const cancelEmbed = new Discord.MessageEmbed()
+                        const cancelEmbed = new MessageEmbed()
                         .setColor('#ff0000')
                         .setDescription('Cancelled mass ban operation, no action(s) will be executed.')
 
@@ -224,7 +254,7 @@ module.exports = {
 
         /**
          * Execute the bans as detailed in the operations collection.
-         * @param {Discord.Collection} operations The operations collection to execute.
+         * @param {Collection} operations The operations collection to execute.
          */
         const executeBanList = async (operations) => {
             const bannedUsers = [];
@@ -263,31 +293,31 @@ module.exports = {
          */
         const createActionRow = (backDisabled, nextDisabled) => {
             
-            const backButton = new Discord.MessageButton()
+            const backButton = new MessageButton()
                 .setCustomId('back')
                 .setLabel('Back')
                 .setStyle('SECONDARY')
                 .setDisabled(backDisabled)
     
-            const nextButton = new Discord.MessageButton()
+            const nextButton = new MessageButton()
                 .setCustomId('next')
                 .setLabel(`Next`)
                 .setStyle('SECONDARY')
                 .setDisabled(nextDisabled)
 
-            const userListActionButtons = new Discord.MessageActionRow()
+            const userListActionButtons = new MessageActionRow()
             .addComponents(
                 backButton,
                 nextButton,
-                new Discord.MessageButton()
+                new MessageButton()
                     .setCustomId('pardon')
                     .setLabel(`Pardon User`)
                     .setStyle('PRIMARY'),
-                new Discord.MessageButton()
+                new MessageButton()
                     .setCustomId('edit_reason')
                     .setLabel(`Edit Reason for User`)
                     .setStyle('DANGER'),
-                new Discord.MessageButton()
+                new MessageButton()
                     .setCustomId('continue')
                     .setLabel(`Continue to review`)
                     .setStyle('SUCCESS')
@@ -299,11 +329,11 @@ module.exports = {
 
         /**
          * Create and watch the embeds for the user list.
-         * @param { Discord.SelectMenuInteraction } interaction The select menu interaction that called this function.
+         * @param { SelectMenuInteraction } interaction The select menu interaction that called this function.
          * @param { String | null } reason The default reason to apply to this user list.
          */
         const createUserList = async (interaction, reason) => {
-            const userListOperations = new Discord.Collection();
+            const userListOperations = new Collection();
 
             for (let user of userListArray) {
                 await createUserEmbed(user, reason)
@@ -362,7 +392,7 @@ module.exports = {
                         break;
 
                         case 'edit_reason':
-                            interaction.followUp({ embeds: [new Discord.MessageEmbed().setDescription('Enter new reason for banning:')]}).then((prompt => {
+                            interaction.followUp({ embeds: [new MessageEmbed().setDescription('Enter new reason for banning:')]}).then((prompt => {
                                 const filter = message => message.author.id === interaction.member.id;
                                 interaction.channel.awaitMessages({ filter, max: 1, time: 30000, errors: ['time'] })
                                 .then(async (collected) => {
@@ -400,12 +430,12 @@ module.exports = {
 
         /**
          * Turn the operation collection into an summary embed
-         * @param {Discord.Collection} operations The operation collection to transform
+         * @param {Collection} operations The operation collection to transform
          * @param {String} reason The default reason to apply to this user list. 
          */
         const createOperationSummary = (operations, reason) => {
 
-            const operationSummaryEmbed = new Discord.MessageEmbed()
+            const operationSummaryEmbed = new MessageEmbed()
                 .setAuthor({name: `Operation Summary`, iconURL: client.user.displayAvatarURL({ dynamic: true })})
                 .setDescription(codeBlock('', `Default Reason Selected: ${reason}\nUsers to be banned: ${operations.filter(i => i != 'pardon').size}\nUsers to be pardoned: ${operations.filter(i => i === 'pardon').size}`))
 

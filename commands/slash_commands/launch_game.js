@@ -1,4 +1,4 @@
-const Discord = require('discord.js');
+const { MessageEmbed, MessageButton, MessageActionRow, CommandInteraction, Client } = require('discord.js');
 
 module.exports = {
     enabled: false,
@@ -58,6 +58,10 @@ module.exports = {
             ]
         }
     ],
+    /**
+     * @param { CommandInteraction } interaction The command interaction object.
+     * @param { Client } client The discord client that called this command.
+     */
     async execute(interaction, client) {
 
         await interaction.deferReply();
@@ -70,11 +74,11 @@ module.exports = {
 
             const invite = await client.discordTogether.createTogetherCode(interaction.member.voice.channelId, selectedGame);
 
-            const inviteEmbed = new Discord.MessageEmbed()
+            const inviteEmbed = new MessageEmbed()
                 .setColor('#0099ff')
                 .setDescription(`Click the link button below to join ${selectedGame}!`)
 
-            const inviteButtonRow = new Discord.MessageActionRow()
+            const inviteButtonRow = new MessageActionRow()
                 .addComponents(
                     new Discord.MessageButton()
                     .setLabel(`Join The Game!`)

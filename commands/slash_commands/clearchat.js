@@ -1,3 +1,5 @@
+const { CommandInteraction, Client } = require('discord.js');
+
 module.exports = {
     name: 'clearchat',
     description: "This can clear the channel you execute the command in",
@@ -20,6 +22,10 @@ module.exports = {
         description: 'You wanna fucken delete the fucken threads or not ?',
         required: false,
     }],
+    /**
+     * @param { CommandInteraction } interaction The command interaction object.
+     * @param { Client } client The discord client that called this command.
+     */
     async execute(interaction, client) {
         
         

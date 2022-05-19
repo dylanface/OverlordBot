@@ -1,3 +1,4 @@
+const { CommandInteraction, Client } = require('discord.js');
 
 module.exports = {
 enabled: false,
@@ -11,6 +12,10 @@ options: [
         required: false
     }
 ],
+/**
+ * @param { CommandInteraction } interaction The command interaction object.
+ * @param { Client } client The discord client that called this command.
+ */
 async execute(interaction, client) {
     await interaction.deferReply();
 

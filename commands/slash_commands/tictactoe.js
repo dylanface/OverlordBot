@@ -1,4 +1,4 @@
-const Discord = require('discord.js');
+const { CommandInteraction, Client } = require('discord.js');
 const TicTacManager = require('../../managers/game_managers/games/TicTacManager');
 
 module.exports = {
@@ -11,7 +11,10 @@ module.exports = {
         description: 'The user you would like to challenge',
         required: true,
     }],
-    defaultPermission: true,
+    /**
+     * @param { CommandInteraction } interaction The command interaction object.
+     * @param { Client } client The discord client that called this command.
+     */
     async execute(interaction, client) {
         const match = TicTacManager.createGame(interaction, client)
 

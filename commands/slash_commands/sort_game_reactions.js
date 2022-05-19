@@ -1,3 +1,5 @@
+const { CommandInteraction, Client } = require('discord.js');
+
 module.exports = {
 name: 'sort_game_reactions',
 description: 'Remove reactions for users who are not present in your voice channel',
@@ -27,6 +29,10 @@ permissions: [
         permission: true,
     }
 ],
+/**
+ * @param { CommandInteraction } interaction The command interaction object.
+ * @param { Client } client The discord client that called this command.
+ */
 async execute(interaction, client) {
 
     await interaction.deferReply({ ephemeral: true });

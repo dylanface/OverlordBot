@@ -18,11 +18,15 @@
 
 	"v13 Empty Command": {
 		"scope": "javascript,typescript",
-		"prefix": "13cmd",
+		"prefix": "cmdv13",
 		"body": [
 			"module.exports = {",
 				"name: '$1',",
 				"description: '$2',",
+				"/**",
+				" * @param { CommandInteraction } interaction The command interaction object.",
+				" * @param { Client } client The discord client that called this command.",
+				" */",
 				"async execute(interaction, client) {",
 				"$3",
 				"}",

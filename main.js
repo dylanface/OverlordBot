@@ -40,7 +40,7 @@ client.TrackerController = new TrackerController(client);
 
 client.login(token);
 
-client.on("ready", () => {
+client.once("ready", () => {
 
     process.on("uncaughtException", err => client.ErrorHandler.recoverable(err));
 })

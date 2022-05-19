@@ -1,11 +1,16 @@
-const Discord = require('discord.js');
 const ytdl = require('ytdl-core');
-const { joinVoiceChannel, getVoiceConnection, VoiceConnectionStatus, NoSubscriberBehavior, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice')
+
+const { CommandInteraction, Client } = require('discord.js');
+const { joinVoiceChannel, getVoiceConnection, createAudioPlayer, createAudioResource, AudioPlayerStatus, NoSubscriberBehavior } = require('@discordjs/voice')
 
 
 module.exports = {
     name: 'play',
     description: "Play music",
+    /**
+     * @param { CommandInteraction } interaction The command interaction object.
+     * @param { Client } client The discord client that called this command.
+     */
     async execute(interaction, client) {
         await interaction.deferReply({ ephemeral: true });
 
