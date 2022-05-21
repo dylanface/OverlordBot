@@ -35,7 +35,7 @@ client.EventLogger = new EventLogger(client);
 client.TrackerController = new TrackerController(client);
 
 ['slash_cmd_handler', 'event_handler'].forEach(handler => {
-    require(`./handlers/${handler}`)(client, Discord);
+    require(`./handlers/${handler}`)(client);
 })
 
 client.login(token);

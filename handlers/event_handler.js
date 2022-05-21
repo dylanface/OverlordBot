@@ -4,7 +4,7 @@ let table = new ascii("Events");
 
 table.setHeading('Event', 'Status', 'Once');
 
-module.exports = async (client, Discord) => {
+module.exports = async (client) => {
     const load_dir = (dirs) =>{
         const event_files = fs.readdirSync(`./events/${dirs}`).filter(file => file.endsWith('.js'));
 
