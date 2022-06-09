@@ -46,7 +46,7 @@ class EventLogger {
 
         if (this.status !== "ready") throw new Error("EventLogger is not ready.");
 
-        const jsonEvent = JSON.parse(event).catch(err => {throw err});
+        const jsonEvent = JSON.parse(event);
 
         const dbLogs = this.#mongoClient.db().collection('logs')
         dbLogs.insertOne(jsonEvent, (err, result) => {
@@ -117,7 +117,7 @@ class OverlordEvent {
      * @param {String} type The type of event.
      */
     setType(type) {
-        if (typeof type !== "string") throw new Error("Type must be a string.");
+        if (typeof type != "string") throw new Error("Type must be a string.");
         this.type = type;
         this.#addTimestamp('setType');
         return this;
@@ -128,7 +128,7 @@ class OverlordEvent {
      * @param {String} description The description of the event.
      */
     setDescription(description) {
-        if (typeof description !== "string") throw new Error("Description must be a string.");
+        if (typeof description != "string") throw new Error("Description must be a string.");
         this.description = description;
         this.#addTimestamp('setDescription');
         return this;

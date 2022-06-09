@@ -16,13 +16,13 @@ module.exports = {
      */
     async execute(interaction, client) {
 
-        // await interaction.deferReply(/*{ ephemeral: true }*/);
+        await interaction.deferReply({ ephemeral: true });
 
         const guild = interaction.guild
         const channel = await interaction.member.guild.channels.fetch(interaction.channelId);
-        const guildLogChannel = await guild.channels.cache.find(channel => channel.name === 'guild-logs');
+        const guildLogChannel = guild.channels.cache.find(channel => channel.name === 'guild-logs');
 
-        const inputUserList = await interaction.options.getString('userlist');
+        const inputUserList = interaction.options.getString('userlist');
         
 
         /**
@@ -138,7 +138,7 @@ module.exports = {
             .setTitle('Mass Ban')
             .setDescription(`Select default reason for banning (${userListLength}) users:`)
                 
-            interaction.editReply({ embeds: [massBanEmbed], components: [reasonSelector] });
+            await interaction.editReply({ embeds: [massBanEmbed], components: [reasonSelector] });
     
             const defaultReasonFilter = i => i.customId === 'massban_reason_selector' && i.user.id === interaction.member.user.id && i.message.interaction.id === interaction.id;
             const defaultReasonCollector = channel.createMessageComponentCollector({filter: defaultReasonFilter, componentType: 'SELECT_MENU', idle: 120 * 1000});
@@ -263,12 +263,10 @@ module.exports = {
                     if (value === 'null') value = `Banned by ${interaction.member.user.tag} with mass ban`;
 
                     await guild.members.ban(key, { reason: value })
-                    .then(console.log)
-                    .catch(console.error)
-
-                    bannedUsers.push(key);
-
-                    
+                    .then((k) => {
+                        bannedUsers.push(k);
+                    })
+                    .catch(console.error);
                 }
             }
             

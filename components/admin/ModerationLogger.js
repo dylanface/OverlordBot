@@ -22,21 +22,20 @@ class ModerationLogger {
         const channel = this.#getLogChannel(guild);
         if (!channel) throw new Error(`No log channel found for guild: ${guild.name}`);
 
-        var { type, suspectId, suspect, moderator, reason } = event;
-
+        const { type, suspectId, suspect, moderator, reason } = event;
         
-        if (type === 'ban' && suspect != undefined && suspectId === undefined) {
+        if (type === 'banned' && suspect != undefined && suspectId === undefined) {
             var fetchedSuspect = suspect;
-        } else if (type === 'ban') {
+        } else if (type === 'bannned') {
             var fetchedSuspect = await this.client.users.fetch(suspectId, true)
             event.suspect = fetchedSuspect;
         }
         
         if (type === 'mass-ban') {
-            var suspects = event.suspects;
-            var embed = this.#massModerationEventToEmbed({moderator, type, suspects, reason});
+            const suspects = event.suspects;
+            var embed = this.#massModerationEventToEmbed(moderator, type, suspects, reason);
         } else {
-            var embed = this.#singularModerationEventToEmbed({moderator, type, fetchedSuspect, reason});
+            var embed = this.#singularModerationEventToEmbed(moderator, type, suspect, reason);
         }
         
         try {
@@ -46,8 +45,9 @@ class ModerationLogger {
         }
 
         try {
-            this.#publishToEventLogger(guild, JSON.stringify(event));
-        } catch {
+            this.#publishToEventLogger(guild, event);
+        } catch(err) {
+            console.log(err);
             console.log("Failed to publish to event log.")
         }
 
@@ -70,7 +70,7 @@ class ModerationLogger {
      * @param { Discord.User } suspect The user who was affected by this action.
      * @param { String | undefined } reason The reason for this action.
      */
-    #singularModerationEventToEmbed = ({moderator, action, suspect, reason}) => {
+    #singularModerationEventToEmbed = (moderator, action, suspect, reason) => {
         const registryEmbed = new Discord.MessageEmbed()
             .setColor('#00ff00')
             .setAuthor({name: `${suspect.tag}`, iconURL: suspect.displayAvatarURL({ dynamic: true })})
@@ -85,7 +85,7 @@ class ModerationLogger {
         return registryEmbed;
     }
 
-    #massModerationEventToEmbed = ({moderator, action, suspects, reason}) => {
+    #massModerationEventToEmbed = (moderator, action, suspects, reason) => {
 
         const registryEmbed = new Discord.MessageEmbed()
             .setColor('#00ff00')
@@ -113,6 +113,8 @@ class ModerationLogger {
         if (event['suspectId'] && !event['suspect']) formattedEvent.attachContext({ id: 'suspectId', item: event.suspectId });
         if (event['moderator']) formattedEvent.attachContext({ id: 'moderator', item: event.moderator });
         if (event['moderatorId'] && !event['moderator']) formattedEvent.attachContext({ id: 'moderatorId', item: event.moderatorId });
+        if (event['suspects']) formattedEvent.attachContext({ id: 'suspects', item: event.suspects });
+
 
         formattedEvent.submit();
     }

@@ -4,7 +4,7 @@ let table = new ascii("Slash Commands");
 
 table.setHeading('Command', 'Status', 'Perms');
 
-module.exports = async (client, Discord) => {
+module.exports = async (client) => {
     const slash_cmd_files = fs.readdirSync('./commands/slash_commands').filter(file => file.endsWith('.js'));
     
     for(const file of slash_cmd_files){

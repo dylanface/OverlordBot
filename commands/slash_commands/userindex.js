@@ -110,8 +110,9 @@ module.exports = {
                         }
 
                         // Then create a log
-                        registerInteraction({ moderator: interaction.member, suspect: user, type: 'banned', reason: inputReason })
+                        registerInteraction({ moderator: interaction.member, suspect: user, type:'banned', reason: inputReason })
                         collector.stop()
+                        await interaction.editReply({ content:'userindex completed.',  components: [], embeds: [] });
 
                     break;
 

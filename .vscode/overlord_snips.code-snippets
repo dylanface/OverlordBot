@@ -20,6 +20,8 @@
 		"scope": "javascript,typescript",
 		"prefix": "cmdv13",
 		"body": [
+			"const { CommandInteraction, Client } = require('discord.js');",
+			"",
 			"module.exports = {",
 				"name: '$1',",
 				"description: '$2',",

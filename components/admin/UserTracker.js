@@ -27,24 +27,22 @@ class TrackerController {
     /**
      * Create a new user tracker for a valid user.
      * 
-     * @returns {UserTracker} The newly created user tracker.
+     * @returns {Promise<UserTracker>} The newly created user tracker.
      */
     createTracker(user) {
-        
         return new Promise((resolve, reject) => {
             const tracker = new UserTracker(user, this);
 
             const timeout = setTimeout(() => {
                 tracker.setStatus(3);
                 reject(new Error('Tracker creation timed out.'));
+                tracker.removeAllListeners('staged');
             }, 10 * 1000)
 
             tracker.once('staged', (tracker) => {
                 resolve(this._add(tracker.id, tracker));
                 clearTimeout(timeout);
             })
-
-
         })
     }
 
@@ -60,6 +58,7 @@ class TrackerController {
             var tracker = this.#cache.find((tracker) => tracker.userId === id);
             if (!tracker) throw new Error('Tracker not found.');
         }
+
         tracker.setStatus(3);
     }
 
@@ -154,7 +153,17 @@ class UserTracker extends EventEmitter {
 
     /**
      * Set the status of the tracker based on status code passed in.
-     * @param { Number } code The status code to apply to this UserTracker.
+     * @param { 0 | 1 | 2 | 3 | 4 } code The status code to apply to this UserTracker.
+     * 
+     * 0 (error): Error has occured within the UserTracker and will attempt recovery on the next sweep, if recovery fails automatically mark for cleanup.
+     * 
+     * 1 (healthy): UserTracker has been staged and is running as intended with no unrecoverable errors.
+     * 
+     * 2 (c-staging): The TrackerController is still staging the UserTracker, the UserTracker is not subject to sweeps or input at this point and error is fatal.
+     * 
+     * 3 (cleanup): The UserTracker is marked for cleanup and will be removed from the cache and archived [if applicable] on the next sweep.
+     * 
+     * 4 (unhealthy): The UserTracker is in an unhealthy or outdated state and will be updated on the next sweep.
      */
     setStatus(code) {
         if (typeof code !== 'number') throw new Error("Status code must be of type number.");
@@ -212,6 +221,12 @@ class UserTracker extends EventEmitter {
         this.timestamps[name] = date;
         return this.timestamps;
     }
+
+}
+
+class UserWatcher {
+
+    
 
 }
 
