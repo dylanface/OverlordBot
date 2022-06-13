@@ -1,17 +1,10 @@
 const { CommandInteraction, Client } = require('discord.js');
+const { codeBlock } = require("@discordjs/builders");
 
 module.exports = {
-enabled: false,
+enabled: true,
 name: 'test',
 description: 'Test command',
-options: [
-    {
-        name: 'as',
-        description: 'The user to test as',
-        type: 'USER',
-        required: false
-    }
-],
 /**
  * @param { CommandInteraction } interaction The command interaction object.
  * @param { Client } client The discord client that called this command.
@@ -19,7 +12,12 @@ options: [
 async execute(interaction, client) {
     await interaction.deferReply();
 
-    await interaction.editReply(interaction.locale)
+    const testTracker = await client.TrackerController.createTracker(interaction.user)
+    .catch((err) => {
+        interaction.editReply('Error creating tracker: ' + err.message);
+    });
+
+    if (testTracker) await interaction.editReply(codeBlock('JSON' , JSON.stringify(testTracker.toJSON())));
 
 }
 }

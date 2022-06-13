@@ -1,6 +1,7 @@
 const Discord = require('discord.js');
 const { v4: uuidv4 } = require('uuid');
 const EventEmitter = require('events');
+const clientPromise = require('../../database');
 
 class TrackerController {
 
@@ -40,8 +41,13 @@ class TrackerController {
             }, 10 * 1000)
 
             tracker.once('staged', (tracker) => {
-                resolve(this._add(tracker.id, tracker));
                 clearTimeout(timeout);
+                resolve(this._add(tracker.id, tracker));
+                console.log('Tracker created.');
+            })
+
+            tracker.once('healthy', (tracker) => {
+                console.log('Tracker is healthy.');
             })
         })
     }
@@ -76,6 +82,66 @@ class TrackerController {
         return tracker;
     }
 
+    /**
+     * Save the entire cache of UserTrackers to the database.
+     * @param {any} [options] Options to pass to the database.
+     * 
+     * @returns {Promise<any>}
+     */
+    backup(options = null) {
+        return new Promise(async (resolve, reject) => {
+            const savedTrackers = [];
+
+            for (const [id, tracker] of this.#cache) {
+                await this.edit(tracker).then(() => savedTrackers.push(id)).catch(reject);
+            }
+
+            resolve({
+                success: true,
+                trackers: savedTrackers
+            });
+
+        });
+    }
+
+    /**
+     * Attempt to edit an existing UserTracker or upsert a new one into the database.
+     * @param {UserTracker} tracker The UserTracker to edit or upsert.
+     */
+    edit(tracker) {
+        return new Promise((resolve, reject) => {
+            if (!(tracker instanceof UserTracker)) throw new Error('Tracker must be an instance of UserTracker.');
+
+            const { mongoId } = tracker.databaseInfo;
+
+            clientPromise.then((client) => {
+                const trackerCollection = client.db().collection('l_user_trackers');
+
+                trackerCollection.updateOne({ _id: mongoId }, { $set: tracker.toJSON() }, { upsert: true }, (err, result) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        tracker.databaseInfo.mongoId = result.insertedId.toString();
+                        resolve(result)
+                    }
+                })
+            })
+            
+        });
+    }
+
+    /**
+     * Pull UserTrackers from the database, check if they are outdated and add updated or new UserTrackers to the cache.
+     */
+    hydrate(options = null) {
+        return new Promise((resolve, reject) => {
+
+
+
+
+        });
+    }
+
 }
 
 class UserTracker extends EventEmitter {
@@ -94,32 +160,45 @@ class UserTracker extends EventEmitter {
 
     status;
 
+    databaseInfo = {
+        mongoId: undefined,
+    };
+
     timestamps = {};
     
     constructor(user, controller) {
+        super();
         this.controller = controller;
+        console.log('Creating new UserTracker.');
 
         this.setStatus(2);
         this.#generateTrackerId();
-        this.#initialUserLoad(user);
+
+        setTimeout(() => {
+          this.#initialUserLoad(user);
+        }, 1000);
 
     }
 
 
     #initialUserLoad(user) {
         if (typeof user === 'string') {
+            console.log('User is a string, fetching user.');
             const result = this.#getUser(user, this.controller.client);
             if (!result) throw new Error("User not found. Tracker will be destroyed.");
             else {
                 this.user = result
                 this.userId = result.id;
                 this.emit('staged', this);
+                this.setStatus(1);
             };
         }
         else if (user instanceof Discord.User) {
+            console.log("User is a user.");
             this.user = user;
             this.userId = user.id;
             this.emit('staged', this);
+            this.setStatus(1);
         } else {
             this.setStatus(3);
             throw new Error("User must be of type Discord.User or a stringified Snowflake Id. Tracker will be destroyed.");
@@ -136,6 +215,8 @@ class UserTracker extends EventEmitter {
         if (!client) throw new Error("Client was not passed by the TrackerController, check service health.");
         if (typeof userId !== 'string') throw new Error("userId must be a string.");
         const result = await client.users.fetch(userId);
+
+        if (!result) return undefined;
         
         return result;
 
@@ -148,6 +229,8 @@ class UserTracker extends EventEmitter {
 
         this.id = uuidv4();
         this.#addTimestamp('assignId');
+
+        console.log(`Tracker id is ${this.id}`);
 
     }
 
@@ -221,6 +304,23 @@ class UserTracker extends EventEmitter {
         this.timestamps[name] = date;
         return this.timestamps;
     }
+
+
+
+
+    toJSON() {
+        return {
+            id: this.id,
+            userId: this.userId,
+            user: this.user,
+            status: this.status,
+            timestamps: this.timestamps,
+            guilds: this.trackedInGuilds,
+            databaseInfo: this.databaseInfo,
+            
+        }
+    }
+    
 
 }
 
