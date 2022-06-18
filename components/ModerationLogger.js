@@ -1,5 +1,5 @@
 const Discord = require('discord.js');
-const { OverlordEvent } = require('../../database/EventLogger');
+const { OverlordEvent } = require('../database/EventLogger');
 
 /**
  * Main point of contact to publish moderation events to guild-logs.
