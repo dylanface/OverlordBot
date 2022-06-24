@@ -7,7 +7,7 @@ dotenv.config()
 
 const ModerationLogger = require('./components/ModerationLogger');
 const ErrorHandler = require('./handlers/error_handler');
-const { EventLogger } = require('./database/EventLogger');
+const { EventLogger } = require('./components/EventLogger');
 const { TrackerController } = require('./components/UserTracker');
 
 
