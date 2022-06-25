@@ -1,6 +1,7 @@
 const { MessageActionRow, Modal, TextInputComponent, Client, CommandInteraction } = require('discord.js');
 
 module.exports = {
+	enabled: false,
     name: 'modal',
     description: 'Open a test modal',
 	/**

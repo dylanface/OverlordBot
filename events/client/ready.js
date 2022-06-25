@@ -1,4 +1,5 @@
 const Discord = require('discord.js');
+const { registerGuildCommands, fetchGuildInfo } = require('../../util/guild_init');
 
 module.exports = {
 	name: 'ready',
@@ -8,28 +9,15 @@ module.exports = {
         const clientGuilds = client.guilds.cache;
         const startupLogs = new Discord.Collection();
 
-
         /**
         Function to set Guild commands for all guilds the bot is in
         */
         const setGuildCommands = async () => {
-            // const commandList = [];
 
             await clientGuilds.forEach(async guild => {
                 startupLog('newLogSection', guild.id)
-                const data = [];
-                
-                await client.slashCommands.forEach(async command => { 
-                    const sCommand = command;
-                    data.push({
-                        name: sCommand.name,
-                        description: sCommand.description,
-                        options: sCommand.options
-                    });
-                    
-                })
-                
-                const cmd = await guild.commands.set(data);
+
+                await registerGuildCommands(guild.id, client);
                 
             })
 
@@ -38,14 +26,12 @@ module.exports = {
         /**
          * Function to fetch information about all guilds the bot is in.
          */
-        const fetchGuildInfo = async () => {
+        const fetchGuildForCache = async () => {
 
             for (const guild of clientGuilds.values()) {
-                if (!guild.available) return;
-                const availableChannels = await guild.channels.fetch(null, {cache:true});
-                client.totalMembers += guild.memberCount;
+                const channelCount = await fetchGuildInfo(guild.id, client);
 
-                startupLog('newLogEntry', guild.id, `${guild.name} has ${availableChannels.size} channels that have been cached`)
+                startupLog('newLogEntry', guild.id, `${guild.name} has ${channelCount} channels that have been cached`)
             }
 
         }
@@ -72,7 +58,7 @@ module.exports = {
         }
 
         await setGuildCommands()
-        await fetchGuildInfo()
+        await fetchGuildForCache()
         startupLog('final');
         
         client.user.setPresence({

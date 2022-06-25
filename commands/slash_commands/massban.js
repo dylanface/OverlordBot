@@ -1,5 +1,5 @@
 const { User, Client, Modal, TextInputComponent, MessageActionRow, MessageSelectMenu, MessageEmbed, MessageButton, Collection, CommandInteraction, SelectMenuInteraction } = require('discord.js');
-const { codeBlock } = require('@discordjs/builders');
+const { codeBlock, SlashCommandBuilder } = require('@discordjs/builders');
 
 module.exports = {
     name: 'massban',
@@ -10,6 +10,14 @@ module.exports = {
         description: 'Comma separated user id list',
         required: true,
     }],
+    data: new SlashCommandBuilder()
+        .setName('massban')
+        .setDescription('Begin the mass ban process for a list of Users')
+        .addStringOption(option => 
+            option.setName('userlist')
+            .setDescription('Comma separated user id list')
+            .setRequired(true)
+        ),
     /**
      * @param { CommandInteraction } interaction The command interaction object.
      * @param { Client } client The discord client that called this command.

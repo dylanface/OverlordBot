@@ -2,11 +2,15 @@ const ytdl = require('ytdl-core');
 
 const { CommandInteraction, Client } = require('discord.js');
 const { joinVoiceChannel, getVoiceConnection, createAudioPlayer, createAudioResource, AudioPlayerStatus, NoSubscriberBehavior } = require('@discordjs/voice')
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 
 module.exports = {
     name: 'play',
     description: "Play music",
+    data: new SlashCommandBuilder()
+        .setName('play')
+        .setDescription('Play music'),
     /**
      * @param { CommandInteraction } interaction The command interaction object.
      * @param { Client } client The discord client that called this command.

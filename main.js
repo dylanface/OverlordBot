@@ -1,4 +1,5 @@
 const Discord = require('discord.js');
+const { REST } = require('@discordjs/rest');
 const { DiscordTogether } = require('discord-together');
 const { StartRequestHandler } = require('./handlers/status_request_handler');
 
@@ -15,9 +16,12 @@ const client = new Discord.Client({ partials: ["MESSAGE", "CHANNEL", "REACTION" 
 const token = process.env.TEST_TOKEN;
 
 
+client.REST = new REST({ version: "9" }).setToken(token);
+
 client.instanceRegistry = new Discord.Collection();
 client.slashCommands = new Discord.Collection();
 client.events = new Discord.Collection();
+
 
 
 global.DiscordClient = client;
@@ -36,7 +40,7 @@ client.TrackerController = new TrackerController(client);
 
 ['slash_cmd_handler', 'event_handler'].forEach(handler => {
     require(`./handlers/${handler}`)(client);
-})
+});
 
 client.login(token);
 

@@ -1,4 +1,5 @@
 const { CommandInteraction, Client } = require('discord.js');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 module.exports = {
     name: 'yoinkies',
@@ -7,7 +8,7 @@ module.exports = {
         {
             name: 'emotes',
             type: 'STRING',
-            description: 'What you wanna yoinkies you little yoinker',
+            description: 'What you wanna yoink you little yoinker',
             required: true,
         },
         {
@@ -17,6 +18,19 @@ module.exports = {
             required: true,
         }
     ],
+    data: new SlashCommandBuilder()
+        .setName('yoinkies')
+        .setDescription('Yoink an emote from another guild')
+        .addStringOption(option =>
+            option.setName('emotes')
+            .setDescription('What you wanna yoinkies you little yoinker')
+            .setRequired(true)
+            )
+        .addStringOption(option =>
+            option.setName('name')
+            .setDescription('The name of your new emote(s)')
+            .setRequired(true)
+            ),
     /**
      * @param { CommandInteraction } interaction The command interaction object.
      * @param { Client } client The discord client that called this command.

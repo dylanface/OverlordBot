@@ -40,7 +40,7 @@ function Init(client) {
     })
 
     app.get(`${api_route}/users`, (req, res) => {
-        if (req.headers.authorization = process.env.AUTH_TOKEN) {
+        if (req.headers.authorization === process.env.AUTH_TOKEN) {
             res.status(200).json(client.users.cache.toJSON());
         } else {
             res.status(403).send("Unauthorized");

@@ -1,4 +1,5 @@
 const { MessageButton, MessageActionRow, MessageEmbed, CommandInteraction, Client } = require('discord.js');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 module.exports = {
     enabled: true,
@@ -18,6 +19,19 @@ module.exports = {
         required: false,
 
     }],
+    data: new SlashCommandBuilder()
+        .setName('userindex')
+        .setDescription('Search all of Discord for a user')
+        .addUserOption(option =>
+            option.setName('userid')
+            .setDescription('The user\'s userid (in snowflake form)')
+            .setRequired(true)
+            )
+        .addStringOption(option =>
+            option.setName('reason')
+            .setDescription('Reason for banning the user, if any')
+            .setRequired(false)
+            ),
     /**
      * @param { CommandInteraction } interaction The command interaction object.
      * @param { Client } client The discord client that called this command.

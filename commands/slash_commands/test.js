@@ -2,7 +2,7 @@ const { CommandInteraction, Client } = require('discord.js');
 const { codeBlock } = require("@discordjs/builders");
 
 module.exports = {
-enabled: true,
+enabled: false,
 name: 'test',
 description: 'Test command',
 /**
