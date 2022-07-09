@@ -12,12 +12,22 @@ async function registerGuildCommands(guildId, client) {
         return command.data.toJSON();
     });
 
+    const contextMenuCommands = await client.contextMenuCommands.map(command => {
+        return command.data.toJSON();
+    });
+
+    const commands = [...slashCommands, ...contextMenuCommands];
+
     try {
 		console.log('Started refreshing guild (/) commands.');
 
+        console.log('slashCommands: ', slashCommands);
+        console.log('contextMenuCommands: ', contextMenuCommands);
+        console.log('allCommands: ', commands);
+
 		await client.REST.put(
 			Routes.applicationGuildCommands(client.application.id, guildId),
-			{ body: slashCommands },
+			{ body: commands },
 		);
 
 		console.log(`Successfully reloaded guild (/) commands for ${guildId}.`);
