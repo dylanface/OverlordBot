@@ -1,4 +1,8 @@
 const fs = require("fs");
+const ascii = require("ascii-table");
+let table = new ascii("Context Menu Commands");
+
+table.setHeading("Command", "Status");
 
 module.exports = async (client) => {
 
@@ -8,9 +12,14 @@ module.exports = async (client) => {
         const context_menu_cmd = require(`../commands/context_menu_commands/${file}`);
 
         if (context_menu_cmd.name && context_menu_cmd.enabled != false) {
-            console.log(`Registering context menu command: ${context_menu_cmd.name}`);
             client.contextMenuCommands.set(context_menu_cmd.name, context_menu_cmd);
-        }  else continue;
+            table.addRow(file, "✓");
+        }  else {
+            table.addRow(file, "✕");
+            continue;
+        };
     }
+
+    console.log(table.toString());
 
 }

@@ -59,9 +59,14 @@ module.exports = {
         const messageContent = interaction.targetMessage.content;
         const messageTones = [];
 
-        const found = messageContent.match(toneIndicatorsRegex);
+        // console.log(interaction)
+        // console.log(interaction.targetMessage)
 
+        if (interaction.targetMessage.type !== 'DEFAULT') return interaction.reply("You cannot use tone_decoder on interaction replies.");
+
+        const found = messageContent.match(toneIndicatorsRegex);
         if (!found) return interaction.reply("No tone indicators found.");
+
 
 
         for (const tone of found) {
@@ -73,7 +78,7 @@ module.exports = {
 
         if (messageTones.length > 0) {
             interaction.reply(codeBlock(
-                `Message: ${messageContent}\nTones: ${messageTones.join(", ")}`
+                `Message: ${messageContent}\n\nTones: ${messageTones.join(", ")}`
                 ));
         } else interaction.reply("No tone indicators found.");
     }

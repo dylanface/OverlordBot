@@ -21,10 +21,6 @@ async function registerGuildCommands(guildId, client) {
     try {
 		console.log('Started refreshing guild (/) commands.');
 
-        console.log('slashCommands: ', slashCommands);
-        console.log('contextMenuCommands: ', contextMenuCommands);
-        console.log('allCommands: ', commands);
-
 		await client.REST.put(
 			Routes.applicationGuildCommands(client.application.id, guildId),
 			{ body: commands },
