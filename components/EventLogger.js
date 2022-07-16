@@ -1,4 +1,4 @@
-const clientPromise = require("./index");
+const clientPromise = require("../database/index");
 const Discord = require("discord.js");
 
 /**

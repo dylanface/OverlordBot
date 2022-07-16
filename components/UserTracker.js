@@ -1,7 +1,7 @@
 const Discord = require('discord.js');
 const { v4: uuidv4 } = require('uuid');
 const EventEmitter = require('events');
-const clientPromise = require('../../database');
+const clientPromise = require('../database');
 
 class TrackerController {
 
@@ -317,7 +317,7 @@ class UserTracker extends EventEmitter {
             timestamps: this.timestamps,
             guilds: this.trackedInGuilds,
             databaseInfo: this.databaseInfo,
-            
+            storage: this.StorageManager.toJSON()
         }
     }
     

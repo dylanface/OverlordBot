@@ -1,6 +1,7 @@
 const { CommandInteraction, Client } = require('discord.js');
 
 module.exports = {
+    enabled: false,
     name: 'clearchat',
     description: "This can clear the channel you execute the command in",
     options: [ 

@@ -1,6 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const fs = require('fs');
+
+const path = require("path");
 
 
 
@@ -37,12 +40,28 @@ function Init(client) {
     })
 
     app.get(`${api_route}/users`, (req, res) => {
-        if (req.headers.authorization = process.env.AUTH_TOKEN) {
+        if (req.headers.authorization === process.env.AUTH_TOKEN) {
             res.status(200).json(client.users.cache.toJSON());
         } else {
             res.status(403).send("Unauthorized");
         }
     })
+
+    // app.get(
+    //   `${api_route}/storage/:trackerId([0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89AB][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12})/media/:fileName(\\w+\.\\w+)`,
+    //   (req, res) => {
+    //     const { trackerId, fileName } = req.params;
+
+    //     console.log(`Request captured: ${req.path}`);
+    //     res.send(req.params);
+    //   }
+    // );
+
+    // app.get(`${api_route}/storage/:fileName(\\w+\.\\w+)`, (req, res) => {
+    //     const { fileName } = req.params;
+
+    //     res.sendFile(path.join(__dirname, `../images/${fileName}`));
+    // });
 
 }
 
@@ -58,13 +77,20 @@ function Init(client) {
 async function getStats(client) {
 
     const stats = {
-        status: {
-            state: true,
-            uptime: process.uptime(),
-        },
-        guildSize: client.guilds.cache.size,
-        totalMembers: client.totalMembers,
-    }
+      status: {
+        name: "Overlord Status",
+        state: true,
+        uptime: process.uptime(),
+      },
+      guildSize: {
+        name: "Overlord Guilds",
+        stat: client.guilds.cache.size,
+      },
+      totalMembers: {
+        name: "Overlord Subjects",
+        stat: client.totalMembers,
+      },
+    };
 
     // const stats = [
     //     { name: 'Overlord Status', stat: 'Online', uptime: process.uptime() },

@@ -1,4 +1,24 @@
 {
     "sqltools.connections": [],
-    "sqltools.useNodeRuntime": true
+    "sqltools.useNodeRuntime": true,
+    "peacock.color": "#fcd4ff",
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#ffffff",
+        "activityBar.activeBorder": "#df9f9f",
+        "activityBar.background": "#ffffff",
+        "activityBar.foreground": "#15202b",
+        "activityBar.inactiveForeground": "#15202b99",
+        "activityBarBadge.background": "#df9f9f",
+        "activityBarBadge.foreground": "#15202b",
+        "sash.hoverBorder": "#ffffff",
+        "statusBar.background": "#fcd4ff",
+        "statusBar.foreground": "#15202b",
+        "statusBarItem.hoverBackground": "#f8a1ff",
+        "statusBarItem.remoteBackground": "#fcd4ff",
+        "statusBarItem.remoteForeground": "#15202b",
+        "titleBar.activeBackground": "#fcd4ff",
+        "titleBar.activeForeground": "#15202b",
+        "titleBar.inactiveBackground": "#fcd4ff99",
+        "titleBar.inactiveForeground": "#15202b99"
+    }
 }

@@ -8,9 +8,12 @@ module.exports = {
         if (oldMessage.author.bot) return console.log('MessageUpdate: Author is bot');
         if (oldMessage.content.length >= 1024) return console.log('MessageUpdate: Message exceeds 1024 characters');
         if (oldMessage.content.length == 0 || newMessage.content.length == 0 ) return console.log('MessageUpdate: Message has no content');
-        if (newMessage.embeds[0]) {
-            // Check messages because of embed
-            if (oldMessage.toString() === newMessage.toString()) return;
+        if (newMessage.embeds[0] || oldMessage.embeds[0]) {
+          // Check messages because of embed
+          if (oldMessage.toString() === newMessage.toString()) return;
+        }
+        if (oldMessage.content.includes('overlord-ignore') || newMessage.content.includes('overlord-ignore')) {
+            return console.log('MessageUpdate: Message contains overlord-ignore');
         }
 
         const messageGuild = await client.guilds.fetch(newMessage.guildId)

@@ -7,3 +7,9 @@ deprecated/
 node_modules/
 wordStart.js
 messageCreate.js
+images/
+
+
+modal_maker.js
+hydration_helper.js
+test.js

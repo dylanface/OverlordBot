@@ -1,6 +1,7 @@
 const { CommandInteraction, Client } = require('discord.js');
 
 module.exports = {
+    enabled: false,
 name: 'sort_game_reactions',
 description: 'Remove reactions for users who are not present in your voice channel',
 options: [
