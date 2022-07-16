@@ -77,13 +77,20 @@ function Init(client) {
 async function getStats(client) {
 
     const stats = {
-        status: {
-            state: true,
-            uptime: process.uptime(),
-        },
-        guildSize: client.guilds.cache.size,
-        totalMembers: client.totalMembers,
-    }
+      status: {
+        name: "Overlord Status",
+        state: true,
+        uptime: process.uptime(),
+      },
+      guildSize: {
+        name: "Overlord Guilds",
+        stat: client.guilds.cache.size,
+      },
+      totalMembers: {
+        name: "Overlord Subjects",
+        stat: client.totalMembers,
+      },
+    };
 
     // const stats = [
     //     { name: 'Overlord Status', stat: 'Online', uptime: process.uptime() },
