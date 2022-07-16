@@ -63,6 +63,10 @@ module.exports = {
         // console.log(interaction.targetMessage)
 
         if (interaction.targetMessage.type !== 'DEFAULT') return interaction.reply("You cannot use tone_decoder on interaction replies.");
+        if (interaction.targetMessage.author.bot) return interaction.reply("You cannot use tone_decoder on bot messages.");
+        if (messageContent.length < 3) return interaction.reply("You cannot use tone_decoder on messages shorter than 3 characters.");
+        if (messageContent.length > 1700) return interaction.reply("You cannot use tone_decoder on messages longer than 1700 characters.");
+        if (messageContent.includes("```")) return interaction.reply("You cannot use tone_decoder on messages with code blocks.");
 
         const found = messageContent.match(toneIndicatorsRegex);
         if (!found) return interaction.reply("No tone indicators found.");
