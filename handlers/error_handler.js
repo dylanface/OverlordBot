@@ -14,6 +14,9 @@ class ErrorHandler {
 
     async recoverable(error) {
         console.error(error);
+
+        if (process.env.DEVELOPMENT_MODE) return;
+
         const adminDM = await this.client.users.createDM('265023187614433282');
         await adminDM.send(`An error occured: \`\`\`${error}\`\`\``);
     }

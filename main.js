@@ -19,16 +19,17 @@ const token = process.env.TEST_TOKEN;
 client.REST = new REST({ version: "9" }).setToken(token);
 
 client.instanceRegistry = new Discord.Collection();
-client.slashCommands = new Discord.Collection();
-client.contextMenuCommands = new Discord.Collection();
 client.events = new Discord.Collection();
 
+client.slashCommands = new Discord.Collection();
+client.contextMenuCommands = new Discord.Collection();
+client.autocompleteInteractions = new Discord.Collection();
 
 
-global.DiscordClient = client;
-setInterval(() => {
-    global.DiscordClient = client;
-}, 1000);
+// global.DiscordClient = client;
+// setInterval(() => {
+//     global.DiscordClient = client;
+// }, 1000);
 
 client.totalMembers = 0;
 StartRequestHandler(client);
@@ -39,7 +40,7 @@ client.ErrorHandler = new ErrorHandler(client);
 client.EventLogger = new EventLogger(client);
 client.TrackerController = new TrackerController(client);
 
-['slash_cmd_handler', 'context_menu_cmd_handler', 'event_handler'].forEach(handler => {
+['slash_cmd_handler', 'context_menu_cmd_handler', 'autocomplete_interaction_handler', 'event_handler'].forEach(handler => {
     require(`./handlers/${handler}`)(client);
 });
 
