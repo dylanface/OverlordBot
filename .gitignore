@@ -13,3 +13,4 @@ images/
 modal_maker.js
 hydration_helper.js
 test.js
+json_safety_checker.js
