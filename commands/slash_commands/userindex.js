@@ -1,7 +1,16 @@
-const { MessageButton, MessageActionRow, MessageEmbed, CommandInteraction, Client } = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const {
+  CommandInteraction,
+  Client,
+  ComponentType,
+  ButtonStyle,
+} = require("discord.js");
+const {
+  SlashCommandBuilder,
+  ButtonBuilder,
+  ActionRowBuilder,
+  EmbedBuilder,
+} = require("@discordjs/builders");
 const { PermissionFlagsBits } = require("discord-api-types/v10");
-
 
 module.exports = {
   enabled: true,
@@ -53,26 +62,24 @@ module.exports = {
     const banEmoji = "🔨";
     const cancelEmoji = "❌";
 
-    const cancelButtonPr = [
-      new MessageButton()
-        .setCustomId("cancel")
-        .setLabel(`${cancelEmoji} Cancel`)
-        .setStyle("SECONDARY"),
-    ];
+    const cancelButtonPr = new ButtonBuilder()
+      .setCustomId("cancel")
+      .setLabel(`${cancelEmoji} Cancel`)
+      .setStyle(ButtonStyle.Secondary);
 
-    const banButton = new MessageActionRow().addComponents(
-      new MessageButton()
+    const banButton = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
         .setCustomId("banuser")
         .setLabel(`${banEmoji} Ban User`)
-        .setStyle("PRIMARY"),
+        .setStyle(ButtonStyle.Primary),
       cancelButtonPr
     );
 
-    const banConfirm = new MessageActionRow().addComponents(
-      new MessageButton()
+    const banConfirm = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
         .setCustomId("redbanuser")
         .setLabel(`${banEmoji} Are You Sure?`)
-        .setStyle("DANGER"),
+        .setStyle(ButtonStyle.Danger),
       cancelButtonPr
     );
 
@@ -82,8 +89,9 @@ module.exports = {
 
     try {
       var user = await client.users.fetch(inputId, true);
-      const userInfo = new MessageEmbed()
-        .setColor("#f6c5f8")
+
+      const userInfo = new EmbedBuilder()
+        .setColor(0xf6c5f8)
         .setAuthor({
           name: `${user.tag}`,
           iconURL: user.displayAvatarURL({ dynamic: true }),
@@ -106,7 +114,7 @@ module.exports = {
         i.message.interaction.id === interaction.id;
       const collector = channel.createMessageComponentCollector({
         filter,
-        componentType: "BUTTON",
+        componentType: ComponentType.Button,
         idle: 45 * 1000,
       });
 
@@ -171,7 +179,7 @@ module.exports = {
         );
       });
     } catch (error) {
-      console.log(`Something went wrong when fetching the user`);
+      console.error(error);
     }
   },
 };

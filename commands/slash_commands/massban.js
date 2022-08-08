@@ -1,5 +1,22 @@
-const { User, Client, Modal, TextInputComponent, MessageActionRow, MessageSelectMenu, MessageEmbed, MessageButton, Collection, CommandInteraction, SelectMenuInteraction } = require('discord.js');
-const { codeBlock, SlashCommandBuilder } = require('@discordjs/builders');
+const {
+  User,
+  Client,
+  Collection,
+  CommandInteraction,
+  SelectMenuInteraction,
+  ComponentType,
+  ButtonStyle,
+} = require("discord.js");
+const {
+  codeBlock,
+  SlashCommandBuilder,
+  ActionRowBuilder,
+  SelectMenuBuilder,
+  EmbedBuilder,
+  ButtonBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+} = require("@discordjs/builders");
 const { PermissionFlagsBits } = require("discord-api-types/v10");
 
 module.exports = {
@@ -90,21 +107,21 @@ module.exports = {
      * Initiate the mass ban process using a modal.
      */
     const modalMassBan = async () => {
-      const modal = new Modal()
+      const modal = new ModalBuilder()
         .setCustomId("massBanModal")
         .setTitle("Mass Ban Input");
 
-      const idList = new TextInputComponent()
+      const idList = new TextInputBuilder()
         .setCustomId("idList")
         .setLabel("Copy and paste user list below.")
         .setStyle("PARAGRAPH");
 
-      const reasoning = new TextInputComponent()
+      const reasoning = new TextInputBuilder()
         .setCustomId("reasoning")
         .setLabel("What is your reasoning for this ban?")
         .setStyle("PARAGRAPH");
 
-      const firstActionRow = new MessageActionRow().addComponents(
+      const firstActionRow = new ActionRowBuilder().addComponents(
         idList,
         reasoning
       );
@@ -136,8 +153,8 @@ module.exports = {
      * @param {CommandInteraction} interaction The command interaction that began this mass ban.
      */
     const establishDefaultReason = async (interaction) => {
-      const reasonSelector = new MessageActionRow().addComponents(
-        new MessageSelectMenu()
+      const reasonSelector = new ActionRowBuilder().addComponents(
+        new SelectMenuBuilder()
           .setCustomId("massban_reason_selector")
           .setPlaceholder("Select a default reason for this operation")
           .addOptions([
@@ -165,8 +182,8 @@ module.exports = {
           ])
       );
 
-      const massBanEmbed = new MessageEmbed()
-        .setColor("#0099ff")
+      const massBanEmbed = new EmbedBuilder()
+        .setColor(0x099ff)
         .setTitle("Mass Ban")
         .setDescription(
           `Select default reason for banning (${userListLength}) users:`
@@ -181,17 +198,19 @@ module.exports = {
         i.customId === "massban_reason_selector" &&
         i.user.id === interaction.member.user.id &&
         i.message.interaction.id === interaction.id;
+
       const defaultReasonCollector = channel.createMessageComponentCollector({
         filter: defaultReasonFilter,
-        componentType: "SELECT_MENU",
+        componentType: ComponentType.SelectMenu,
         idle: 120 * 1000,
       });
 
       defaultReasonCollector.on("collect", async (interaction) => {
+        console.log("default reason selected");
         if (!interaction.isSelectMenu()) return;
         else await interaction.deferUpdate({ ephemeral: true });
 
-        createUserList(interaction, interaction.values);
+        createUserList(interaction, interaction.values).catch(console.error);
         defaultReasonCollector.stop();
       });
     };
@@ -209,8 +228,8 @@ module.exports = {
     const createUserEmbed = async (userObject, reason) => {
       const user = userObject.user;
       if (reason === "pardon") {
-        const userPardonEmbed = new MessageEmbed()
-          .setColor(user.hexAccentColor)
+        const userPardonEmbed = new EmbedBuilder()
+          .setColor(user.accentColor)
           .setAuthor({
             name: `${user.tag}`,
             iconURL: user.displayAvatarURL({ dynamic: true }),
@@ -220,8 +239,8 @@ module.exports = {
           );
         userListGeneratedEmbeds.set(userObject.id, userPardonEmbed);
       } else {
-        const userEmbed = new MessageEmbed()
-          .setColor(user.hexAccentColor)
+        const userEmbed = new EmbedBuilder()
+          .setColor(user.accentColor)
           .setAuthor({
             name: `${user.tag}`,
             iconURL: user.displayAvatarURL({ dynamic: true }),
@@ -260,15 +279,15 @@ module.exports = {
      * Create action row for operation summary confirmation.
      */
     const confirmActionRow = () => {
-      const confirmationButtons = new MessageActionRow().addComponents(
-        new MessageButton()
+      const confirmationButtons = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
           .setCustomId("confirm_button")
           .setLabel("Confirm")
-          .setStyle("SUCCESS"),
-        new MessageButton()
+          .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
           .setCustomId("cancel_button")
           .setLabel("Cancel")
-          .setStyle("DANGER")
+          .setStyle(ButtonStyle.Danger)
       );
 
       return confirmationButtons;
@@ -283,7 +302,11 @@ module.exports = {
         i.user.id === interaction.user.id &&
         i.message.interaction.id === interaction.id;
       const userActionButtonCollector = channel.createMessageComponentCollector(
-        { filter: confirmationFilter, componentType: "BUTTON", idle: 45 * 1000 }
+        {
+          filter: confirmationFilter,
+          componentType: ComponentType.Button,
+          idle: 45 * 1000,
+        }
       );
 
       userActionButtonCollector.on("collect", async (interaction) => {
@@ -294,8 +317,8 @@ module.exports = {
           await executeBanList(operations);
           userActionButtonCollector.stop();
 
-          const confirmationEmbed = new MessageEmbed()
-            .setColor("#0099ff")
+          const confirmationEmbed = new EmbedBuilder()
+            .setColor(0x099ff)
             .setDescription(
               `Actions are being executed... Check <#${guildLogChannel.id}> for logs.`
             );
@@ -308,8 +331,8 @@ module.exports = {
         if (interaction.customId === "cancel_button") {
           userActionButtonCollector.stop();
 
-          const cancelEmbed = new MessageEmbed()
-            .setColor("#ff0000")
+          const cancelEmbed = new EmbedBuilder()
+            .setColor(0xff0000)
             .setDescription(
               "Cancelled mass ban operation, no action(s) will be executed."
             );
@@ -363,33 +386,33 @@ module.exports = {
      * @param {Boolean} nextDisabled True if the next button should be disabled.
      */
     const createActionRow = (backDisabled, nextDisabled) => {
-      const backButton = new MessageButton()
+      const backButton = new ButtonBuilder()
         .setCustomId("back")
         .setLabel("Back")
-        .setStyle("SECONDARY")
+        .setStyle(ButtonStyle.Secondary)
         .setDisabled(backDisabled);
 
-      const nextButton = new MessageButton()
+      const nextButton = new ButtonBuilder()
         .setCustomId("next")
         .setLabel(`Next`)
-        .setStyle("SECONDARY")
+        .setStyle(ButtonStyle.Secondary)
         .setDisabled(nextDisabled);
 
-      const userListActionButtons = new MessageActionRow().addComponents(
+      const userListActionButtons = new ActionRowBuilder().addComponents(
         backButton,
         nextButton,
-        new MessageButton()
+        new ButtonBuilder()
           .setCustomId("pardon")
           .setLabel(`Pardon User`)
-          .setStyle("PRIMARY"),
-        new MessageButton()
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
           .setCustomId("edit_reason")
           .setLabel(`Edit Reason for User`)
-          .setStyle("DANGER"),
-        new MessageButton()
+          .setStyle(ButtonStyle.Danger),
+        new ButtonBuilder()
           .setCustomId("continue")
           .setLabel(`Continue to review`)
-          .setStyle("SUCCESS")
+          .setStyle(ButtonStyle.Success)
       );
 
       return userListActionButtons;
@@ -422,7 +445,7 @@ module.exports = {
       const userActionButtonCollector = channel.createMessageComponentCollector(
         {
           filter: userActionButtonFilter,
-          componentType: "BUTTON",
+          componentType: ComponentType.Button,
           idle: 60 * 1000,
         }
       );
@@ -502,7 +525,7 @@ module.exports = {
             interaction
               .followUp({
                 embeds: [
-                  new MessageEmbed().setDescription(
+                  new EmbedBuilder().setDescription(
                     "Enter new reason for banning:"
                   ),
                 ],
@@ -565,7 +588,7 @@ module.exports = {
      * @param {String} reason The default reason to apply to this user list.
      */
     const createOperationSummary = (operations, reason) => {
-      const operationSummaryEmbed = new MessageEmbed()
+      const operationSummaryEmbed = new EmbedBuilder()
         .setAuthor({
           name: `Operation Summary`,
           iconURL: client.user.displayAvatarURL({ dynamic: true }),

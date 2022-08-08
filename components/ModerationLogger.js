@@ -121,7 +121,9 @@ class ModerationLogger {
       .setTimestamp();
 
     if (reason)
-      registryEmbed.addField("Default Reason:", `\`\`\`${reason}\`\`\``);
+      registryEmbed.addFields([
+        { name: "Default Reason:", value: `\`\`\`${reason}\`\`\`` },
+      ]);
 
     return registryEmbed;
   };

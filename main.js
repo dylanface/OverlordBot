@@ -52,6 +52,7 @@ client.instanceRegistry = new Collection();
 client.events = new Collection();
 
 client.slashCommands = new Collection();
+client.subCommands = new Collection();
 client.contextMenuCommands = new Collection();
 client.autocompleteInteractions = new Collection();
 

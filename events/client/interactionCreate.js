@@ -10,13 +10,21 @@ module.exports = {
   async execute(interaction, client) {
     if (interaction.isChatInputCommand()) {
       const sCommandName = interaction.commandName;
-      const sCommand = client.slashCommands.get(sCommandName);
+      let sCommand = client.slashCommands.get(sCommandName);
       if (!sCommand) return console.log(`Command ${sCommandName} not found`);
+      if (sCommand?.hasSubs === true) {
+        const subCommandName = interaction.options.getSubcommand();
+        sCommand = client.subCommands.get(subCommandName);
+        if (!sCommand)
+          return interaction.reply(
+            "This subcommand has not been configured yet. Contact an Overlord developer if this is an error."
+          );
+      }
 
       try {
         sCommand.execute(interaction, client);
       } catch (error) {
-        console.log(error);
+        console.error(error);
         interaction.reply(
           "There was an error executing the command, please try again later or contact support."
         );
