@@ -11,10 +11,10 @@ const { StartRequestHandler } = require("./handlers/status_request_handler");
 const dotenv = require("dotenv");
 dotenv.config();
 
-const ModerationLogger = require("./components/ModerationLogger");
+const ModerationLogger = require("./modules/ModerationLogger");
 const ErrorHandler = require("./handlers/error_handler");
-const { EventLogger } = require("./components/EventLogger");
-const { TrackerController } = require("./components/UserTracker");
+const { EventLogger } = require("./modules/EventLogger");
+const { TrackerController } = require("./modules/UserTracker");
 
 const client = new Client({
   partials: [

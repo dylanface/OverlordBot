@@ -49,18 +49,10 @@ module.exports = async (client) => {
     for (const cmd of insideDir) {
       const subCommand = require(`../commands/slash_commands/${subcmd_dir}/${cmd}`);
 
-      if (
-        subCommand.name &&
-        subCommand.description &&
-        subCommand.enabled === true
-      ) {
+      if (subCommand.name && subCommand.data && subCommand.enabled === true) {
         client.subCommands.set(subCommand.name, subCommand);
         subCommandsTable.addRow(cmd, "✓");
-        builtCommand.addSubcommand(
-          new SlashCommandSubcommandBuilder()
-            .setName(subCommand.name)
-            .setDescription(subCommand.description)
-        );
+        builtCommand.addSubcommand(subCommand.data);
       } else continue;
     }
 
@@ -72,27 +64,22 @@ module.exports = async (client) => {
     for (const category of commandCategories) {
       const commands = fs
         .readdirSync(`./commands/slash_commands/${subcmd_dir}/${category}`)
-        .filter((file) => !file.includes(".") && file !== "index.js");
+        .filter((file) => file.endsWith(".js") && file !== "index.js");
       if (commands.length <= 0) continue;
 
-      let group = new SlashCommandSubcommandGroupBuilder().setName(category);
+      let group = new SlashCommandSubcommandGroupBuilder()
+        .setName(category)
+        .setDescription(
+          `The home of ${subcmd_dir} ${category} related commands.`
+        );
 
       for (const cmd of commands) {
-        subCommandsTable.addRow(cmd, "✓");
         const cmdModule = require(`../commands/slash_commands/${subcmd_dir}/${category}/${cmd}`);
 
-        if (
-          cmdModule.enabled === true &&
-          cmdModule.name &&
-          cmdModule.description
-        ) {
+        if (cmdModule.enabled === true && cmdModule.name && cmdModule.data) {
           client.subCommands.set(cmdModule.name, cmdModule);
-          subCommandsTable.addRow(cmdModule, "✓");
-          group.addSubcommand(
-            new SlashCommandSubcommandBuilder()
-              .setName(cmdModule.name)
-              .setDescription(cmdModule.description)
-          );
+          subCommandsTable.addRow(cmd, "✓");
+          group.addSubcommand(cmdModule.data);
         } else continue;
       }
 

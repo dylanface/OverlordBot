@@ -41,7 +41,9 @@ module.exports = {
         console.log(error);
       }
     } else if (interaction.isAutocomplete()) {
-      const autocompleteName = interaction.commandName;
+      const autocompleteName = interaction.options.getString("timezone")
+        ? "timezone"
+        : interaction.commandName;
       const autocomplete =
         client.autocompleteInteractions.get(autocompleteName);
       if (!autocomplete)
