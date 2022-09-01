@@ -15,6 +15,8 @@ const ModerationLogger = require("./modules/ModerationLogger");
 const ErrorHandler = require("./handlers/error_handler");
 const { EventLogger } = require("./modules/EventLogger");
 const { TrackerController } = require("./modules/UserTracker");
+const { PartyPlanner } = require("./modules/PartyPlanner/PartyPlanner");
+const { UserProfileManager } = require("./modules/UserProfiles/UserProfile");
 
 const client = new Client({
   partials: [
@@ -63,7 +65,9 @@ client.discordTogether = new DiscordTogether(client);
 client.ModerationLogger = new ModerationLogger(client);
 client.ErrorHandler = new ErrorHandler(client);
 client.EventLogger = new EventLogger(client);
-client.TrackerController = new TrackerController(client);
+// client.TrackerController = new TrackerController(client);
+client.PartyPlanner = new PartyPlanner(client);
+client.UserProfileManager = new UserProfileManager(client);
 
 [
   "slash_cmd_handler",
