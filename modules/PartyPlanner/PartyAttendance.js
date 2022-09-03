@@ -1,17 +1,14 @@
-const {
-  ReportToParty,
-  ReportToManager,
-} = require("../../templates/SelfChanges");
+const { ReceivesFunctions } = require("../../templates/ReceivesFunctions");
 const { UserProfile } = require("../UserProfiles/UserProfile");
 
-class PartyAttendance extends ReportToParty {
+class PartyAttendance extends ReceivesFunctions {
   /**
    * @type { Map<string, Attendee> }
    */
   #attending;
 
-  constructor(party, template = undefined) {
-    super(party);
+  constructor({ ...funcs }, template = undefined) {
+    super(funcs);
     this.#attending = new Map();
 
     if (template) {
@@ -68,14 +65,14 @@ class PartyAttendance extends ReportToParty {
   }
 }
 
-class Attendee extends ReportToManager {
+class Attendee extends ReceivesFunctions {
   /**
    * @type { UserProfile }
    */
   profile;
 
-  constructor(profile) {
-    super();
+  constructor(profile, { ...funcs }) {
+    super(funcs);
     this.profile = profile;
   }
 
@@ -86,4 +83,5 @@ class Attendee extends ReportToManager {
   }
 }
 
+module.exports.Attendee = Attendee;
 module.exports.PartyAttendance = PartyAttendance;

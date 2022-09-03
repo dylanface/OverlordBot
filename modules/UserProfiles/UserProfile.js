@@ -1,7 +1,8 @@
 const clientPromise = require("../../database/index");
+const { ReceivesFunctions } = require("../../templates/ReceivesFunctions");
 const { SelfUpdatingMap } = require("../../templates/SelfUpdatingMap");
 
-class UserProfile {
+class UserProfile extends ReceivesFunctions {
   createdAt;
 
   id = "";
@@ -13,23 +14,14 @@ class UserProfile {
    */
   contactMethod = "DM";
 
-  /**
-   * @type { UserProfileManager }
-   */
-  manager;
-
-  constructor(manager, discordId = undefined, template = undefined) {
-    if (!manager) throw new Error("No manager provided.");
-    if (!(manager instanceof UserProfileManager))
-      throw new Error("Invalid manager type.");
-    this.manager = manager;
-    // super({ mtype: UserProfileManager, manager }, UserProfile);
+  constructor(funcs, discordId = undefined, template = undefined) {
+    super(funcs);
 
     if (template) {
       this.createdAt = template.createdAt;
       this.id = template.id;
       this.timezone = template.timezone;
-      this.contact = template.contact;
+      this.contactMethod = template.contactMethod;
     } else {
       if (!discordId) throw new Error("No discord id provided.");
       this.id = discordId;
@@ -42,8 +34,6 @@ class UserProfile {
    */
   setTimezone(timezone) {
     this.timezone = timezone;
-
-    // this.report(this);
     return this;
   }
 
@@ -52,13 +42,16 @@ class UserProfile {
    */
   setContactMethod(contact) {
     this.contactMethod = contact;
-
-    // this.report(this);
     return this;
   }
 
   async asDiscordUser() {
-    return await this.manager.getDiscordUserFromProfile(this);
+    return await this.getDiscordUserFromProfile(this);
+  }
+
+  save() {
+    this.update(this);
+    console.log("Saved: " + this.id);
   }
 
   toJSON() {
@@ -66,20 +59,29 @@ class UserProfile {
       createdAt: this.createdAt,
       id: this.id,
       timezone: this.timezone,
-      contact: this.contactMethod,
+      contactMethod: this.contactMethod,
     };
   }
 }
+
+module.exports.UserProfile = UserProfile;
 
 class UserProfileManager {
   /**
    * @type { SelfUpdatingMap }
    */
-  #profiles;
+  _profiles;
+
+  _functions;
 
   constructor(client) {
     this.client = client;
-    this.#profiles = new SelfUpdatingMap();
+    this._profiles = new SelfUpdatingMap(this.#update.bind(this));
+    this._functions = {
+      getDiscordUserFromProfile: this.getDiscordUserFromProfile.bind(this),
+      update: this.#update.bind(this),
+    };
+
     this.#fetchAllProfiles();
   }
 
@@ -95,14 +97,10 @@ class UserProfileManager {
 
           if (allProfiles.length <= 0) return;
           for (const profile of allProfiles) {
-            this.#profiles.set(
+            this._profiles.set(
               profile.id,
-              new UserProfile(this, null, profile)
+              new UserProfile(this._functions, null, profile)
             );
-
-            this.#profiles.get(profile.id).on("dataChanged", (res) => {
-              this.#updateProfile(res);
-            });
           }
         })
         .catch(reject);
@@ -121,8 +119,11 @@ class UserProfileManager {
             .findOne({ id: discordId });
 
           if (result !== null) {
-            this.#profiles.set(discordId, new UserProfile(this, null, result));
-            resolve(this.#profiles.get(discordId));
+            this._profiles.set(
+              discordId,
+              new UserProfile(this._functions, null, result)
+            );
+            resolve(this._profiles.get(discordId));
           } else {
             const profile = this.createProfile(discordId);
             resolve(profile);
@@ -132,7 +133,7 @@ class UserProfileManager {
     });
   }
 
-  #updateProfile(profile) {
+  #update(profile) {
     if (!(profile instanceof UserProfile))
       throw new Error("Invalid profile provided.");
 
@@ -146,29 +147,24 @@ class UserProfileManager {
           { upsert: true }
         );
 
-      if (!result || (result.modifiedCount <= 0 && result.upsertedCount <= 0)) {
+      if (!result || !result.acknowledged) {
         throw new Error("Failed to update profile.");
-      } else {
-        this.#profiles.set(profile.id, profile);
-      }
+      } else console.log(result);
     });
 
     return profile;
   }
 
   createProfile(discordId) {
-    if (this.#profiles.has(discordId)) return this.#profiles.get(discordId);
-    const profile = new UserProfile(this, discordId);
-    profile.on("dataChanged", (res) => {
-      this.#updateProfile(res);
-    });
-    this.#updateProfile(profile);
+    if (this._profiles.has(discordId)) return this._profiles.get(discordId);
+    const profile = new UserProfile(this._functions, discordId);
+    this.#update(profile);
 
     return profile;
   }
 
   async getProfile(discordId) {
-    if (this.#profiles.has(discordId)) return this.#profiles.get(discordId);
+    if (this._profiles.has(discordId)) return this._profiles.get(discordId);
     const profile = await this.#fetchProfile(discordId);
     return profile;
   }
@@ -183,4 +179,3 @@ class UserProfileManager {
 }
 
 module.exports.UserProfileManager = UserProfileManager;
-module.exports.UserProfile = UserProfile;

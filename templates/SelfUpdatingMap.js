@@ -1,15 +1,22 @@
-const { Party } = require("../modules/PartyPlanner/Party");
-const { UserProfile } = require("../modules/UserProfiles/UserProfile");
-
 class SelfUpdatingMap extends Map {
   handler;
+  updateCallback;
 
-  constructor(...args) {
+  constructor(updateCallback, ...args) {
     super(...args);
+    if (!updateCallback || typeof updateCallback !== "function")
+      throw new Error(
+        "You must provide a valid update callback when creating a SelfUpdatingMap."
+      );
+    this.updateCallback = updateCallback;
     this.handler = {
       get: (target, key) => {
         if (target[key] instanceof Date) return target[key];
-        if (typeof target[key] === "object" && target[key] !== null) {
+        if (
+          typeof target[key] === "object" &&
+          target[key] !== null &&
+          !(target[key] instanceof SelfUpdatingMap)
+        ) {
           return new Proxy(target[key], this.handler);
         }
 
@@ -17,25 +24,25 @@ class SelfUpdatingMap extends Map {
       },
       set: (target, key, value) => {
         target[key] = value;
-
-        if (target instanceof Party) {
-          target.manager.updateParty(target);
-        }
-
+        target.save();
         return true;
       },
     };
   }
 
   set(key, value) {
-    console.log("set called");
+    value.save();
     return super.set(key, value);
   }
 
   get(key) {
     const value = super.get(key);
     if (!value) return null;
-    else if (typeof value === "object" && value !== null) {
+    else if (
+      typeof value === "object" &&
+      value !== null &&
+      !(value instanceof SelfUpdatingMap)
+    ) {
       return new Proxy(value, this.handler);
     }
 
