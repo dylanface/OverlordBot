@@ -22,7 +22,16 @@ module.exports = {
    * @param { Client } client The discord client that called this command.
    */
   async execute(interaction, client) {
+    await interaction.deferReply();
+
     const timezone = interaction.options.getString("timezone");
-    await interaction.reply("Your preferred timezone is " + timezone + ".");
+
+    const profile = await client.UserProfileManager.getProfile(
+      interaction.user.id
+    );
+
+    profile.setTimezone(timezone);
+
+    await interaction.editReply("Your preferred timezone is " + timezone + ".");
   },
 };

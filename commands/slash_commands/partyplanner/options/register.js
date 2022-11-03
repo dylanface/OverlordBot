@@ -1,14 +1,15 @@
 const { CommandInteraction, Client } = require("discord.js");
-const { SlashCommandBuilder } = require("@discordjs/builders");
+const {
+  SlashCommandSubcommandBuilder,
+  SlashCommandStringOption,
+} = require("@discordjs/builders");
 
 module.exports = {
-  enabled: false,
-  name: "test",
-  description: "Test command",
-  data: new SlashCommandBuilder()
-    .setName("test")
-    .setDescription("Test Command")
-    .setDMPermission(false),
+  enabled: true,
+  name: "register",
+  data: new SlashCommandSubcommandBuilder()
+    .setName("register")
+    .setDescription("Create a PartyPlanner profile."),
   /**
    * @param { CommandInteraction } interaction The command interaction object.
    * @param { Client } client The discord client that called this command.

@@ -41,13 +41,18 @@ module.exports = {
         console.log(error);
       }
     } else if (interaction.isAutocomplete()) {
-      const autocompleteName = interaction.options.getString("timezone")
-        ? "timezone"
-        : interaction.commandName;
+      let autocompleteName = "default";
+
+      if (interaction.options.getString("timezone") !== null) {
+        autocompleteName = "timezone";
+      }
+      if (interaction.options.getString("party") !== null) {
+        autocompleteName = "party";
+      }
+
       const autocomplete =
         client.autocompleteInteractions.get(autocompleteName);
-      if (!autocomplete)
-        return console.log(`Autocomplete ${autocompleteName} not found`);
+      if (!autocomplete) return;
 
       try {
         autocomplete.execute(interaction, client);

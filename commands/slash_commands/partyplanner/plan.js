@@ -22,7 +22,6 @@ module.exports = {
       new SlashCommandStringOption()
         .setName("timezone")
         .setDescription("The timezone of the event.")
-        .setRequired(true)
         .setAutocomplete(true)
     ),
   /**
@@ -30,7 +29,16 @@ module.exports = {
    * @param { Client } client The discord client that called this command.
    */
   async execute(interaction, client) {
-    const timezone = interaction.options.getString("timezone");
+    let timezone = interaction.options.getString("timezone");
+
+    const profile = await client.UserProfileManager.getProfile(
+      interaction.user.id
+    );
+
+    if (!timezone) {
+      if (profile.timezone) timezone = profile.timezone;
+      else timezone = "America/Los_Angeles";
+    }
 
     const timezoneNow = DateTime.now().setZone(timezone);
     let eventDate = timezoneNow.toFormat("yyyy-MM-dd");
@@ -161,7 +169,10 @@ module.exports = {
     const event_modal_filter = (mod) =>
       mod.customId === "event_questions_modal";
     interaction
-      .awaitModalSubmit({ filter: event_modal_filter, time: 5 * 60 * 1000 })
+      .awaitModalSubmit({
+        filter: event_modal_filter,
+        time: 5 * 60 * 1000,
+      })
       .then(async (i) => {
         eventTitle = i.fields.getTextInputValue("event_title");
         eventDate = i.fields.getTextInputValue("event_date");
@@ -208,7 +219,11 @@ module.exports = {
           }
         );
 
+        const party = await client.PartyPlanner.createParty(eventTitle);
+        party.attendance.add(profile);
+
         await i.reply({
+          content: JSON.stringify(party),
           embeds: [event_modal_response],
           ephemeral: true,
         });

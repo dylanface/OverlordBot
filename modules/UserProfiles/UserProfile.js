@@ -1,8 +1,14 @@
 const clientPromise = require("../../database/index");
-const { ReceivesFunctions } = require("../../templates/ReceivesFunctions");
-const { SelfUpdatingMap } = require("../../templates/SelfUpdatingMap");
+const { CacheManager } = require("../../templates/CacheManager");
+// const { ReceivesFunctions } = require("../../templates/ReceivesFunctions");
+// const { SelfUpdatingMap } = require("../../templates/PersistentDataMap");
+const {
+  PermBitfield,
+  AttendeeBits,
+  DefaultPartyBitfields,
+} = require("../../templates/PermBitfield");
 
-class UserProfile extends ReceivesFunctions {
+class UserProfile {
   createdAt;
 
   id = "";
@@ -14,9 +20,7 @@ class UserProfile extends ReceivesFunctions {
    */
   contactMethod = "DM";
 
-  constructor(funcs, discordId = undefined, template = undefined) {
-    super(funcs);
-
+  constructor(discordId = undefined, template = undefined) {
     if (template) {
       this.createdAt = template.createdAt;
       this.id = template.id;
@@ -45,15 +49,6 @@ class UserProfile extends ReceivesFunctions {
     return this;
   }
 
-  async asDiscordUser() {
-    return await this.getDiscordUserFromProfile(this);
-  }
-
-  save() {
-    this.update(this);
-    console.log("Saved: " + this.id);
-  }
-
   toJSON() {
     return {
       createdAt: this.createdAt,
@@ -66,21 +61,14 @@ class UserProfile extends ReceivesFunctions {
 
 module.exports.UserProfile = UserProfile;
 
-class UserProfileManager {
-  /**
-   * @type { SelfUpdatingMap }
-   */
-  _profiles;
-
-  _functions;
-
+class UserProfileManager extends CacheManager {
   constructor(client) {
+    super(UserProfile, (profile) => {
+      const inDB = this.#updateProfile(profile);
+      if (!inDB) throw new Error("Profile could not be saved.");
+      else console.log("Profile saved.");
+    });
     this.client = client;
-    this._profiles = new SelfUpdatingMap(this.#update.bind(this));
-    this._functions = {
-      getDiscordUserFromProfile: this.getDiscordUserFromProfile.bind(this),
-      update: this.#update.bind(this),
-    };
 
     this.#fetchAllProfiles();
   }
@@ -97,10 +85,7 @@ class UserProfileManager {
 
           if (allProfiles.length <= 0) return;
           for (const profile of allProfiles) {
-            this._profiles.set(
-              profile.id,
-              new UserProfile(this._functions, null, profile)
-            );
+            this._add(profile.id, new UserProfile(null, profile));
           }
         })
         .catch(reject);
@@ -119,11 +104,8 @@ class UserProfileManager {
             .findOne({ id: discordId });
 
           if (result !== null) {
-            this._profiles.set(
-              discordId,
-              new UserProfile(this._functions, null, result)
-            );
-            resolve(this._profiles.get(discordId));
+            this._add(discordId, new UserProfile(null, result));
+            resolve(this._fetch(discordId));
           } else {
             const profile = this.createProfile(discordId);
             resolve(profile);
@@ -133,7 +115,7 @@ class UserProfileManager {
     });
   }
 
-  #update(profile) {
+  #updateProfile(profile) {
     if (!(profile instanceof UserProfile))
       throw new Error("Invalid profile provided.");
 
@@ -149,22 +131,23 @@ class UserProfileManager {
 
       if (!result || !result.acknowledged) {
         throw new Error("Failed to update profile.");
-      } else console.log(result);
+      }
     });
 
+    // this._add(profile.id, profile);
     return profile;
   }
 
   createProfile(discordId) {
     if (this._profiles.has(discordId)) return this._profiles.get(discordId);
     const profile = new UserProfile(this._functions, discordId);
-    this.#update(profile);
+    this._add(profile.id, profile);
 
-    return profile;
+    return this.getProfile(discordId);
   }
 
   async getProfile(discordId) {
-    if (this._profiles.has(discordId)) return this._profiles.get(discordId);
+    if (this._fetch(discordId)) return this._fetch(discordId);
     const profile = await this.#fetchProfile(discordId);
     return profile;
   }

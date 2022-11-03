@@ -1,30 +1,29 @@
 const { v4: uuidv4 } = require("uuid");
 
-const { ReceivesFunctions } = require("../../templates/ReceivesFunctions");
-const { SelfUpdatingMap } = require("../../templates/SelfUpdatingMap");
-
 const { PartySchedule } = require("./PartySchedule");
-const { PartyModeration } = require("./PartyModeration");
 const { PartyRecording } = require("./PartyRecording");
 const { PartyAttendance } = require("./PartyAttendance");
 
 const clientPromise = require("../../database/index");
+const { CacheManager } = require("../../templates/CacheManager");
 
-class Party extends ReceivesFunctions {
+class Party {
   title = "";
   uuid;
-  host;
+
+  recording = false;
   schedule;
-  moderation;
-  recording;
   attendance;
   game;
+
+  timezone = "America/Los_Angeles";
 
   /**
    * @param { String } title The title of the party.
    */
-  constructor({ ...funcs }, title = undefined, template = undefined) {
-    super(funcs);
+  constructor(callback, title = undefined, template = undefined) {
+    if (typeof callback !== "function")
+      throw new Error("Callback must be a function.");
 
     if (!template) {
       if (!title)
@@ -32,113 +31,195 @@ class Party extends ReceivesFunctions {
 
       this.title = title;
       this.uuid = uuidv4();
-      // this.host = new PartyHost();
-      this.schedule = new PartySchedule();
-      this.moderation = new PartyModeration();
-      this.recording = new PartyRecording();
-      this.attendance = new PartyAttendance(funcs);
+      this.attendance = new PartyAttendance(() => callback(this));
+      // this.schedule = new PartySchedule(funcs);
       // this.game = new PartyGames();
     } else {
       this.title = template.title;
       this.uuid = template.uuid;
-      // this.host = new PartyHost(template.host);
-      this.schedule = new PartySchedule(template.schedule);
-      this.moderation = new PartyModeration(template.moderation);
-      this.recording = new PartyRecording(template.recording);
-      this.attendance = new PartyAttendance(funcs, template.attendance);
+      this.attendance = new PartyAttendance(
+        () => callback(this),
+        template.attendance
+      );
+      // this.schedule = new PartySchedule(funcs, template.schedule);
       // this.game = new PartyGame(template.game);
     }
   }
 
-  get host() {
-    this.attendance.host;
+  /**
+   * @param { Boolean } recording Set the recording status of the party.
+   */
+  setRecording() {
+    let shouldReturn = false;
+    this.attendance._cache.forEach((attendee) => {
+      if (shouldReturn) return;
+      if (attendee.isRecording) {
+        this.recording = true;
+        shouldReturn = true;
+      }
+      return;
+    });
+
+    return this;
   }
 
-  save() {
-    this.update(this);
+  /**
+   * @param { String } title The title of the party.
+   */
+  setTitle(title) {
+    this.title = title;
+    return this;
+  }
+
+  /**
+   * @param { String } timezone The timezone for the party as a string.
+   */
+  setTimezone(timezone) {
+    this.timezone = timezone;
+    return this;
   }
 
   toJSON() {
     return {
       title: this.title,
       uuid: this.uuid,
-      host: this.host.toJSON(),
-      schedule: this.schedule.toJSON(),
-      moderation: this.moderation.toJSON(),
-      recording: this.recording.toJSON(),
-      attendance: this.attendance.toJSON(),
-      game: this.game.toJSON(),
+      schedule: this.schedule?.toJSON() || {},
+      attendance: this.attendance?.toJSON() || {},
+      game: this.game?.toJSON() || {},
     };
   }
 }
 
 module.exports.Party = Party;
 
-class PartyPlanner {
-  /**
-   * @type { Map<string, Party> }
-   */
-  parties;
-
+class PartyPlanner extends CacheManager {
   client;
 
-  _functions;
-
   constructor(client) {
+    super(Party, (party) => {
+      const inDB = this.#updateParty(party);
+      if (!inDB) throw new Error("Party could not be saved.");
+      else console.log("Party saved.");
+    });
     this.client = client;
-    this.parties = new Map();
-    this._functions = {
-      update: this.updateParty.bind(this),
-    };
 
     this.#fetchAllParties();
   }
 
   #fetchAllParties() {
-    clientPromise.then(async (client) => {
-      const allParties = await client
-        .db()
-        .collection("PP_parties")
-        .find({})
-        .toArray();
-      if (allParties.length <= 0) return console.log("No parties found.");
-      for (const party of allParties) {
-        this.parties.set(party.uuid, new Party(this._functions, null, party));
-      }
+    return new Promise((resolve, reject) => {
+      clientPromise
+        .then(async (client) => {
+          const allParties = await client
+            .db()
+            .collection("PP_parties")
+            .find({})
+            .toArray();
+
+          if (allParties.length <= 0) return;
+          for (const party of allParties) {
+            const newParty = new Party(
+              (party) => {
+                const inDB = this.#updateParty(party);
+                if (!inDB) throw new Error("Party could not be saved.");
+                else console.log("Party saved.");
+              },
+              null,
+              party
+            );
+            this._add(newParty.uuid, newParty);
+          }
+          resolve();
+        })
+        .catch(reject);
     });
   }
 
-  updateParty(party) {
+  #fetchParty(uuid) {
+    return new Promise((resolve, reject) => {
+      clientPromise
+        .then(async (client) => {
+          const party = await client
+            .db()
+            .collection("PP_parties")
+            .findOne({ uuid: uuid });
+
+          if (party !== null) {
+            this._add(
+              party.uuid,
+              new Party(
+                (party) => {
+                  const inDB = this.#updateParty(party);
+                  if (!inDB) throw new Error("Party could not be saved.");
+                  else console.log("Party saved.");
+                },
+                null,
+                party
+              )
+            );
+            resolve(this._fetch(party.uuid));
+          } else {
+            reject(new Error("No party found."));
+          }
+        })
+        .catch(reject);
+    });
+  }
+
+  #updateParty(party) {
+    if (!(party instanceof Party)) throw new Error("Invalid Party Provided.");
+
     clientPromise.then(async (client) => {
       const result = await client
         .db()
         .collection("PP_parties")
-        .updateOne({ uuid: party.uuid }, { $set: party.toJSON() });
+        .updateOne(
+          { uuid: party.uuid },
+          { $set: party.toJSON() },
+          { upsert: true }
+        );
 
       if (!result || result.changedRecords <= 0)
         throw new Error("Failed to update party.");
     });
+
+    return party;
+  }
+
+  async getParty(query, options = {}) {
+    if (options.type) {
+      if (options.type === "title") {
+        let matchingParty = null;
+        this._cache.forEach((party) => {
+          if (party.title.toLowerCase() === query.toLowerCase())
+            matchingParty = party;
+        });
+        if (!matchingParty) return { error: new Error("No party found.") };
+        return this._fetch(matchingParty.uuid);
+      }
+    }
+    if (this._cache.has(query)) return this._fetch(query);
+    else {
+      await this.#fetchParty(query)
+        .then((party) => {
+          return party;
+        })
+        .catch((err) => {
+          return { error: err };
+        });
+    }
   }
 
   async createParty(title) {
-    const party = new Party(this._functions, title);
+    const party = new Party((party) => {
+      const inDB = this.#updateParty(party);
+      if (!inDB) throw new Error("Party could not be saved.");
+      else console.log("Party saved.");
+    }, title);
+    this._add(party.id, party);
 
-    // const handler = {
-    //   get: (target, key) => {
-    //     if(typeof target[key] === "object" && target[key] !== null) {
-    //       return new Proxy(target[key], handler)
-    //     }
-
-    //     return target[key];
-    //   },
-    //   set: (target, key, value) => {
-    //     target[key] = value;
-    //     this.updateParty(target);
-    //     return true;
-    //   }
-    // }
-
-    return party;
+    const proxyParty = await this.getParty(party.id);
+    return proxyParty;
   }
 }
 

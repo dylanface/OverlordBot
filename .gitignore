@@ -13,5 +13,4 @@ wordStart.js
 messageCreate.js
 util/modal_maker.js
 util/hydration_helper.js
-test.js
 util/json_safety_checker.js
