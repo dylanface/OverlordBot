@@ -3,6 +3,7 @@ const {
   Partials,
   Collection,
   Client,
+  Events,
 } = require("discord.js");
 const { REST } = require("@discordjs/rest");
 const { DiscordTogether } = require("discord-together");
@@ -16,14 +17,10 @@ const ErrorHandler = require("./handlers/error_handler");
 const { EventLogger } = require("./modules/EventLogger");
 const { PartyPlanner } = require("./modules/PartyPlanner/PartyPlanner");
 const { UserProfileManager } = require("./modules/UserProfiles/UserProfile");
+const { GuildSettingsManager } = require("./modules/GuildSettings");
 
 const client = new Client({
-  partials: [
-    Partials.Message,
-    Partials.Channel,
-    Partials.Channel,
-    Partials.Guild,
-  ],
+  partials: [Partials.Message, Partials.Channel, Partials.Channel],
   intents: [
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.DirectMessageReactions,
@@ -67,6 +64,7 @@ client.EventLogger = new EventLogger(client);
 
 client.PartyPlanner = new PartyPlanner(client);
 client.UserProfileManager = new UserProfileManager(client);
+client.GuildSettingsManager = new GuildSettingsManager(client);
 
 [
   "slash_cmd_handler",
@@ -79,7 +77,7 @@ client.UserProfileManager = new UserProfileManager(client);
 
 client.login(token);
 
-client.once("ready", () => {
+client.once(Events.ClientReady, () => {
   process.on("uncaughtException", (err) =>
     client.ErrorHandler.recoverable(err)
   );

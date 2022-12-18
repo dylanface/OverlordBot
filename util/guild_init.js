@@ -37,6 +37,21 @@ async function fetchGuildInfo(guildId, client) {
   const guild = await client.guilds.cache.get(guildId);
   if (!guild.available) return;
   const availableChannels = await guild.channels.fetch(null, { cache: true });
+  //console.log(availableChannels);
+
+  for (let rawChannel of availableChannels) {
+    if (rawChannel[1].type === 0) {
+      let channel = rawChannel[1];
+      channel.messages
+        .fetchPinned()
+        .then((messages) =>
+          console.log(
+            `Received ${messages.size} pinned messages from ${channel.name}`
+          )
+        )
+        .catch(console.error);
+    }
+  }
   client.totalMembers += guild.memberCount;
 
   return availableChannels.size;
