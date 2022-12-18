@@ -1,7 +1,5 @@
 const clientPromise = require("../../database/index");
 const { CacheManager } = require("../../templates/CacheManager");
-// const { ReceivesFunctions } = require("../../templates/ReceivesFunctions");
-// const { SelfUpdatingMap } = require("../../templates/PersistentDataMap");
 const {
   PermBitfield,
   AttendeeBits,

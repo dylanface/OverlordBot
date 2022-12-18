@@ -15,7 +15,6 @@ dotenv.config();
 const ModerationLogger = require("./modules/ModerationLogger");
 const ErrorHandler = require("./handlers/error_handler");
 const { EventLogger } = require("./modules/EventLogger");
-const { PartyPlanner } = require("./modules/PartyPlanner/PartyPlanner");
 const { UserProfileManager } = require("./modules/UserProfiles/UserProfile");
 const { GuildSettingsManager } = require("./modules/GuildSettings");
 
@@ -62,7 +61,6 @@ client.ModerationLogger = new ModerationLogger(client);
 client.ErrorHandler = new ErrorHandler(client);
 client.EventLogger = new EventLogger(client);
 
-client.PartyPlanner = new PartyPlanner(client);
 client.UserProfileManager = new UserProfileManager(client);
 client.GuildSettingsManager = new GuildSettingsManager(client);
 
