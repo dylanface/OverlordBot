@@ -69,7 +69,7 @@ class CacheManager {
    * @param {string} key The key to store the item under.
    * @param {any} value The value to store.
    */
-  _add(key, value) {
+  _add(key, value, skip = false) {
     if (!(value instanceof this._holds))
       throw new Error(`Value must be a ${this._holds}.`);
 
@@ -79,7 +79,8 @@ class CacheManager {
     }
 
     this.timeout = setTimeout(() => {
-      if (typeof this._updateDB === "function") this._updateDB(value);
+      if (typeof this._updateDB === "function" && skip === false)
+        this._updateDB(value);
       else value.ephemeral = true;
     }, 500);
 

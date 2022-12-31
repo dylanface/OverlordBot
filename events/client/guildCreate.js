@@ -1,4 +1,7 @@
-const { registerGuildCommands, fetchGuildInfo } = require("../../util/guild_init");
+const {
+  registerGuildCommands,
+  fetchGuildInfo,
+} = require("../../util/guild_init");
 
 module.exports = {
   name: "guildCreate",

@@ -27,12 +27,19 @@ module.exports = {
      */
     const fetchGuildForCache = async () => {
       for (const guild of clientGuilds.values()) {
-        const channelCount = await fetchGuildInfo(guild.id, client);
+        const guildCounts = await fetchGuildInfo(guild.id, client);
+        const channelCount = guildCounts.availableChannels;
+        const pinnedMessageCount = guildCounts.pinnedMessages;
 
         startupLog(
           "newLogEntry",
           guild.id,
           `${guild.name} has ${channelCount} channels that have been cached`
+        );
+        startupLog(
+          "newLogEntry",
+          guild.id,
+          `${guild.name} has ${pinnedMessageCount} pinned messages that have been cached`
         );
       }
     };

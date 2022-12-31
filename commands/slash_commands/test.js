@@ -2,7 +2,7 @@ const { CommandInteraction, Client } = require("discord.js");
 const { SlashCommandBuilder } = require("@discordjs/builders");
 
 module.exports = {
-  enabled: false,
+  enabled: true,
   name: "test",
   description: "Test command",
   data: new SlashCommandBuilder()
@@ -16,12 +16,15 @@ module.exports = {
   async execute(interaction, client) {
     await interaction.deferReply();
 
-    const profile = await client.UserProfileManager.getProfile(
-      interaction.user.id
-    );
-
-    await interaction.editReply({
-      content: `Your profile is: ${JSON.stringify(profile)}`,
+    const settings = await client.GuildSettingsManager.fetch(
+      "869137600282259466"
+    ).catch((err) => {
+      console.error(err);
+      console.log(err.message);
     });
+
+    settings.editLogs.regex.enabled = false;
+
+    await interaction.editReply("Done!");
   },
 };

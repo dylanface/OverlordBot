@@ -1,7 +1,7 @@
 const clientPromise = require("../database/index");
-const { CacheManager } = require("../templates/CacheManager");
+const { ObjectManager } = require("../templates/ObjectManager");
 
-class GuildSettingsManager extends CacheManager {
+class GuildSettingsManager extends ObjectManager {
   #cache;
 
   ready = false;
@@ -9,6 +9,7 @@ class GuildSettingsManager extends CacheManager {
   constructor() {
     super(GuildSettings, (settings) => {
       console.log("GuildSettingsManager callback called.");
+      this.updateGuildSettingsDB(settings.guildId, settings);
     });
 
     this.#init();
@@ -20,15 +21,17 @@ class GuildSettingsManager extends CacheManager {
   #init() {
     clientPromise
       .then(async (client) => {
-        const settingsCol = client.db().collection("guild_settings");
+        const settingsCol = client.db().collection("guilds");
         const allFetchedSettings = await settingsCol.find({}).toArray();
 
-        for (let guildSetting of allFetchedSettings) {
+        for (let guild of allFetchedSettings) {
+          console.log(guild);
           const settingsForStorage = new GuildSettings(
-            guildSetting.guildId,
-            guildSetting.settings
+            guild.id,
+            guild.settings || undefined
           );
-          this._add(guildSetting.guildId, settingsForStorage);
+
+          this._add(guild.id, settingsForStorage, { cache: true });
           console.log(this._cache);
         }
       })
@@ -42,47 +45,55 @@ class GuildSettingsManager extends CacheManager {
   }
 
   /**
-   * Returns a GuildSettings object for the given guildId from the cache.
-   */
-  getAllGuildSettings(guildId) {
-    return this.#cache.get(guildId);
-  }
-
-  /**
-   * Returns the value of the specified setting from the GuildSettings object for the given guildId.
-   */
-  getGuildSetting(guildId, setting) {
-    const guildSettings = this.#cache.get(guildId);
-    return guildSettings.getSetting(setting);
-  }
-
-  /**
-   * Update the GuildSettings object for the given guildId with the given settings in safe JSON from the web panel.
-   */
-  updateGuildSettings(guildId, settings) {
-    const guildSettings = this.#cache.get(guildId);
-
-    guildSettings.setFromJSON(settings);
-  }
-
-  /**
    *
    * @param {string} guildId The snowflake of the guild to remove settings for.
    * @param {GuildSettings} settings The GuildSettings object to update in the DB.
    */
   updateGuildSettingsDB(guildId, settings) {
     let result = undefined;
-    clientPromise.then((client) => {
-      const settingsCol = client.db().collection("guild_settings");
+    clientPromise.then(async (client) => {
+      const settingsCol = client.db().collection("guilds");
 
-      result = settingsCol.updateOne(
-        { guildId: guildId },
-        { $set: settings.toJSON() }
+      result = await settingsCol.updateOne(
+        { id: guildId },
+        { $set: { settings: settings } }
       );
+
+      if (result === undefined)
+        throw new Error("GuildSettings could not be saved.");
+      else console.log("GuildSettings saved.");
     });
-    if (result === undefined)
-      throw new Error("GuildSettings could not be saved.");
-    else console.log("GuildSettings saved.");
+  }
+
+  /**
+   * Fetch the GuildSettings object for the guild with the given guildId.
+   * If the guild does not have settings, add default settings for the guild then fetch the settings.
+   * @param {string} guildId The snowflake of the guild to fetch settings for.
+   *
+   * @returns {Promise<GuildSettings>} A promise that resolves to the GuildSettings object for the given guildId.
+   */
+  fetch(guildId) {
+    return new Promise((resolve, reject) => {
+      this._fetch(guildId)
+        .then((settings) => {
+          resolve(settings);
+        })
+        .catch((err) => {
+          if (
+            err.message === "The key provided could not be found in the cache."
+          ) {
+            this.addGuildSettings(guildId)
+              .then((settings) => {
+                resolve(settings);
+              })
+              .catch((err) => {
+                reject(err);
+              });
+          } else {
+            reject(err);
+          }
+        });
+    });
   }
 
   /**
@@ -91,8 +102,7 @@ class GuildSettingsManager extends CacheManager {
    */
   addGuildSettings(guildId) {
     const guildSettings = new GuildSettings(guildId);
-    this._add(guildId, guildSettings);
-    return this._fetch(guildId);
+    return this._add(guildId, guildSettings);
   }
 }
 
@@ -117,100 +127,13 @@ class GuildSettings {
       }
     } else {
       this.editLogs = new EditLogSettings();
-      this._moderationLogs = new ModerationLogSettings();
+      this.moderationLogs = new ModerationLogSettings();
     }
   }
 
-  /**
-   * Returns the value of the specified setting from the GuildSettings object.
-   * @param {string} setting
-   */
-  getSetting(setting) {}
-
-  // toggleEditLogs(force = undefined) {
-  //   this._settings.editLogs.enabled =
-  //     force === undefined ? !this._settings.editLogs.enabled : force;
-  // }
-
-  // editLogsSetChannel(channelId) {
-  //   if (typeof channelId === "string")
-  //     this._settings.editLogs.channelId = channelId;
-  //   else throw new Error("Channel ID must be a string.");
-  // }
-
-  // toggleEditLogsWebLogging(force = undefined) {
-  //   this._settings.editLogs.web =
-  //     force === undefined ? !this._settings.editLogs.web : force;
-  // }
-
-  // toggleEditLogsMessageRegex(force = undefined) {
-  //   this._settings.editLogs.regex.enabled =
-  //     force === undefined ? !this._settings.editLogs.regex.enabled : force;
-  // }
-
-  // addRegexIgnorePattern(pattern) {
-  //   if (typeof pattern === "string")
-  //     this._settings.editLogs.regex.ignorePatterns.push(pattern);
-  //   else throw new Error("Pattern must be a string.");
-  // }
-
-  // addRegexForcePattern(pattern) {
-  //   if (typeof pattern === "string")
-  //     this._settings.editLogs.regex.forcePatterns.push(pattern);
-  //   else throw new Error("Pattern must be a string.");
-  // }
-
-  // toggleEditLogsMessageDiff(force = undefined) {
-  //   this._settings.editLogs.messageDiff.enabled =
-  //     force === undefined
-  //       ? !this._settings.editLogs.messageDiff.enabled
-  //       : force;
-  // }
-
-  // setMessageDiffCharacters(characters) {
-  //   if (typeof characters === "number")
-  //     this._settings.editLogs.messageDiff.characters = characters;
-  //   else throw new Error("Characters must be a number.");
-  // }
-
-  // toggleEditLogsReactions(force = undefined) {
-  //   this._settings.editLogs.reactions.enabled =
-  //     force === undefined ? !this._settings.editLogs.reactions.enabled : force;
-  // }
-
-  // toggleEditLogsReactionsOverlordEmoji(force = undefined) {
-  //   this._settings.editLogs.reactions.overlordEmoji =
-  //     force === undefined
-  //       ? !this._settings.editLogs.reactions.overlordEmoji
-  //       : force;
-  // }
-
-  // toggleModerationLogs(force = undefined) {
-  //   this._settings.moderationLogs.enabled =
-  //     force === undefined ? !this._settings.moderationLogs.enabled : force;
-  // }
-
-  // moderationLogsSetChannel(channelId) {
-  //   if (typeof channelId === "string")
-  //     this._settings.moderationLogs.channelId = channelId;
-  //   else throw new Error("Channel ID must be a string.");
-  // }
-
-  // toggleModerationLogsWebLogging(force = undefined) {
-  //   this._settings.moderationLogs.web =
-  //     force === undefined ? !this._settings.moderationLogs.web : force;
-  // }
-
-  // toggleModerationLogsSeperateActions(force = undefined) {
-  //   this._settings.moderationLogs.seperateActions =
-  //     force === undefined
-  //       ? !this._settings.moderationLogs.seperateActions
-  //       : force;
-  // }
-
-  get toJSON() {
+  toJSON() {
     let json = {};
-    json.guildId = this.guildId;
+    json.id = this.guildId;
     json.editLogs = this.editLogs.toJSON;
     json.moderationLogs = this.moderationLogs.toJSON;
 
@@ -226,7 +149,7 @@ class EditLogSettings {
       this.channelId = template?.channelId;
       this.regex = template?.regex;
       this.messageDiff = template?.messageDiff;
-      this.reactions = template?.reactions;
+      // this.reactions = template?.reactions;
     } else {
       this.enabled = false;
       this.web = false;
@@ -240,12 +163,12 @@ class EditLogSettings {
         enabled: false,
         characters: 3,
       };
-      this.reactions = {
-        enabled: false,
-        overlordEmoji: false,
-        ignoreEmoji: [],
-        forceEmoji: [],
-      };
+      // this.reactions = {
+      //   enabled: false,
+      //   overlordEmoji: false,
+      //   ignoreEmoji: [],
+      //   forceEmoji: [],
+      // };
     }
   }
 
@@ -256,7 +179,7 @@ class EditLogSettings {
       channelId: this.channelId,
       regex: this.regex,
       messageDiff: this.messageDiff,
-      reactions: this.reactions,
+      // reactions: this.reactions,
     };
   }
 }
