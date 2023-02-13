@@ -1,23 +1,30 @@
-const { CommandInteraction, Client } = require('discord.js');
-const { codeBlock } = require("@discordjs/builders");
+const { CommandInteraction, Client } = require("discord.js");
+const { SlashCommandBuilder } = require("@discordjs/builders");
 
 module.exports = {
-enabled: false,
-name: 'test',
-description: 'Test command',
-/**
- * @param { CommandInteraction } interaction The command interaction object.
- * @param { Client } client The discord client that called this command.
- */
-async execute(interaction, client) {
+  enabled: true,
+  name: "test",
+  description: "Test command",
+  data: new SlashCommandBuilder()
+    .setName("test")
+    .setDescription("Test Command")
+    .setDMPermission(false),
+  /**
+   * @param { CommandInteraction } interaction The command interaction object.
+   * @param { Client } client The discord client that called this command.
+   */
+  async execute(interaction, client) {
     await interaction.deferReply();
 
-    const testTracker = await client.TrackerController.createTracker(interaction.user)
-    .catch((err) => {
-        interaction.editReply('Error creating tracker: ' + err.message);
+    const settings = await client.GuildSettingsManager.fetch(
+      "869137600282259466"
+    ).catch((err) => {
+      console.error(err);
+      console.log(err.message);
     });
 
-    if (testTracker) await interaction.editReply(codeBlock('JSON' , JSON.stringify(testTracker.toJSON())));
+    settings.editLogs.regex.enabled = false;
 
-}
-}
+    await interaction.editReply("Done!");
+  },
+};
