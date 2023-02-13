@@ -7,6 +7,7 @@ const {
 } = require("@discordjs/builders");
 
 const ascii = require("ascii-table");
+const { PermissionFlagsBits } = require("discord.js");
 let slashCommandsTable = new ascii("Slash Commands");
 let subCommandsTable = new ascii("Sub Commands");
 
@@ -45,6 +46,11 @@ module.exports = async (client) => {
     const builtCommand = new SlashCommandBuilder()
       .setName(subcmd_dir)
       .setDescription(`The home of ${subcmd_dir} related commands.`);
+
+    if (subcmd_dir === "guild_settings") {
+      builtCommand.setDMPermission(false);
+      builtCommand.setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild);
+    }
 
     for (const cmd of insideDir) {
       const subCommand = require(`../commands/slash_commands/${subcmd_dir}/${cmd}`);

@@ -63,23 +63,39 @@ module.exports = {
         });
     }
 
-    // Check if the message meets regex requirements.
-    // If not then return and do not log the edit or run MessageDiff.
-    if (messageRegexSettings.enabled) {
-      let regexChecks = [];
-      if (messageRegexSettings.forcePatterns.length > 0) {
-        regexChecks = messageRegexSettings.forcePatterns;
-      }
+    // Initialize the force option that will be used to force the message edit to be logged.
+    let forceLog = false;
+    let forceFormattedLog = false;
 
-      let regexCheck = true;
-      for (let regex of regexChecks) {
-        if (regex.test(newMessage.content)) {
-          regexCheck = true;
-          break;
-        }
-      }
-      if (!regexCheck) return;
+    // If a message is pinned force the message edit to be logged.
+    if (oldMessage.pinned) {
+      if (messageDiffSettings.enabled) forceFormattedLog = true;
+      else forceLog = true;
     }
+
+    // // Check if the message meets regex requirements.
+    // // If not then return and do not log the edit or run MessageDiff.
+    // if (messageRegexSettings.enabled && !forceLog && !forceFormattedLog) {
+    //   let regexChecks = [];
+    //   let regexCheck = false;
+
+    //   if (messageRegexSettings.forcePatterns.length > 0) {
+    //     regexChecks = messageRegexSettings.forcePatterns;
+    //   } //else regexCheck = true;
+
+    //   for (let regex of regexChecks) {
+    //     if (regex === "") continue;
+    //     if (typeof regex === "string") regex = new RegExp(regex);
+    //     if (regex.test(newMessage.content)) {
+    //       console.log("Regex: Message matches regex pattern");
+    //       regexCheck = true;
+    //       if (messageDiffSettings.enabled) forceFormattedLog = true;
+    //       else forceLog = true;
+    //       break;
+    //     }
+    //   }
+    //   if (!regexCheck) return;
+    // } else console.log("Regex is disabled");
 
     // // Check if the message author has any of the exempt roles.
     // // If so then return and do not log the edit or run MessageDiff.
@@ -100,7 +116,7 @@ module.exports = {
     // Check if PatienceDiff is enabled and initialize the formatted lines.
     let formattedInsertedLines = newMessage.cleanContent;
     let formattedDeletedLines = oldMessage.cleanContent;
-    if (messageDiffSettings.enabled) {
+    if (messageDiffSettings.enabled && !forceLog) {
       // Run the PatienceDiff algorithm to compare the old and new message.
       const diffResult = compareMessages(
         newMessage.cleanContent,
@@ -112,15 +128,17 @@ module.exports = {
       const diffAmountRequired = messageDiffSettings.characters;
       if (
         diffResult.lineCountDeleted + diffResult.lineCountInserted <
-        diffAmountRequired
+          diffAmountRequired &&
+        !forceFormattedLog
       ) {
+        console.log("PatienceDiff: Less than required characters changed");
         return;
       }
 
       // Format the PatienceDiff results into a string with boldened letters.
       formattedInsertedLines = highlightInsertedLines(diffResult);
       formattedDeletedLines = highlightDeletedLines(diffResult);
-    }
+    } else console.log("PatienceDiff is disabled");
 
     // Create the jump to message button for mobile users.
     const mobileLink = new ActionRowBuilder().addComponents(
@@ -177,27 +195,27 @@ function compareMessages(newMessage, oldMessage) {
  */
 function highlightInsertedLines(diff) {
   let closeIndexGrouping = [];
-  let lastLetter = {};
+  let lastWord = {};
   let lineCountInsertedResult = [];
 
-  for (let letterObject of diff.lines) {
-    let word = letterObject.line;
+  for (let wordObject of diff.lines) {
+    let word = wordObject.line;
 
-    if (letterObject.bIndex !== -1) {
+    if (wordObject.bIndex !== -1) {
       if (
-        letterObject.aIndex === -1
+        wordObject.aIndex === -1
         // &&
         // letterObject.bIndex - lastLetter.bIndex <= 3
       ) {
         // console.log("Adding to close index grouping: missing in old message");
         closeIndexGrouping.push(word);
-      } else if (letterObject.bIndex === 0 && letterObject.aIndex === -1) {
+      } else if (wordObject.bIndex === 0 && wordObject.aIndex === -1) {
         // console.log("Adding to close index grouping: first letter");
         closeIndexGrouping.push(word);
       } else if (
-        (letterObject.aIndex - letterObject.bIndex > 8 ||
-          letterObject.aIndex - letterObject.bIndex < -8) &&
-        letterObject.aIndex !== -1
+        (wordObject.aIndex - wordObject.bIndex > 8 ||
+          wordObject.aIndex - wordObject.bIndex < -8) &&
+        wordObject.aIndex !== -1
       ) {
         // console.log("Adding to close index grouping: large gap");
         closeIndexGrouping.push(word);
@@ -213,7 +231,7 @@ function highlightInsertedLines(diff) {
         lineCountInsertedResult.push(word);
       }
     }
-    lastLetter = letterObject;
+    lastWord = wordObject;
   }
 
   if (closeIndexGrouping.length > 0) {
@@ -229,27 +247,27 @@ function highlightInsertedLines(diff) {
  */
 function highlightDeletedLines(diff) {
   let closeIndexGrouping = [];
-  let lastLetter = {};
+  let lastWord = {};
   let lineCountDeletedResult = [];
 
-  for (let letterObject of diff.lines) {
-    let word = letterObject.line;
+  for (let wordObject of diff.lines) {
+    let word = wordObject.line;
 
-    if (letterObject.aIndex !== -1) {
+    if (wordObject.aIndex !== -1) {
       if (
-        letterObject.bIndex === -1
+        wordObject.bIndex === -1
         // &&
         // letterObject.aIndex - lastLetter.aIndex <= 3
       ) {
         // console.log("Adding to close index grouping: missing in old message");
         closeIndexGrouping.push(word);
-      } else if (letterObject.aIndex === 0 && letterObject.bIndex === -1) {
+      } else if (wordObject.aIndex === 0 && wordObject.bIndex === -1) {
         // console.log("Adding to close index grouping: first letter");
         closeIndexGrouping.push(word);
       } else if (
-        (letterObject.bIndex - letterObject.aIndex > 8 ||
-          letterObject.bIndex - letterObject.aIndex < -8) &&
-        letterObject.bIndex !== -1
+        (wordObject.bIndex - wordObject.aIndex > 8 ||
+          wordObject.bIndex - wordObject.aIndex < -8) &&
+        wordObject.bIndex !== -1
       ) {
         // console.log("Adding to close index grouping: large gap");
         closeIndexGrouping.push(word);
@@ -265,7 +283,7 @@ function highlightDeletedLines(diff) {
         lineCountDeletedResult.push(word);
       }
     }
-    lastLetter = letterObject;
+    lastWord = wordObject;
   }
 
   if (closeIndexGrouping.length > 0) {

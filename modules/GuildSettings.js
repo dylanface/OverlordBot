@@ -2,8 +2,6 @@ const clientPromise = require("../database/index");
 const { ObjectManager } = require("../templates/ObjectManager");
 
 class GuildSettingsManager extends ObjectManager {
-  #cache;
-
   ready = false;
 
   constructor() {
@@ -25,14 +23,12 @@ class GuildSettingsManager extends ObjectManager {
         const allFetchedSettings = await settingsCol.find({}).toArray();
 
         for (let guild of allFetchedSettings) {
-          console.log(guild);
           const settingsForStorage = new GuildSettings(
             guild.id,
             guild.settings || undefined
           );
 
           this._add(guild.id, settingsForStorage, { cache: true });
-          console.log(this._cache);
         }
       })
       .catch((error) => {
@@ -47,21 +43,23 @@ class GuildSettingsManager extends ObjectManager {
   /**
    *
    * @param {string} guildId The snowflake of the guild to remove settings for.
-   * @param {GuildSettings} settings The GuildSettings object to update in the DB.
+   * @param {GuildSettings} guild_settings The GuildSettings object to update in the DB.
    */
-  updateGuildSettingsDB(guildId, settings) {
+  updateGuildSettingsDB(guildId, guild_settings) {
     let result = undefined;
     clientPromise.then(async (client) => {
       const settingsCol = client.db().collection("guilds");
 
       result = await settingsCol.updateOne(
-        { id: guildId },
-        { $set: { settings: settings } }
+        { id: `${guildId}` },
+        { $set: { settings: guild_settings } }
       );
 
       if (result === undefined)
         throw new Error("GuildSettings could not be saved.");
       else console.log("GuildSettings saved.");
+
+      console.log(result);
     });
   }
 
@@ -133,9 +131,9 @@ class GuildSettings {
 
   toJSON() {
     let json = {};
-    json.id = this.guildId;
-    json.editLogs = this.editLogs.toJSON;
-    json.moderationLogs = this.moderationLogs.toJSON;
+    json.guildId = this.guildId;
+    json.editLogs = this.editLogs.toJSON();
+    json.moderationLogs = this.moderationLogs.toJSON();
 
     return json;
   }
