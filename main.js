@@ -25,7 +25,7 @@ const client = new Client({
     GatewayIntentBits.DirectMessageReactions,
     GatewayIntentBits.DirectMessageTyping,
     GatewayIntentBits.DirectMessages,
-    GatewayIntentBits.GuildBans,
+    GatewayIntentBits.GuildModeration,
     GatewayIntentBits.GuildEmojisAndStickers,
     GatewayIntentBits.GuildIntegrations,
     GatewayIntentBits.GuildInvites,
@@ -56,7 +56,7 @@ client.autocompleteInteractions = new Collection();
 client.totalMembers = 0;
 StartRequestHandler(client);
 
-client.discordTogether = new DiscordTogether(client);
+// client.discordTogether = new DiscordTogether(client);
 client.ModerationLogger = new ModerationLogger(client);
 client.ErrorHandler = new ErrorHandler(client);
 client.EventLogger = new EventLogger(client);

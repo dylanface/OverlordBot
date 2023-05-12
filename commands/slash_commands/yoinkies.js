@@ -1,7 +1,8 @@
-const { CommandInteraction, Client } = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { CommandInteraction, Client } = require("discord.js");
+const { SlashCommandBuilder } = require("@discordjs/builders");
 
 module.exports = {
+  enabled: false,
   name: "yoinkies",
   description: "Yoink an emote from another guild",
   options: [

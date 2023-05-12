@@ -1,7 +1,8 @@
-const { CommandInteraction, Client } = require('discord.js');
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { CommandInteraction, Client } = require("discord.js");
+const { SlashCommandBuilder } = require("@discordjs/builders");
 
 module.exports = {
+  enabled: false,
   name: "youtube",
   description: "Watch youtube videos with the help of Discord-Together!",
   data: new SlashCommandBuilder()
@@ -24,6 +25,3 @@ module.exports = {
     }
   },
 };
-
-
-
