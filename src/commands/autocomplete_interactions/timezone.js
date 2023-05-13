@@ -1,5 +1,5 @@
 const { AutocompleteInteraction, Client } = require("discord.js");
-const { Timezones } = require("../../json/timezones/timezones.js");
+const { Timezones } = require("../../../json/timezones/timezones.js");
 
 module.exports = {
   enabled: true,

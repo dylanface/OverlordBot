@@ -57,8 +57,6 @@ class UserProfile {
   }
 }
 
-module.exports.UserProfile = UserProfile;
-
 class UserProfileManager extends CacheManager {
   constructor(client) {
     super(UserProfile, (profile) => {
@@ -159,4 +157,5 @@ class UserProfileManager extends CacheManager {
   }
 }
 
+module.exports.UserProfile = UserProfile;
 module.exports.UserProfileManager = UserProfileManager;

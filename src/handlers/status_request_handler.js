@@ -7,6 +7,7 @@ const path = require("path");
 
 function Init(client) {
   const api_route = "/api/v2";
+  client.totalMembers = 0;
 
   const app = express();
   const port = process.env.STATUS_PORT || 32901;

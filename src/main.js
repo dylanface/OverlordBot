@@ -6,15 +6,15 @@ const {
   Events,
 } = require("discord.js");
 const { REST } = require("@discordjs/rest");
-const { DiscordTogether } = require("discord-together");
-const { StartRequestHandler } = require("./handlers/status_request_handler");
 
 const dotenv = require("dotenv");
 dotenv.config();
 
-const ModerationLogger = require("./modules/ModerationLogger");
-const ErrorHandler = require("./handlers/error_handler");
+const { StartRequestHandler } = require("./handlers/status_request_handler");
+const { ErrorHandler } = require("./handlers/error_handler");
+
 const { EventLogger } = require("./modules/EventLogger");
+const { ModerationLogger } = require("./modules/ModerationLogger");
 const { UserProfileManager } = require("./modules/UserProfiles/UserProfile");
 const { GuildSettingsManager } = require("./modules/GuildSettings");
 
@@ -53,10 +53,8 @@ client.subCommands = new Collection();
 client.contextMenuCommands = new Collection();
 client.autocompleteInteractions = new Collection();
 
-client.totalMembers = 0;
 StartRequestHandler(client);
 
-// client.discordTogether = new DiscordTogether(client);
 client.ModerationLogger = new ModerationLogger(client);
 client.ErrorHandler = new ErrorHandler(client);
 client.EventLogger = new EventLogger(client);

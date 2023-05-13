@@ -154,4 +154,4 @@ class ModerationLogger {
   };
 }
 
-module.exports = ModerationLogger;
+module.exports.ModerationLogger = ModerationLogger;

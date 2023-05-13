@@ -1,5 +1,5 @@
 const fs = require("fs");
-
+const path = require("node:path");
 const {
   SlashCommandBuilder,
   SlashCommandSubcommandBuilder,
@@ -8,24 +8,27 @@ const {
 
 const ascii = require("ascii-table");
 const { PermissionFlagsBits } = require("discord.js");
+
 let slashCommandsTable = new ascii("Slash Commands");
 let subCommandsTable = new ascii("Sub Commands");
 
 slashCommandsTable.setHeading("Command", "Status");
 subCommandsTable.setHeading("Command", "Status");
 
+const slash_cmd_dir = path.join(__dirname, "../commands/slash_commands");
+
 module.exports = async (client) => {
   const slash_cmd_files = fs
-    .readdirSync("./commands/slash_commands")
+    .readdirSync(slash_cmd_dir)
     .filter((file) => file.endsWith(".js"));
 
   const slash_subcmd_files = fs
-    .readdirSync("./commands/slash_commands")
+    .readdirSync(slash_cmd_dir)
     .filter((file) => !file.includes("."));
 
   // Search for and register slash commands
   for (const cmd_file of slash_cmd_files) {
-    const sCommand = require(`../commands/slash_commands/${cmd_file}`);
+    const sCommand = require(`${slash_cmd_dir}/${cmd_file}`);
 
     if (sCommand.name && sCommand.enabled === true) {
       client.slashCommands.set(sCommand.name, sCommand);
@@ -39,7 +42,7 @@ module.exports = async (client) => {
   // Search for and register slash commands with sub commands
   for (const subcmd_dir of slash_subcmd_files) {
     const insideDir = fs
-      .readdirSync(`./commands/slash_commands/${subcmd_dir}`)
+      .readdirSync(`${slash_cmd_dir}/${subcmd_dir}`)
       .filter((file) => file.endsWith(".js"));
     if (insideDir.length <= 0) continue;
 
@@ -53,7 +56,7 @@ module.exports = async (client) => {
     }
 
     for (const cmd of insideDir) {
-      const subCommand = require(`../commands/slash_commands/${subcmd_dir}/${cmd}`);
+      const subCommand = require(`${slash_cmd_dir}/${subcmd_dir}/${cmd}`);
 
       if (subCommand.name && subCommand.data && subCommand.enabled === true) {
         client.subCommands.set(subCommand.name, subCommand);
@@ -64,12 +67,12 @@ module.exports = async (client) => {
 
     // Search for and register sub command categories in the local directory and their sub commands.
     const commandCategories = fs
-      .readdirSync(`./commands/slash_commands/${subcmd_dir}`)
+      .readdirSync(`${slash_cmd_dir}/${subcmd_dir}`)
       .filter((file) => !file.includes("."));
 
     for (const category of commandCategories) {
       const commands = fs
-        .readdirSync(`./commands/slash_commands/${subcmd_dir}/${category}`)
+        .readdirSync(`${slash_cmd_dir}/${subcmd_dir}/${category}`)
         .filter((file) => file.endsWith(".js") && file !== "index.js");
       if (commands.length <= 0) continue;
 
@@ -80,7 +83,7 @@ module.exports = async (client) => {
         );
 
       for (const cmd of commands) {
-        const cmdModule = require(`../commands/slash_commands/${subcmd_dir}/${category}/${cmd}`);
+        const cmdModule = require(`${slash_cmd_dir}/${subcmd_dir}/${category}/${cmd}`);
 
         if (cmdModule.enabled === true && cmdModule.name && cmdModule.data) {
           client.subCommands.set(cmdModule.name, cmdModule);

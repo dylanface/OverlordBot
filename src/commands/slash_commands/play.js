@@ -1,11 +1,18 @@
-const ytdl = require('ytdl-core');
+const ytdl = require("ytdl-core");
 
-const { CommandInteraction, Client } = require('discord.js');
-const { joinVoiceChannel, getVoiceConnection, createAudioPlayer, createAudioResource, AudioPlayerStatus, NoSubscriberBehavior } = require('@discordjs/voice')
-const { SlashCommandBuilder } = require('@discordjs/builders');
-
+const { CommandInteraction, Client } = require("discord.js");
+const {
+  joinVoiceChannel,
+  getVoiceConnection,
+  createAudioPlayer,
+  createAudioResource,
+  AudioPlayerStatus,
+  NoSubscriberBehavior,
+} = require("@discordjs/voice");
+const { SlashCommandBuilder } = require("@discordjs/builders");
 
 module.exports = {
+  enabled: false,
   name: "play",
   description: "Play music",
   data: new SlashCommandBuilder()
