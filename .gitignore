@@ -1,16 +1,17 @@
+# Do not commit enviroment variables
 .env
 
+# Do not commit config file
+config.json
+
+# Do not commit deprecated directory
 deprecated/
-node_modules/
+
+# Do not commit images directory
 images/
 
+# Do not commit TypeScript build directory
+build/
 
-lovenotes.js
-codenotes.txt
-database.sqlite
-command_list.docx
-wordStart.js
-messageCreate.js
-util/modal_maker.js
-util/hydration_helper.js
-util/json_safety_checker.js
+# Do not commit dependencies
+node_modules/

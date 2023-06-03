@@ -1,65 +1,59 @@
 {
-	// Place your Overlord workspace snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and 
-	// description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope 
-	// is left empty or omitted, the snippet gets applied to all languages. The prefix is what is 
-	// used to trigger the snippet and the body will be expanded and inserted. Possible variables are: 
-	// $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders. 
-	// Placeholders with the same ids are connected.
-	// Example:
-	// "Print to console": {
-	// 	"scope": "javascript,typescript",
-	// 	"prefix": "log",
-	// 	"body": [
-	// 		"console.log('$1');",
-	// 		"$2"
-	// 	],
-	// 	"description": "Log output to console"
-	// }
+  // Place your Overlord workspace snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and
+  // description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope
+  // is left empty or omitted, the snippet gets applied to all languages. The prefix is what is
+  // used to trigger the snippet and the body will be expanded and inserted. Possible variables are:
+  // $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders.
+  // Placeholders with the same ids are connected.
+  // Example:
+  // "Print to console": {
+  // 	"scope": "javascript,typescript",
+  // 	"prefix": "log",
+  // 	"body": [
+  // 		"console.log('$1');",
+  // 		"$2"
+  // 	],
+  // 	"description": "Log output to console"
+  // }
 
-	"v14 Simple Sub Command": {
-		"scope": "javascript",
-		"prefix": "v14Subcommand",
-		"body": [
-			"const { CommandInteraction, Client } = require('discord.js');",
-			"const { SlashCommandSubcommandBuilder } = require('@discordjs/builders');",
-			"",
-			"module.exports = {",
-			  "enabled: true,",
-			  "name: '$1',",
-			  "data: new SlashCommandSubcommandBuilder()",
-			  "  .setName('$1')",
-			  "  .setDescription('$2'),",
-			  "/**",
-			  " * @param { CommandInteraction } interaction The command interaction object.",
-			  " * @param { Client } client The discord client that called this command.",
-			  " */",
-			  "async execute(interaction, client) {",
-			  "$3",
-			  "}",
-			"}",
-		],
-	},
-	"v14 Simple Command": {
-		"scope": "javascript",
-		"prefix": "v14Command",
-		"body": [
-			"const { CommandInteraction, Client } = require('discord.js');",
-			"const { SlashCommandBuilder } = require('@discordjs/builders');",	
-			"",
-			"module.exports = {",
-			  "enabled: true,",
-			  "name: '$1',",
-			  "data: new SlashCommandBuilder()",
-			  "    .setName('$1')",
-			  "    .setDescription('$2'),",
-			  "/**",
-			  " * @param { CommandInteraction } interaction The command interaction object.",
-			  " * @param { Client } client The discord client that called this command.",
-			  " */",
-			  "async execute(interaction, client) {",
-			  "$3",
-			  "}",
-			"}",
-		],
-	},
+  "v14 Simple Sub Command": {
+    "scope": "typescript",
+    "prefix": "v14sub",
+    "body": [
+      "import { SlashCommandSubcommandBuilder } from '@discordjs/builders';",
+      "import { OverlordSubCommand } from '../../../types/Overlord';",
+      "",
+      "export = <OverlordSubCommand> {",
+      "enabled: true,",
+      "name: '$1',",
+      "config: {},",
+      "data: new SlashCommandSubcommandBuilder()",
+      "  .setName('$1')",
+      "  .setDescription('$2'),",
+      "async execute(client, interaction) {",
+      "$3",
+      "}",
+      "}"
+    ]
+  },
+  "v14 Simple Command": {
+    "scope": "typescript",
+    "prefix": "v14cmd",
+    "body": [
+      "import { SlashCommandBuilder } from '@discordjs/builders';",
+      "import { OverlordSlashCommand } from '../../types/Overlord';",
+      "",
+      "export = <OverlordSlashCommand> {",
+      "enabled: true,",
+      "name: '$1',",
+      "config: {},",
+      "data: new SlashCommandBuilder()",
+      "    .setName('$1')",
+      "    .setDescription('$2'),",
+      "async execute(client, interaction) {",
+      "$3",
+      "}",
+      "}"
+    ]
+  }
 }
