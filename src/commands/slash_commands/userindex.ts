@@ -1,18 +1,21 @@
-import { OverlordSlashCommand } from "../../types/Overlord";
+import { ModerationAction, OverlordSlashCommand } from "../../types/Overlord";
 
 import {
   ComponentType,
   ButtonStyle,
   Guild,
   ButtonInteraction,
+  TextInputBuilder,
+  InteractionCollector,
 } from "discord.js";
 import {
   SlashCommandBuilder,
   ButtonBuilder,
   ActionRowBuilder,
   EmbedBuilder,
+  ModalBuilder,
 } from "@discordjs/builders";
-import { PermissionFlagsBits } from "discord-api-types/v10";
+import { PermissionFlagsBits, TextInputStyle } from "discord-api-types/v10";
 
 export = <OverlordSlashCommand>{
   name: "index",
@@ -44,40 +47,81 @@ export = <OverlordSlashCommand>{
     if (!inputUser) return interaction.editReply("No user input found.");
     const inputId = inputUser.id;
 
-    let inputReason: string = "";
+    let inputReason: string = "No reason provided.";
     if (interaction.options.getString("reason")) {
       inputReason = interaction.options.getString("reason") as string;
     }
 
-    const banEmoji = "🔨";
-    const cancelEmoji = "❌";
     const kickEmoji = "👢";
+    const banEmoji = "🔨";
+    const warnEmoji = "⚠️";
+    // const cancelEmoji = "✖️";
+    // const confirmEmoji = "✔️";
+
+    const confirmActionButton = new ButtonBuilder()
+      .setCustomId("confirm")
+      .setLabel("Confirm")
+      .setStyle(ButtonStyle.Success);
 
     const cancelButton = new ButtonBuilder()
       .setCustomId("cancel")
-      .setLabel(`${cancelEmoji} Cancel`)
-      .setStyle(ButtonStyle.Secondary);
+      .setLabel("Cancel")
+      .setStyle(ButtonStyle.Danger);
 
-    const kickButton = new ButtonBuilder()
-      .setCustomId("kickuser")
-      .setLabel(`${kickEmoji} Kick User`)
-      .setStyle(ButtonStyle.Primary);
+    const warnButton = (confirm: boolean = false): ButtonBuilder => {
+      return new ButtonBuilder()
+        .setCustomId(ModerationAction.Warn)
+        .setLabel(`${warnEmoji} Warn User`)
+        .setStyle(confirm ? ButtonStyle.Danger : ButtonStyle.Primary);
+    };
 
-    const banButton = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId("banuser")
+    const kickButton = (confirm: boolean = false): ButtonBuilder => {
+      return new ButtonBuilder()
+        .setCustomId(ModerationAction.Kick)
+        .setLabel(`${kickEmoji} Kick User`)
+        .setStyle(confirm ? ButtonStyle.Danger : ButtonStyle.Primary);
+    };
+
+    const banButton = (confirm: boolean = false): ButtonBuilder => {
+      return new ButtonBuilder()
+        .setCustomId(ModerationAction.Ban)
         .setLabel(`${banEmoji} Ban User`)
-        .setStyle(ButtonStyle.Primary),
+        .setStyle(confirm ? ButtonStyle.Danger : ButtonStyle.Primary);
+    };
+
+    const promptActionRow = new ActionRowBuilder().addComponents(
+      warnButton(),
+      kickButton(),
+      banButton(),
       cancelButton
     );
 
-    const banConfirm = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId("redbanuser")
-        .setLabel(`${banEmoji} Are You Sure?`)
-        .setStyle(ButtonStyle.Danger),
+    const confirmationActionRow = new ActionRowBuilder().addComponents(
+      confirmActionButton,
       cancelButton
     );
+
+    const sendTimeoutEmbed = () => {
+      const embed = new EmbedBuilder()
+        .setColor(0xff6961)
+        .setTitle("The collector timed out.")
+        .setDescription(
+          "The action has been canceled and the user has been cached."
+        );
+
+      interaction.editReply({ embeds: [embed], components: [] });
+    };
+
+    const sendCanceledEmbed = () => {
+      const embed = new EmbedBuilder()
+        .setColor(0xff6961)
+        .setTitle("The action was canceled.")
+        .setDescription(
+          "The action has been canceled and the user has been cached."
+        );
+
+      interaction.editReply({ embeds: [embed], components: [] });
+    };
 
     async function registerInteraction(event: any) {
       if (!event) return console.error("No event found.");
@@ -86,96 +130,277 @@ export = <OverlordSlashCommand>{
 
     const user = await client.users.fetch(inputId, { cache: true });
 
-    const userInfo = new EmbedBuilder()
-      .setColor(0xf6c5f8)
-      .setAuthor({
-        name: `${user.tag}`,
-        iconURL: user.displayAvatarURL(),
-      })
-      .addFields(
-        { name: "Requested Id:", value: inputId },
-        { name: "Fetched Id:", value: user.id },
-        { name: "Account Creation Date:", value: user.createdAt.toString() }
+    const generateUserInfoEmbed = (
+      moderationAction?: ModerationAction
+    ): EmbedBuilder => {
+      const embed = new EmbedBuilder()
+        .setColor(0xf6c5f8)
+        .setThumbnail(user.displayAvatarURL())
+        .addFields(
+          { name: "Username:", value: user.tag, inline: true },
+          { name: "User ID:", value: user.id, inline: true },
+          { name: "Account Creation Date:", value: user.createdAt.toString() }
+        );
+
+      if (moderationAction === ModerationAction.Warn) {
+        embed.setTitle("Are you sure you want to warn this user?");
+        embed.setDescription(
+          "The warning that will be sent to the user is posted below this embed."
+        );
+      } else if (moderationAction === ModerationAction.Kick)
+        embed.setTitle("Are you sure you want to kick this user?");
+      else if (moderationAction === ModerationAction.Ban)
+        embed.setTitle("Are you sure you want to ban this user?");
+
+      return embed;
+    };
+
+    const generateWarningEmbed = async (
+      bInteraction: ButtonInteraction,
+      promptCollector: InteractionCollector<ButtonInteraction>
+    ) => {
+      let warningMessage = `• You violated the rules of ${interaction.guild?.name}.\n\n• If you would like to view the rules, please visit the #rules channel.\n\n• If you would like to dispute this warning contact a moderator. Please note that if you choose to dispute this warning a second decision will be made by a moderator other than the one who issued this warning, their decision will be final and can not be disputed.`;
+
+      const warningInfoInput = new TextInputBuilder()
+        .setCustomId("message")
+        .setLabel("Customize Warning Message")
+        .setPlaceholder("Enter a warning message here.")
+        .setValue(warningMessage)
+        .setMinLength(10)
+        .setMaxLength(1000)
+        .setRequired(true)
+        .setStyle(TextInputStyle.Paragraph);
+
+      const reasonInput = new TextInputBuilder()
+        .setCustomId("reason")
+        .setLabel("Reason for Warning")
+        .setPlaceholder("Enter a reason for warning this user.")
+        .setValue(inputReason)
+        .setMinLength(10)
+        .setMaxLength(1000)
+        .setRequired(false)
+        .setStyle(TextInputStyle.Paragraph);
+
+      const warningInfoRow = new ActionRowBuilder().addComponents(
+        warningInfoInput
+      );
+      const reasonRow = new ActionRowBuilder().addComponents(reasonInput);
+
+      await bInteraction.showModal(
+        new ModalBuilder()
+          .setCustomId("warning")
+          .setTitle("Warning Message")
+          .addComponents(warningInfoRow, reasonRow as any)
       );
 
-    await interaction.editReply({
-      embeds: [userInfo],
-      components: [banButton as any],
-    });
-
-    const channelId = interaction.channelId;
-    const channel = await interaction.guild.channels.fetch(channelId);
-    if (!channel?.isTextBased()) throw new Error("Channel not found.");
-
-    const filter = (i: ButtonInteraction) =>
-      i.user.id === interaction.user.id &&
-      i.message.interaction?.id === interaction.id;
-    const collector = channel.createMessageComponentCollector({
-      filter,
-      componentType: ComponentType.Button,
-      idle: 45 * 1000,
-    });
-
-    collector.on("collect", async (i) => {
-      if (!i.isButton()) return;
-      else await i.deferUpdate();
-
-      switch (i.customId) {
-        case "banuser":
-          await i.editReply({ embeds: [userInfo], components: [] });
-          await i.editReply({
-            embeds: [userInfo],
-            components: [banConfirm as any],
-          });
-          break;
-
-        case "cancel":
-          await i.editReply({
-            content:
-              "All actions canceled, the user has been added to the cache.",
-            components: [],
-            embeds: [],
-          });
-          collector.stop();
-          break;
-
-        case "redbanuser":
-          if (!inputReason) {
-            await interaction.guild?.members
-              .ban(inputId)
-              .then(console.log)
-              .catch(console.error);
-          } else {
-            await interaction.guild?.members
-              .ban(inputId, { reason: inputReason })
-              .then(console.log)
-              .catch(console.error);
+      await bInteraction
+        .awaitModalSubmit({ time: 240 * 1000 })
+        .then((i) => {
+          if (i.isModalSubmit()) {
+            warningMessage = i.fields.getTextInputValue("message");
+            inputReason = i.fields.getTextInputValue("reason");
+            i.deferUpdate();
+            promptCollector.stop("selection made");
           }
-          // Then create a log
-          registerInteraction({
-            moderator: i.member,
-            suspect: user,
-            type: "banned",
-            reason: inputReason,
-          });
-          collector.stop();
-          await i.editReply({
-            content: "userindex completed.",
-            components: [],
-            embeds: [],
-          });
-          break;
+        })
+        .catch(() => {
+          sendTimeoutEmbed();
+          promptCollector.stop("time expired");
+        });
 
-        default:
-          throw new Error(`A button with the id ${i.customId} was not found.`);
-          break;
-      }
+      const warningEmbed = new EmbedBuilder()
+        .setColor(0xfdfd96)
+        .setTitle(
+          `You have recieved a warning from ${interaction.guild?.name}.`
+        )
+        .setDescription(warningMessage)
+        .addFields({ name: "Reason:", value: inputReason })
+        .setFooter({
+          text: `This is an automated message from ${interaction.guild?.name}.`,
+        });
+
+      return warningEmbed;
+    };
+
+    const getChannel = async () => {
+      const channelId = interaction.channelId;
+      const channel = await interaction.guild?.channels.fetch(channelId);
+      if (!channel?.isTextBased()) throw new Error("Channel not found.");
+
+      return channel;
+    };
+
+    const startCollector = async () => {
+      const channel = await getChannel();
+      const filter = (i: ButtonInteraction) =>
+        i.user.id === interaction.user.id &&
+        i.message.interaction?.id === interaction.id;
+      const collector = channel.createMessageComponentCollector({
+        filter,
+        componentType: ComponentType.Button,
+        idle: 60 * 1000,
+      });
+
+      return collector;
+    };
+
+    const handlePromptCollector = async () => {
+      return new Promise(async (resolve, reject) => {
+        const collector = await startCollector();
+        collector.on("collect", async (i) => {
+          if (!i.isButton()) return;
+          else if (i.customId !== ModerationAction.Warn) await i.deferUpdate();
+
+          switch (i.customId) {
+            case ModerationAction.Warn:
+              const warningEmbed = await generateWarningEmbed(i, collector);
+              await i.editReply({
+                embeds: [
+                  generateUserInfoEmbed(ModerationAction.Warn),
+                  warningEmbed,
+                ],
+                components: [confirmationActionRow as any],
+              });
+              await handleModerationAction(ModerationAction.Warn, warningEmbed);
+              break;
+
+            case ModerationAction.Kick:
+              await i.editReply({
+                embeds: [generateUserInfoEmbed(ModerationAction.Kick)],
+                components: [confirmationActionRow as any],
+              });
+              await handleModerationAction(ModerationAction.Kick);
+              collector.stop("selection made");
+              break;
+
+            case ModerationAction.Ban:
+              await i.editReply({
+                embeds: [generateUserInfoEmbed(ModerationAction.Ban)],
+                components: [confirmationActionRow as any],
+              });
+              await handleModerationAction(ModerationAction.Ban);
+              collector.stop("selection made");
+              break;
+
+            case "cancel":
+              sendCanceledEmbed();
+              collector.stop("actions canceled");
+              break;
+
+            default:
+              throw new Error(
+                `A button with the id ${i.customId} was not found.`
+              );
+          }
+        });
+
+        collector.once("end", async (collected, reason) => {
+          if (reason === "idle") {
+            reject("The collector timed out.");
+          } else resolve(reason);
+        });
+      });
+    };
+
+    const handleConfirmationCollector = async (): Promise<boolean> => {
+      return new Promise(async (resolve, reject) => {
+        let confirmed = false;
+        const collector = await startCollector();
+        collector.once("collect", async (i) => {
+          if (!i.isButton()) return;
+          else await i.deferUpdate();
+
+          if (i.customId === "confirm") confirmed = true;
+          collector.stop("confirmed");
+        });
+
+        collector.once("end", async (collected, reason) => {
+          if (reason === "idle") {
+            reject("The collector timed out.");
+          } else {
+            resolve(confirmed);
+          }
+        });
+      });
+    };
+
+    const handleModerationAction = async (
+      moderationAction: ModerationAction,
+      warningEmbed?: EmbedBuilder
+    ) => {
+      await handleConfirmationCollector()
+        .then((confirmed) => {
+          console.log("Confirmed:", confirmed);
+          if (!confirmed) return sendCanceledEmbed();
+
+          switch (moderationAction) {
+            case ModerationAction.Ban:
+              interaction.guild?.members.ban(user, {
+                reason: inputReason ? inputReason : "No reason provided.",
+              });
+              // registerInteraction({
+              //   moderator: interaction.member,
+              //   suspect: user,
+              //   type: "banned",
+              //   reason: inputReason,
+              // });
+              break;
+
+            case ModerationAction.Kick:
+              interaction.guild?.members.kick(
+                user,
+                inputReason ? inputReason : "No reason provided."
+              );
+              // registerInteraction({
+              //   moderator: interaction.member,
+              //   suspect: user,
+              //   type: "kicked",
+              //   reason: inputReason,
+              // });
+              break;
+
+            case ModerationAction.Warn:
+              if (!warningEmbed)
+                throw new Error("No warning embed given to handler.");
+              user
+                .createDM()
+                .then((dm) => {
+                  dm.send({ embeds: [warningEmbed] });
+                })
+                .catch((err) => {
+                  interaction.editReply({
+                    embeds: [
+                      new EmbedBuilder()
+                        .setTitle("Warning Failed to Send")
+                        .setDescription(
+                          "Overlord can no send a message to that user. The user must be in a mutual server with Overlord, and must have their DMs enabled."
+                        ),
+                    ],
+                    components: [],
+                  });
+                });
+              // Keep track of each users warnings in the database
+              // register the interaction
+              break;
+
+            default:
+              throw new Error("No moderation action found.");
+          }
+        })
+        .catch(() => {
+          sendTimeoutEmbed();
+        });
+
+      return;
+    };
+
+    await interaction.editReply({
+      embeds: [generateUserInfoEmbed()],
+      components: [promptActionRow as any],
     });
-
-    // collector.on("end", (collected) => {
-    //   console.log(
-    //     `The collecter has ended its collection round, and collected ${collected.size} items`
-    //   );
-    // });
+    await handlePromptCollector().catch((err) => {
+      sendTimeoutEmbed();
+    });
+    return;
   },
 };

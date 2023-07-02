@@ -89,6 +89,12 @@ export type OverlordCommandType =
   | OverlordSubCommandGroup
   | undefined;
 
+export enum ModerationAction {
+  Kick = "kick",
+  Ban = "ban",
+  Warn = "warn",
+}
+
 export class OverlordClient extends Client {
   REST: REST;
   slashCommands: Collection<
