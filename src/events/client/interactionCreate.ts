@@ -5,6 +5,7 @@ import {
   OverlordEvent,
   OverlordSubCommand,
 } from "../../types/Overlord";
+import { generateErrorEmbed } from "../../util/embed_generator";
 
 export = <OverlordEvent>{
   name: "interactionCreate",
@@ -51,14 +52,17 @@ export = <OverlordEvent>{
 
       sCommand.execute(client, interaction).catch((error: Error) => {
         console.error(error);
+
+        const errorEmebed = generateErrorEmbed(error);
+
         if (interaction.replied || interaction.deferred) {
-          interaction.editReply(
-            "There was an error executing the command, please try again later or contact support."
-          );
+          interaction.editReply({
+            embeds: [errorEmebed],
+            components: [],
+          });
         } else {
           interaction.reply({
-            content:
-              "There was an error executing the command, please try again later or contact support.",
+            embeds: [errorEmebed],
             ephemeral: true,
           });
         }
