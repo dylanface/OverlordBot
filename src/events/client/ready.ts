@@ -1,6 +1,10 @@
 import Discord from "discord.js";
-import { refreshGuildCommands } from "../../util/guild_init";
+import {
+  refreshGlobalCommands,
+  refreshGuildCommands,
+} from "../../util/guild_init";
 import { OverlordEvent } from "../../types/Overlord";
+import { DirectMessageManager } from "../../modules/DirectMessageManager";
 
 export = <OverlordEvent>{
   name: "ready",
@@ -16,6 +20,10 @@ export = <OverlordEvent>{
         await refreshGuildCommands(client, guild.id);
       });
       console.log("Commands set for all guilds.");
+    };
+
+    const setGlobalCommands = async () => {
+      await refreshGlobalCommands(client);
     };
 
     // /**
@@ -41,12 +49,23 @@ export = <OverlordEvent>{
       });
     };
 
+    const createDirectMessageManagers = async () => {
+      clientGuilds.forEach(async (guild) => {
+        const dmManager = new DirectMessageManager(client, guild);
+
+        client.DirectMessageManagers.set(guild.id, dmManager);
+      });
+    };
+
     if (process.env.DEVELOPMENT_MODE === "true")
       console.log(
-        "Skipping guild command registration due to development mode being enabled."
+        "Skipping guild and global command registration due to development mode being enabled."
       );
-    else await setGuildCommands();
-    // await fetchGuildForCache();
+    else {
+      await setGuildCommands();
+      await setGlobalCommands();
+    }
+    await createDirectMessageManagers();
     setPresence();
   },
 };

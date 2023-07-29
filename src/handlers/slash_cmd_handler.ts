@@ -11,7 +11,6 @@ import {
   OverlordClient,
   OverlordSlashCommand,
   OverlordSubCommand,
-  OverlordSubCommandGroup,
 } from "../types/Overlord";
 
 let slashCommandsTable = new AsciiTable3("Slash Commands");
@@ -110,12 +109,12 @@ export = async (client: OverlordClient) => {
       builtCommand.addSubcommandGroup(group);
     }
 
-    const builtSubCommandGroup: OverlordSubCommandGroup = {
+    const builtCommandWithSubs: OverlordSlashCommand = {
       name: subcmd_dir,
       config: { hasSubs: true },
       data: builtCommand,
     };
-    client.slashCommands.set(subcmd_dir, builtSubCommandGroup);
+    client.slashCommands.set(subcmd_dir, builtCommandWithSubs);
     slashCommandsTable.addRow(subcmd_dir, "✓");
   }
 

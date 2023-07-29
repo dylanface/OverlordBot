@@ -8,6 +8,7 @@ import {
   AutocompleteInteraction,
   ContextMenuCommandBuilder,
   MessageContextMenuCommandInteraction,
+  EmbedBuilder,
 } from "discord.js";
 import { REST } from "@discordjs/rest";
 
@@ -17,6 +18,7 @@ import { ModerationLogger } from "../modules/ModerationLogger";
 import { ErrorHandler } from "../handlers/error_handler";
 import { EventLogger } from "../modules/EventLogger";
 import { GuildSettingsManager } from "../modules/GuildSettings";
+import { DirectMessageManager } from "../modules/DirectMessageManager";
 
 export interface OverlordEvent {
   name: string;
@@ -30,22 +32,14 @@ export interface OverlordSlashCommand {
   config?: {
     help?: {};
     permissions?: {};
+    global?: boolean;
+    hasSubs?: boolean;
   };
   data: SlashCommandBuilder;
-  execute: (
+  execute?: (
     client: OverlordClient,
     interaction: ChatInputCommandInteraction
   ) => Promise<void>;
-}
-
-export interface OverlordSubCommandGroup {
-  name: string;
-  enabled?: boolean;
-  config: {
-    hasSubs?: boolean;
-    help?: {};
-  };
-  data: SlashCommandBuilder;
 }
 
 export interface OverlordSubCommand {
@@ -86,8 +80,23 @@ export interface OverlordContextMenuCommand {
 export type OverlordCommandType =
   | OverlordSlashCommand
   | OverlordSubCommand
-  | OverlordSubCommandGroup
   | undefined;
+
+interface DirectMessageTextContent {
+  message: string;
+  embed?: never;
+  color?: number;
+}
+
+interface DirectMessageEmbedContent {
+  message?: never;
+  embed: EmbedBuilder;
+  color?: never;
+}
+
+export type DirectMessageContent =
+  | DirectMessageTextContent
+  | DirectMessageEmbedContent;
 
 export enum ModerationAction {
   Kick = "kick",
@@ -97,10 +106,7 @@ export enum ModerationAction {
 
 export class OverlordClient extends Client {
   REST: REST;
-  slashCommands: Collection<
-    string,
-    OverlordSlashCommand | OverlordSubCommandGroup
-  >;
+  slashCommands: Collection<string, OverlordSlashCommand>;
   subCommands: Collection<string, OverlordSubCommand>;
   contextMenuCommands: Collection<string, any>;
   autocompleteInteractions: Collection<string, any>;
@@ -109,6 +115,7 @@ export class OverlordClient extends Client {
   ErrorHandler: ErrorHandler;
   EventLogger: EventLogger;
   GuildSettingsManager: GuildSettingsManager;
+  DirectMessageManagers: Collection<string, DirectMessageManager>;
 
   connect() {
     this.login(token());
@@ -123,6 +130,7 @@ export class OverlordClient extends Client {
     this.contextMenuCommands = new Collection();
     this.autocompleteInteractions = new Collection();
 
+    this.DirectMessageManagers = new Collection();
     this.ModerationLogger = new ModerationLogger(this);
     this.ErrorHandler = new ErrorHandler(this);
     this.EventLogger = new EventLogger(this);

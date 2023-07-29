@@ -1,14 +1,19 @@
 import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import { OverlordSlashCommand } from "../../types/Overlord";
-import { refreshGuildCommands } from "../../util/guild_init";
+import {
+  refreshGlobalCommands,
+  refreshGuildCommands,
+} from "../../util/guild_init";
 
 export = <OverlordSlashCommand>{
   enabled: true,
   name: "refresh",
   data: new SlashCommandBuilder()
     .setName("refresh")
-    .setDescription("Refresh commands for your Guild.")
-    .setDMPermission(false)
+    .setDescription("Refresh Overlord commands.")
+    .addBooleanOption((option) =>
+      option.setName("global").setDescription("Refresh global commands?")
+    )
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   async execute(client, interaction) {
     await interaction.deferReply({ ephemeral: true });
@@ -19,6 +24,10 @@ export = <OverlordSlashCommand>{
     await interaction.editReply({ content: "Refreshing commands..." });
 
     await refreshGuildCommands(client, interaction.guild.id);
+
+    if (interaction.options.getBoolean("global"))
+      await refreshGlobalCommands(client);
+
     await interaction.editReply({ content: "Commands refreshed!" });
   },
 };

@@ -10,28 +10,58 @@ export async function refreshGuildCommands(
   client: OverlordClient,
   guildId: string
 ) {
-  const slashCommands = client.slashCommands.map((command) => {
-    return command.data.toJSON();
-  });
+  const slashCommands: any[] = [];
+  const contextMenuCommands: any[] = [];
 
-  const contextMenuCommands = client.contextMenuCommands.map((command) => {
-    return command.data.toJSON();
-  });
+  for (const [key, command] of client.slashCommands) {
+    if (command.config?.global) continue;
+    slashCommands.push(command.data.toJSON());
+  }
 
-  const commands = [...slashCommands, ...contextMenuCommands];
+  for (const [key, command] of client.contextMenuCommands) {
+    contextMenuCommands.push(command.data.toJSON());
+  }
+
+  const guildCommands = [...slashCommands, ...contextMenuCommands];
+
+  if (!guildCommands.length) return;
 
   try {
-    console.log(`Refreshing ${commands.length} commands for ${guildId}.`);
+    console.log(`Refreshing ${guildCommands.length} commands for ${guildId}.`);
 
     await client.REST.put(
       Routes.applicationGuildCommands(
         client.application?.id as string,
         guildId
       ),
-      { body: commands }
+      { body: guildCommands }
     );
 
     console.log(`Successfully reloaded guild (/) commands for ${guildId}.`);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function refreshGlobalCommands(client: OverlordClient) {
+  const globalCommands: any[] = [];
+
+  for (const [key, command] of client.slashCommands) {
+    if (!command.config?.global) continue;
+    globalCommands.push(command.data.toJSON());
+  }
+
+  if (!globalCommands.length) return;
+
+  try {
+    console.log(`Refreshing ${globalCommands.length} global commands.`);
+
+    await client.REST.put(
+      Routes.applicationCommands(client.application?.id as string),
+      { body: globalCommands }
+    );
+
+    console.log(`Successfully reloaded global (/) commands.`);
   } catch (error) {
     console.error(error);
   }

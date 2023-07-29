@@ -1,10 +1,5 @@
 import { BaseInteraction } from "discord.js";
-import {
-  OverlordClient,
-  OverlordCommandType,
-  OverlordEvent,
-  OverlordSubCommand,
-} from "../../types/Overlord";
+import { OverlordCommandType, OverlordEvent } from "../../types/Overlord";
 import { generateErrorEmbed } from "../../util/embed_generator";
 
 export = <OverlordEvent>{
@@ -21,8 +16,8 @@ export = <OverlordEvent>{
         "hasSubs" in sCommand.config &&
         sCommand.config.hasSubs
       ) {
-        const subCommandName = interaction.options.getSubcommand();
         const subCommandGroup = interaction.options.getSubcommandGroup();
+        const subCommandName = interaction.options.getSubcommand();
         sCommand = client.subCommands.find((cmd) => {
           return (
             cmd.category + "-" + cmd.name ==
@@ -41,7 +36,7 @@ export = <OverlordEvent>{
         }
       }
 
-      if (!("execute" in sCommand)) {
+      if (!sCommand.execute) {
         interaction.reply({
           content:
             "There was an error executing the command, please try again later or contact support.",
@@ -89,9 +84,6 @@ export = <OverlordEvent>{
 
       if (interaction.options.getString("timezone") !== null) {
         autocompleteName = "timezone";
-      }
-      if (interaction.options.getString("party") !== null) {
-        autocompleteName = "party";
       }
 
       const autocomplete =
