@@ -1,8 +1,10 @@
-import { Channel, DMChannel, Guild, SnowflakeUtil, User } from "discord.js";
+import { AttachmentBuilder, Channel, DMChannel, Guild, User } from "discord.js";
 import { OverlordClient, DirectMessageContent } from "../types/Overlord";
 import clientPromise from "../database/index";
 import { generateColoredEmbed } from "../util/embed_generator";
 import { EmbedBuilder } from "@discordjs/builders";
+import * as Transcript from "discord-html-transcripts";
+import { generateAlphaNumericString } from "../util/string_utils";
 
 export class DirectMessageManager {
   client: OverlordClient;
@@ -14,12 +16,68 @@ export class DirectMessageManager {
     this.guild = guild;
   }
 
-  getConversation(user: User): Promise<DirectMessageConversation> {
+  /**
+   * @description Get the most recent conversation with the user.
+   */
+  async getConversationByUser(
+    user: User,
+    options?: {
+      upsert?: boolean;
+    }
+  ): Promise<DirectMessageConversation> {
     return new Promise(async (resolve, reject) => {
       let conversation: DirectMessageConversation | undefined;
 
-      if (this.cache.has(user.id)) {
-        conversation = this.cache.get(user.id);
+      for (const [key, value] of this.cache.entries()) {
+        if (value.user.id === user.id) {
+          if (conversation) {
+            if (value.lastMessageMS > conversation.lastMessageMS) {
+              conversation = value;
+            }
+          } else conversation = value;
+          break;
+        }
+      }
+
+      if (conversation) return resolve(conversation);
+
+      const jsonConversation = await (await clientPromise)
+        .db("overlord")
+        .collection("direct_messages")
+        .findOne({ userId: user.id, guildId: this.guild.id });
+
+      if (!jsonConversation) {
+        if (options?.upsert) {
+          conversation = new DirectMessageConversation(this, user);
+          this.cache.set(conversation.id, conversation);
+          return resolve(conversation);
+        }
+        return reject("Conversation not found.");
+      }
+
+      conversation = new DirectMessageConversation(this, user, {
+        conversationId: jsonConversation.id ?? undefined,
+        channelId: jsonConversation.channelId ?? undefined,
+        conversationInfoMessageId:
+          jsonConversation.conversationInfoMessageId ?? undefined,
+        lastMessageTimestamp:
+          jsonConversation.lastMessageTimestamp ?? undefined,
+      });
+
+      this.cache.set(conversation.id, conversation);
+      return resolve(conversation);
+    });
+  }
+
+  /**
+   * @description Get a conversation by it's ID.
+   */
+  async getConversationById(id: string): Promise<DirectMessageConversation> {
+    return new Promise(async (resolve, reject) => {
+      let conversation: DirectMessageConversation | undefined;
+
+      if (this.cache.has(id)) {
+        conversation = this.cache.get(id);
         if (!conversation)
           return reject(
             "Conversation has the incorrect format in the cache and can not be returned."
@@ -30,26 +88,43 @@ export class DirectMessageManager {
       const jsonConversation = await (await clientPromise)
         .db("overlord")
         .collection("direct_messages")
-        .findOne({ userId: user.id, guildId: this.guild.id });
+        .findOne({ id: id, guildId: this.guild.id });
 
       if (!jsonConversation) {
-        conversation = new DirectMessageConversation(this, user);
-      } else {
-        conversation = new DirectMessageConversation(this, user, {
-          conversationId: jsonConversation.id ?? undefined,
-          channelId: jsonConversation.channelId ?? undefined,
-          conversationInfoMessageId:
-            jsonConversation.conversationInfoMessageId ?? undefined,
-          lastMessageTimestamp:
-            jsonConversation.lastMessageTimestamp ?? undefined,
-        });
+        return reject("Conversation not found.");
       }
 
-      this.cache.set(user.id, conversation);
+      const user = await this.client.users.fetch(jsonConversation.userId);
+
+      conversation = new DirectMessageConversation(this, user, {
+        conversationId: jsonConversation.id ?? undefined,
+        channelId: jsonConversation.channelId ?? undefined,
+        conversationInfoMessageId:
+          jsonConversation.conversationInfoMessageId ?? undefined,
+        lastMessageTimestamp:
+          jsonConversation.lastMessageTimestamp ?? undefined,
+      });
+
+      this.cache.set(id, conversation);
       return resolve(conversation);
     });
   }
 
+  /**
+   * @description Create a new conversation with a user.
+   */
+  async createConversation(user: User): Promise<DirectMessageConversation> {
+    return new Promise(async (resolve, reject) => {
+      const conversation = new DirectMessageConversation(this, user);
+
+      this.cache.set(conversation.id, conversation);
+      return resolve(conversation);
+    });
+  }
+
+  /**
+   * @description Save a conversation to the database.
+   */
   async saveConversation(conversation: DirectMessageConversation) {
     await (
       await clientPromise
@@ -57,7 +132,7 @@ export class DirectMessageManager {
       .db("overlord")
       .collection("direct_messages")
       .updateOne(
-        { userId: conversation.user.id, guildId: conversation.guildId },
+        { id: conversation.id, guildId: conversation.guildId },
         {
           $set: {
             id: conversation.id,
@@ -74,7 +149,7 @@ export class DirectMessageManager {
 }
 
 class DirectMessageConversation {
-  manager: DirectMessageManager;
+  #manager: DirectMessageManager;
   id: string;
   user: User;
   guildId: string;
@@ -94,9 +169,10 @@ class DirectMessageConversation {
       lastMessageTimestamp?: number;
     }
   ) {
-    this.manager = manager;
-    this.id =
-      persistedValues?.conversationId ?? SnowflakeUtil.generate().toString();
+    this.#manager = manager;
+    // Generate a random ID for the conversation if one is not provided from the persisted data.
+    // The ID is a 6 character alphanumeric string.
+    this.id = persistedValues?.conversationId ?? generateAlphaNumericString(6);
     this.user = user;
     this.guildId = manager.guild.id;
 
@@ -113,9 +189,7 @@ class DirectMessageConversation {
       this.channelId = channel.id;
     });
 
-    if (!this.persistent) {
-      this.save();
-    }
+    if (!this.persistent) this.save();
   }
 
   get lastMessageMS() {
@@ -128,7 +202,7 @@ class DirectMessageConversation {
 
       if (!this.channelId || !(typeof this.channelId === "string"))
         dmChannel = await this.user.createDM();
-      else dmChannel = this.manager.client.channels.cache.get(this.channelId);
+      else dmChannel = this.#manager.client.channels.cache.get(this.channelId);
 
       if (!dmChannel) dmChannel = await this.user.createDM();
       if (!dmChannel)
@@ -152,13 +226,17 @@ class DirectMessageConversation {
     const conversationInfoEmbed = new EmbedBuilder()
       .setTitle(`Overlord Conversation: ${this.id}`)
       .setDescription(
-        `Overlord has started a new conversation with you on behalf of **${this.manager.guild.name}**. Moderators of **${this.manager.guild.name}** will be able to export and view the contents of this conversation. 
-        
-        • If you would like to export this conversation for your own records, run the following command in this DM channel: \`/export ${this.id}\`. 
+        `Overlord has started a new conversation with you on behalf of **${
+          this.#manager.guild.name
+        }**. 
 
-        • If you would like to reject this conversation, run the following command in this DM channel: \`/reject ${this.id}\`.
+        Moderators of **${
+          this.#manager.guild.name
+        }** will be able to export and view the contents of this conversation.
 
-        • Rejected conversations will be deleted after 24 hours, and can not be interacted with after their deletion.`
+        If you would like to export this conversation for your own records, run the following command in this DM channel: \`/export ${
+          this.id
+        }\`.`
       )
       .setColor(0xec8b00);
 
@@ -204,7 +282,7 @@ class DirectMessageConversation {
    * @info This method will apply an automated message footer to the embed sent.
    */
   async sendFromGuild(content: DirectMessageContent) {
-    if (!this.manager.guild.available)
+    if (!this.#manager.guild.available)
       throw new Error("Guild information is not available.");
     if (!this.channel) this.channel = await this.#getChannel();
     const channel = this.channel;
@@ -212,7 +290,9 @@ class DirectMessageConversation {
     let guildEmbed = content.embed ?? generateColoredEmbed();
 
     guildEmbed.setFooter({
-      text: `This is an automated message sent on behalf of ${this.manager.guild?.name}.`,
+      text: `This is an automated message sent on behalf of ${
+        this.#manager.guild?.name
+      }.`,
     });
 
     if (content.color) guildEmbed.setColor(content.color);
@@ -230,6 +310,39 @@ class DirectMessageConversation {
   }
 
   async save() {
-    await this.manager.saveConversation(this);
+    await this.#manager.saveConversation(this);
+  }
+
+  export(): Promise<AttachmentBuilder> | undefined {
+    return new Promise(async (resolve, reject) => {
+      let transcript: Promise<AttachmentBuilder>;
+
+      if (!this.channel) this.channel = await this.#getChannel();
+      const channel = this.channel;
+
+      if (!this.conversationInfoMessageId) {
+        return undefined;
+      } else {
+        let messages = await channel.messages.fetch({
+          after: this.conversationInfoMessageId,
+        });
+
+        messages = messages.filter(
+          (msg) =>
+            !msg.attachments.some((a) => a.contentType?.includes("text/html"))
+        );
+
+        transcript = Transcript.generateFromMessages(
+          messages.reverse(),
+          channel,
+          {
+            filename: `overlord_conversation_${this.id}.html`,
+            poweredBy: false,
+          }
+        );
+      }
+
+      return resolve(transcript);
+    });
   }
 }
