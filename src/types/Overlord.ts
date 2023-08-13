@@ -19,6 +19,7 @@ import { ErrorHandler } from "../handlers/error_handler";
 import { EventLogger } from "../modules/EventLogger";
 import { GuildSettingsManager } from "../modules/GuildSettings";
 import { DirectMessageManager } from "../modules/DirectMessageManager";
+import { VerificationManager } from "../modules/VerificationManager";
 
 export interface OverlordEvent {
   name: string;
@@ -116,6 +117,7 @@ export class OverlordClient extends Client {
   EventLogger: EventLogger;
   GuildSettingsManager: GuildSettingsManager;
   DirectMessageManagers: Collection<string, DirectMessageManager>;
+  VerificationManager: VerificationManager;
 
   connect() {
     this.login(token());
@@ -131,6 +133,7 @@ export class OverlordClient extends Client {
     this.autocompleteInteractions = new Collection();
 
     this.DirectMessageManagers = new Collection();
+    this.VerificationManager = new VerificationManager(this);
     this.ModerationLogger = new ModerationLogger(this);
     this.ErrorHandler = new ErrorHandler(this);
     this.EventLogger = new EventLogger(this);
