@@ -11,22 +11,28 @@ export class VerificationManager {
   }
 
   async checkUser(user: User) {
-    const verification = await this.getVerification(user.id);
+    const verification = await this.getVerification(user);
+    if (!verification) return false;
     if (verification.verified) return true;
     return false;
   }
 
   async verifyUser(user: User) {
-    const verification = await this.getVerification(user.id);
+    let verification = await this.getVerification(user);
+    if (!verification) {
+      verification = await this.createVerification(user);
+    }
+    if (verification.verified) return;
+
     verification.verify();
   }
 
-  async getVerification(userId: string) {
-    return new Promise<Verification>(async (resolve, reject) => {
+  async getVerification(user: User) {
+    return new Promise<Verification | undefined>(async (resolve, reject) => {
       let verification: Verification | undefined;
 
-      if (this.cache.has(userId)) {
-        verification = this.cache.get(userId);
+      if (this.cache.has(user.id)) {
+        verification = this.cache.get(user.id);
         if (!verification)
           return reject(
             "Conversation has the incorrect format in the cache and can not be returned."
@@ -37,18 +43,18 @@ export class VerificationManager {
       const jsonVerification = await (await clientPromise)
         .db("overlord")
         .collection("user_verification")
-        .findOne({ userId: userId });
+        .findOne({ userId: user.id });
 
       if (!jsonVerification) {
-        return reject("Verification not found.");
+        return resolve(undefined);
       }
 
-      verification = new Verification(this, userId, {
+      verification = new Verification(this, user.id, {
         verified: jsonVerification.verified,
         verifiedAt: jsonVerification.verifiedAt,
       });
 
-      this.cache.set(userId, verification);
+      this.cache.set(user.id, verification);
       return resolve(verification);
     });
   }
@@ -56,24 +62,26 @@ export class VerificationManager {
   async createVerification(user: User) {
     return new Promise<Verification>(async (resolve, reject) => {
       const verification = new Verification(this, user.id);
+      this.cache.set(user.id, verification);
       return resolve(verification);
     });
   }
 
-  async saveVerification(verificationKey: Verification) {
+  async saveVerification(verification: Verification) {
     await (
       await clientPromise
     )
       .db("overlord")
       .collection("user_verification")
       .updateOne(
-        { userId: verificationKey.userId },
+        { userId: verification.userId },
         {
           $set: {
-            verified: verificationKey.verified,
-            verifiedAt: verificationKey.verifiedAt,
+            verified: verification.verified,
+            verifiedAt: verification.verifiedAt,
           },
-        }
+        },
+        { upsert: true }
       );
   }
 }
