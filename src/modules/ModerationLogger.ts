@@ -59,12 +59,13 @@ export class ModerationLogger {
       console.log("Failed to send registry message");
     }
 
-    try {
-      this.#publishToEventLogger(guild, event);
-    } catch (err) {
-      console.log(err);
-      console.log("Failed to publish to event log.");
-    }
+    return embed;
+    // try {
+    //   this.#publishToEventLogger(guild, event);
+    // } catch (err) {
+    //   console.log(err);
+    //   console.log("Failed to publish to event log.");
+    // }
   }
 
   /**
@@ -141,28 +142,28 @@ export class ModerationLogger {
     return registryEmbed;
   };
 
-  #publishToEventLogger = (guild: Guild, event: any) => {
-    const formattedEvent = new OverlordLogEvent(this.client)
-      .setType(event.type)
-      .setAssociatedGuild(guild.id);
+  // #publishToEventLogger = (guild: Guild, event: any) => {
+  //   const formattedEvent = new OverlordLogEvent(this.client)
+  //     .setType(event.type)
+  //     .setAssociatedGuild(guild.id);
 
-    if (event["reason"]) formattedEvent.setDescription(event.reason);
-    else formattedEvent.setDescription(`No reason provided.`);
+  //   if (event["reason"]) formattedEvent.setDescription(event.reason);
+  //   else formattedEvent.setDescription(`No reason provided.`);
 
-    if (event["suspect"])
-      formattedEvent.attachContext({ id: "suspect", item: event.suspect });
-    if (event["suspectId"] && !event["suspect"])
-      formattedEvent.attachContext({ id: "suspectId", item: event.suspectId });
-    if (event["moderator"])
-      formattedEvent.attachContext({ id: "moderator", item: event.moderator });
-    if (event["moderatorId"] && !event["moderator"])
-      formattedEvent.attachContext({
-        id: "moderatorId",
-        item: event.moderatorId,
-      });
-    if (event["suspects"])
-      formattedEvent.attachContext({ id: "suspects", item: event.suspects });
+  //   if (event["suspect"])
+  //     formattedEvent.attachContext({ id: "suspect", item: event.suspect });
+  //   if (event["suspectId"] && !event["suspect"])
+  //     formattedEvent.attachContext({ id: "suspectId", item: event.suspectId });
+  //   if (event["moderator"])
+  //     formattedEvent.attachContext({ id: "moderator", item: event.moderator });
+  //   if (event["moderatorId"] && !event["moderator"])
+  //     formattedEvent.attachContext({
+  //       id: "moderatorId",
+  //       item: event.moderatorId,
+  //     });
+  //   if (event["suspects"])
+  //     formattedEvent.attachContext({ id: "suspects", item: event.suspects });
 
-    formattedEvent.submit();
-  };
+  //   formattedEvent.submit();
+  // };
 }

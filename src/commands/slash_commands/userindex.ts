@@ -68,31 +68,25 @@ export = <OverlordSlashCommand>{
       .setLabel("Cancel")
       .setStyle(ButtonStyle.Danger);
 
-    const warnButton = (confirm: boolean = false): ButtonBuilder => {
-      return new ButtonBuilder()
-        .setCustomId(ModerationAction.Warn)
-        .setLabel(`${warnEmoji} Warn User`)
-        .setStyle(confirm ? ButtonStyle.Danger : ButtonStyle.Primary);
-    };
+    const warnButton = new ButtonBuilder()
+      .setCustomId(ModerationAction.Warn)
+      .setLabel(`${warnEmoji} Warn User`)
+      .setStyle(ButtonStyle.Primary);
 
-    const kickButton = (confirm: boolean = false): ButtonBuilder => {
-      return new ButtonBuilder()
-        .setCustomId(ModerationAction.Kick)
-        .setLabel(`${kickEmoji} Kick User`)
-        .setStyle(confirm ? ButtonStyle.Danger : ButtonStyle.Primary);
-    };
+    const kickButton = new ButtonBuilder()
+      .setCustomId(ModerationAction.Kick)
+      .setLabel(`${kickEmoji} Kick User`)
+      .setStyle(ButtonStyle.Primary);
 
-    const banButton = (confirm: boolean = false): ButtonBuilder => {
-      return new ButtonBuilder()
-        .setCustomId(ModerationAction.Ban)
-        .setLabel(`${banEmoji} Ban User`)
-        .setStyle(confirm ? ButtonStyle.Danger : ButtonStyle.Primary);
-    };
+    const banButton = new ButtonBuilder()
+      .setCustomId(ModerationAction.Ban)
+      .setLabel(`${banEmoji} Ban User`)
+      .setStyle(ButtonStyle.Primary);
 
     const promptActionRow = new ActionRowBuilder().addComponents(
-      warnButton(),
-      kickButton(),
-      banButton(),
+      warnButton,
+      kickButton,
+      banButton,
       cancelButton
     );
 
@@ -124,8 +118,16 @@ export = <OverlordSlashCommand>{
     };
 
     async function registerInteraction(event: any) {
-      if (!event) return console.error("No event found.");
-      await client.ModerationLogger.publish(interaction.guild as Guild, event);
+      if (!event) throw new Error("No event found.");
+      const moderationInteractionEmbed = await client.ModerationLogger.publish(
+        interaction.guild as Guild,
+        event
+      );
+
+      if (!moderationInteractionEmbed)
+        throw new Error("Moderation interaction embed could not be generated.");
+
+      return moderationInteractionEmbed;
     }
 
     const user = await client.users.fetch(inputId, { cache: true });
@@ -166,8 +168,8 @@ export = <OverlordSlashCommand>{
         .setLabel("Customize Warning Message")
         .setPlaceholder("Enter a warning message here.")
         .setValue(warningMessage)
-        .setMinLength(10)
-        .setMaxLength(1000)
+        .setMinLength(1)
+        .setMaxLength(350)
         .setRequired(true)
         .setStyle(TextInputStyle.Paragraph);
 
@@ -176,8 +178,8 @@ export = <OverlordSlashCommand>{
         .setLabel("Reason for Warning")
         .setPlaceholder("Enter a reason for warning this user.")
         .setValue(inputReason)
-        .setMinLength(10)
-        .setMaxLength(1000)
+        .setMinLength(1)
+        .setMaxLength(350)
         .setRequired(false)
         .setStyle(TextInputStyle.Paragraph);
 
@@ -247,9 +249,10 @@ export = <OverlordSlashCommand>{
     const handlePromptCollector = async () => {
       return new Promise(async (resolve, reject) => {
         const collector = await startCollector();
-        collector.on("collect", async (i) => {
+        collector.once("collect", async (i) => {
           if (!i.isButton()) return;
           else if (i.customId !== ModerationAction.Warn) await i.deferUpdate();
+          console.log("Button pressed:", i.customId);
 
           switch (i.customId) {
             case ModerationAction.Warn:
@@ -309,6 +312,7 @@ export = <OverlordSlashCommand>{
         collector.once("collect", async (i) => {
           if (!i.isButton()) return;
           else await i.deferUpdate();
+          console.log("Button pressed:", i.customId);
 
           if (i.customId === "confirm") confirmed = true;
           collector.stop("confirmed");
@@ -329,7 +333,7 @@ export = <OverlordSlashCommand>{
       warningEmbed?: EmbedBuilder
     ) => {
       await handleConfirmationCollector()
-        .then((confirmed) => {
+        .then(async (confirmed) => {
           console.log("Confirmed:", confirmed);
           if (!confirmed) return sendCanceledEmbed();
 
@@ -338,12 +342,17 @@ export = <OverlordSlashCommand>{
               interaction.guild?.members.ban(user, {
                 reason: inputReason ? inputReason : "No reason provided.",
               });
-              // registerInteraction({
-              //   moderator: interaction.member,
-              //   suspect: user,
-              //   type: "banned",
-              //   reason: inputReason,
-              // });
+              interaction.editReply({
+                embeds: [
+                  (await registerInteraction({
+                    moderator: interaction.member,
+                    suspect: user,
+                    type: "banned",
+                    reason: inputReason,
+                  })) as any,
+                ],
+                components: [],
+              });
               break;
 
             case ModerationAction.Kick:
@@ -351,12 +360,17 @@ export = <OverlordSlashCommand>{
                 user,
                 inputReason ? inputReason : "No reason provided."
               );
-              // registerInteraction({
-              //   moderator: interaction.member,
-              //   suspect: user,
-              //   type: "kicked",
-              //   reason: inputReason,
-              // });
+              interaction.editReply({
+                embeds: [
+                  (await registerInteraction({
+                    moderator: interaction.member,
+                    suspect: user,
+                    type: "kicked",
+                    reason: inputReason,
+                  })) as any,
+                ],
+                components: [],
+              });
               break;
 
             case ModerationAction.Warn:
@@ -364,16 +378,16 @@ export = <OverlordSlashCommand>{
                 throw new Error("No warning embed given to handler.");
               user
                 .createDM()
-                .then((dm) => {
-                  dm.send({ embeds: [warningEmbed] });
+                .then(async (dm) => {
+                  await dm.send({ embeds: [warningEmbed] });
                 })
-                .catch((err) => {
-                  interaction.editReply({
+                .catch(async (err) => {
+                  await interaction.editReply({
                     embeds: [
                       new EmbedBuilder()
                         .setTitle("Warning Failed to Send")
                         .setDescription(
-                          "Overlord can no send a message to that user. The user must be in a mutual server with Overlord, and must have their DMs enabled."
+                          "Overlord can not send a message to that user. The user must be in a mutual server with Overlord, and must have their DMs enabled."
                         ),
                     ],
                     components: [],
